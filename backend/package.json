@@ -6,6 +6,11 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "seed": "node seed.js",
+    "seed:judge-directory": "node seed-judge-directory.js",
+    "seed:tribunals": "node seed-tribunals.js",
+    "seed:police-stations": "node seed-police-stations.js",
+    "verify:police-stations": "node seed-police-stations.js --verify-only",
+    "verify:tribunals": "node verify-tribunals.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -15,17 +20,20 @@
   "dependencies": {
     "@openrouter/agent": "^0.7.2",
     "axios": "^1.18.1",
+    "axios-cookiejar-support": "^7.0.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-validator": "^7.3.2",
+    "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
     "mongodb": "^7.2.0",
     "mongoose": "^9.6.2",
     "multer": "^2.2.0",
     "node-cron": "^4.6.0",
-    "openai": "^4.104.0"
+    "openai": "^4.104.0",
+    "tough-cookie": "^6.0.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

@@ -2,8 +2,10 @@ const router = require("express").Router();
 const DraftTemplate = require("../models/DraftTemplate");
 const draftLibraryPhase11 = require("../data/draftLibrary");
 
-// Middleware: require auth
+// Middleware: require auth (used for write/delete operations)
 const auth = require("../middleware/auth");
+// Optional auth for public/read endpoints that also work for anonymous users
+const optionalAuth = require("../middleware/optionalAuth");
 
 // GET Phase 11 – Draft Library data (template definitions)
 router.get("/", async (req, res) => {
@@ -22,8 +24,15 @@ router.get("/", async (req, res) => {
 });
 
 // GET user's saved drafts
-router.get("/saved", auth, async (req, res) => {
+// Public/read endpoint: anonymous (logged-out) users are allowed via optionalAuth and
+// simply have no saved drafts. Authenticated users get their own drafts as before.
+router.get("/saved", optionalAuth, async (req, res) => {
   try {
+    if (!req.user) {
+      // Anonymous user — no saved drafts to return
+      return res.status(200).json({ success: true, drafts: [] });
+    }
+
     const drafts = await DraftTemplate.find({ createdBy: req.user._id })
       .sort({ updatedAt: -1 })
       .lean();

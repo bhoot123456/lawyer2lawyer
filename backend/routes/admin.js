@@ -100,15 +100,6 @@ router.delete(
 );
 
 // ============================
-// ARTICLES MANAGEMENT
-// ============================
-router.get(
-  "/articles",
-  checkPermission("manageArticles"),
-  adminController.getAllArticles,
-);
-
-// ============================
 // BARE ACTS MANAGEMENT
 // ============================
 router.get(
@@ -259,6 +250,92 @@ router.delete(
   "/articles/:id",
   checkPermission("manageArticles"),
   adminController.deleteArticle,
+);
+
+// ============================
+// JUDGE DIRECTORY MANAGEMENT
+// ============================
+router.get(
+  "/judge-directory",
+  checkPermission("manageJudgeDirectory"),
+  adminCrud.listJudgeDirectoryAdmin,
+);
+router.get(
+  "/judge-directory/:id",
+  checkPermission("manageJudgeDirectory"),
+  adminCrud.getJudgeDirectoryAdmin,
+);
+router.post(
+  "/judge-directory",
+  checkPermission("manageJudgeDirectory"),
+  adminCrud.createJudgeDirectoryAdmin,
+);
+router.put(
+  "/judge-directory/:id",
+  checkPermission("manageJudgeDirectory"),
+  adminCrud.updateJudgeDirectoryAdmin,
+);
+router.delete(
+  "/judge-directory/:id",
+  checkPermission("manageJudgeDirectory"),
+  adminCrud.deleteJudgeDirectoryAdmin,
+);
+
+// ============================
+// POLICE STATIONS MANAGEMENT
+// ============================
+// Public-read controller handles public list/detail; admin routes
+// provide full CRUD via the same controller methods.
+const policeStationController = require("../controllers/policeStationController");
+
+router.get(
+  "/police-stations",
+  checkPermission("managePoliceStations"),
+  policeStationController.listStationsAdmin,
+);
+router.get(
+  "/police-stations/:id",
+  checkPermission("managePoliceStations"),
+  policeStationController.getStationAdmin,
+);
+router.post(
+  "/police-stations",
+  checkPermission("managePoliceStations"),
+  policeStationController.createStationAdmin,
+);
+router.put(
+  "/police-stations/:id",
+  checkPermission("managePoliceStations"),
+  policeStationController.updateStationAdmin,
+);
+router.delete(
+  "/police-stations/:id",
+  checkPermission("managePoliceStations"),
+  policeStationController.deleteStationAdmin,
+);
+
+// ============================
+// POLICE HIERARCHY OFFICES MANAGEMENT
+// ============================
+router.get(
+  "/police-hierarchy",
+  checkPermission("managePoliceStations"),
+  policeStationController.listHierarchyOfficesAdmin,
+);
+router.post(
+  "/police-hierarchy",
+  checkPermission("managePoliceStations"),
+  policeStationController.createHierarchyOfficeAdmin,
+);
+router.put(
+  "/police-hierarchy/:id",
+  checkPermission("managePoliceStations"),
+  policeStationController.updateHierarchyOfficeAdmin,
+);
+router.delete(
+  "/police-hierarchy/:id",
+  checkPermission("managePoliceStations"),
+  policeStationController.deleteHierarchyOfficeAdmin,
 );
 
 // ============================

@@ -6,6 +6,7 @@ function sendError(res, statusCode, message, details) {
 
 exports.sendChatMessage = async (req, res) => {
   try {
+    // userId is optional — undefined for unauthenticated (public) users
     const userId = req.user?._id;
     const { prompt, conversationId, metadata } = req.body || {};
 
@@ -167,6 +168,25 @@ exports.searchConversations = async (req, res) => {
   } catch (error) {
     console.error("AI search conversations error:", error);
     return sendError(res, error.statusCode || 500, error.message || "Failed to search conversations.");
+  }
+};
+
+/**
+ * Reset conversation: delete old (if exists) and create a brand new empty conversation.
+ * Public endpoint — no auth required.
+ * For authenticated users (via optional auth token), userId is extracted for ownership.
+ * For anonymous users, conversationId is used directly.
+ */
+exports.resetConversation = async (req, res) => {
+  try {
+    const userId = req.user?._id;
+    const { conversationId, metadata } = req.body || {};
+
+    const result = await aiService.resetConversation({ userId, conversationId, metadata });
+    return res.json({ success: true, data: result });
+  } catch (error) {
+    console.error("AI reset conversation error:", error);
+    return sendError(res, error.statusCode || 500, error.message || "Failed to reset conversation.");
   }
 };
 

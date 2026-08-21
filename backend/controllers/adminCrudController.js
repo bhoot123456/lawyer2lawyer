@@ -2,6 +2,7 @@ const BareAct = require("../models/BareAct");
 const RevenueCourtPhase8 = require("../models/RevenueCourtPhase8");
 const TaxCorporatePhase9 = require("../models/TaxCorporatePhase9");
 const Report = require("../models/Report");
+const JudgeDirectory = require("../models/JudgeDirectory");
 
 const parseBool = (v) => v === "true" || v === true;
 
@@ -455,6 +456,135 @@ exports.deleteReportAdmin = async (req, res) => {
   } catch (e) {
     console.error("deleteReportAdmin error:", e);
     res.status(500).json({ success: false, message: "Failed to delete report" });
+  }
+};
+
+// ============================
+// Judge Directory
+// ============================
+exports.listJudgeDirectoryAdmin = async (req, res) => {
+  try {
+    const { search, status, courtId } = req.query;
+    const filter = {};
+    if (status) filter.status = status;
+    if (courtId) filter.courtId = courtId;
+    if (search) {
+      filter.$or = [
+        { judgeName: { $regex: search, $options: "i" } },
+        { courtRoom: { $regex: search, $options: "i" } },
+        { courtName: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const { page, limit, skip } = buildPagination(req);
+    const sortBy = req.query.sortBy || "displayOrder";
+    const sortOrder = req.query.sortOrder || "asc";
+    const sort = { [sortBy]: sortOrder === "asc" ? 1 : -1 };
+
+    const [items, total] = await Promise.all([
+      JudgeDirectory.find(filter)
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        .select("courtId courtName courtRoom bench judgeName vcLink meetingId email displayOrder status updatedAt createdAt"),
+      JudgeDirectory.countDocuments(filter),
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        items,
+        pagination: { total, page, limit, totalPages: Math.ceil(total / limit) },
+      },
+    });
+  } catch (e) {
+    console.error("listJudgeDirectoryAdmin error:", e);
+    res.status(500).json({ success: false, message: "Failed to fetch judge directory" });
+  }
+};
+
+exports.getJudgeDirectoryAdmin = async (req, res) => {
+  try {
+    const item = await JudgeDirectory.findById(req.params.id);
+    if (!item) return res.status(404).json({ success: false, message: "Judge not found" });
+    res.json({ success: true, data: item });
+  } catch (e) {
+    console.error("getJudgeDirectoryAdmin error:", e);
+    res.status(500).json({ success: false, message: "Failed to fetch judge" });
+  }
+};
+
+exports.createJudgeDirectoryAdmin = async (req, res) => {
+  try {
+    const { courtId, courtName, courtRoom, bench, judgeName, vcLink, meetingId, email, displayOrder, tags, status } = req.body;
+
+    if (!courtId || !courtName || !courtRoom || !judgeName || !vcLink || !meetingId) {
+      return res.status(400).json({
+        success: false,
+        message: "courtId, courtName, courtRoom, judgeName, vcLink, and meetingId are required",
+      });
+    }
+
+    const item = new JudgeDirectory({
+      courtId,
+      courtName,
+      courtRoom,
+      bench: bench || "",
+      judgeName,
+      vcLink,
+      meetingId,
+      email: email || "",
+      displayOrder: displayOrder !== undefined ? displayOrder : 0,
+      tags: Array.isArray(tags) ? tags : [],
+      status: status || "published",
+      publishedAt: status === "published" || !status ? new Date() : undefined,
+    });
+
+    await item.save();
+    res.status(201).json({ success: true, data: item });
+  } catch (e) {
+    console.error("createJudgeDirectoryAdmin error:", e);
+    res.status(500).json({ success: false, message: "Failed to create judge entry" });
+  }
+};
+
+exports.updateJudgeDirectoryAdmin = async (req, res) => {
+  try {
+    const allowedFields = [
+      "courtId", "courtName", "courtRoom", "bench", "judgeName",
+      "vcLink", "meetingId", "email", "displayOrder", "tags", "status",
+    ];
+
+    const updates = {};
+    for (const f of allowedFields) {
+      if (req.body[f] !== undefined) updates[f] = req.body[f];
+    }
+
+    if (updates.status === "published") updates.publishedAt = new Date();
+
+    const item = await JudgeDirectory.findByIdAndUpdate(
+      req.params.id,
+      { $set: updates },
+      { new: true, runValidators: true },
+    );
+    if (!item) return res.status(404).json({ success: false, message: "Judge not found" });
+
+    res.json({ success: true, data: item });
+  } catch (e) {
+    console.error("updateJudgeDirectoryAdmin error:", e);
+    res.status(500).json({ success: false, message: "Failed to update judge entry" });
+  }
+};
+
+exports.deleteJudgeDirectoryAdmin = async (req, res) => {
+  try {
+    const item = await JudgeDirectory.findByIdAndDelete(req.params.id);
+    if (!item) return res.status(404).json({ success: false, message: "Judge not found" });
+    res.json({ success: true, message: "Judge deleted successfully" });
+  } catch (e) {
+    console.error("deleteJudgeDirectoryAdmin error:", e);
+    res.status(500).json({ success: false, message: "Failed to delete judge entry" });
   }
 };
 

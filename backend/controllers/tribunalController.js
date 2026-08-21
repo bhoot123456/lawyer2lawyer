@@ -48,6 +48,7 @@ const getTribunalById = async (req, res) => {
 const createTribunal = async (req, res) => {
   try {
     const {
+      // ── Existing fields ──────────────────────────────────────────────────
       name,
       abbreviation,
       category,
@@ -55,6 +56,64 @@ const createTribunal = async (req, res) => {
       description,
       location,
       website,
+
+      // ── Classification ────────────────────────────────────────────────────
+      subCategory,
+      tribunalType,
+      jurisdictionLevel,
+      state,
+      district,
+      benchType,
+
+      // ── Bench Info ────────────────────────────────────────────────────────
+      benchName,
+      benchCode,
+      principalBench,
+      circuitBench,
+
+      // ── Contact ───────────────────────────────────────────────────────────
+      address,
+      city,
+      pincode,
+      email,
+      phone,
+      fax,
+      googleMapsLink,
+
+      // ── Working Info ─────────────────────────────────────────────────────
+      workingDays,
+      workingHours,
+      filingMode,
+      eFilingAvailable,
+      videoConferenceAvailable,
+
+      // ── Resources ────────────────────────────────────────────────────────
+      causeListLink,
+      ordersLink,
+      judgmentsLink,
+      notificationsLink,
+      circularsLink,
+      formsLink,
+      rulesLink,
+      governingAct,
+      governingActLink,
+
+      // ── Administrative ───────────────────────────────────────────────────
+      displayOrder,
+      isFeatured,
+      isActive,
+      lastVerifiedAt,
+      verifiedBy,
+
+      // ── Verification Metadata (Phase 4) ─────────────────────────────────
+      sourceId,
+      sourceName,
+      sourceUrl,
+      sourceType,
+      verificationStatus,
+      dataSource,
+      lastSyncedAt,
+      dataVersion,
     } = req.body;
 
     if (!name) {
@@ -72,6 +131,57 @@ const createTribunal = async (req, res) => {
       description,
       location,
       website,
+
+      subCategory,
+      tribunalType,
+      jurisdictionLevel,
+      state,
+      district,
+      benchType,
+
+      benchName,
+      benchCode,
+      principalBench,
+      circuitBench,
+
+      address,
+      city,
+      pincode,
+      email,
+      phone,
+      fax,
+      googleMapsLink,
+
+      workingDays,
+      workingHours,
+      filingMode,
+      eFilingAvailable,
+      videoConferenceAvailable,
+
+      causeListLink,
+      ordersLink,
+      judgmentsLink,
+      notificationsLink,
+      circularsLink,
+      formsLink,
+      rulesLink,
+      governingAct,
+      governingActLink,
+
+      displayOrder,
+      isFeatured,
+      isActive,
+      lastVerifiedAt,
+      verifiedBy,
+
+      sourceId,
+      sourceName,
+      sourceUrl,
+      sourceType,
+      verificationStatus,
+      dataSource,
+      lastSyncedAt,
+      dataVersion,
     });
 
     res.status(201).json({
@@ -92,6 +202,7 @@ const updateTribunal = async (req, res) => {
   try {
     const { id } = req.params;
     const {
+      // ── Existing fields ──────────────────────────────────────────────────
       name,
       abbreviation,
       category,
@@ -99,11 +210,70 @@ const updateTribunal = async (req, res) => {
       description,
       location,
       website,
+
+      // ── Classification ────────────────────────────────────────────────────
+      subCategory,
+      tribunalType,
+      jurisdictionLevel,
+      state,
+      district,
+      benchType,
+
+      // ── Bench Info ────────────────────────────────────────────────────────
+      benchName,
+      benchCode,
+      principalBench,
+      circuitBench,
+
+      // ── Contact ───────────────────────────────────────────────────────────
+      address,
+      city,
+      pincode,
+      email,
+      phone,
+      fax,
+      googleMapsLink,
+
+      // ── Working Info ─────────────────────────────────────────────────────
+      workingDays,
+      workingHours,
+      filingMode,
+      eFilingAvailable,
+      videoConferenceAvailable,
+
+      // ── Resources ────────────────────────────────────────────────────────
+      causeListLink,
+      ordersLink,
+      judgmentsLink,
+      notificationsLink,
+      circularsLink,
+      formsLink,
+      rulesLink,
+      governingAct,
+      governingActLink,
+
+      // ── Administrative ───────────────────────────────────────────────────
+      displayOrder,
+      isFeatured,
+      isActive,
+      lastVerifiedAt,
+      verifiedBy,
+
+      // ── Verification Metadata (Phase 4) ─────────────────────────────────
+      sourceId,
+      sourceName,
+      sourceUrl,
+      sourceType,
+      verificationStatus,
+      dataSource,
+      lastSyncedAt,
+      dataVersion,
     } = req.body;
 
     const tribunal = await Tribunal.findByIdAndUpdate(
       id,
       {
+        // ── Existing fields ──────────────────────────────────────────────────
         ...(name !== undefined ? { name } : {}),
         ...(abbreviation !== undefined ? { abbreviation } : {}),
         ...(category !== undefined ? { category } : {}),
@@ -111,6 +281,64 @@ const updateTribunal = async (req, res) => {
         ...(description !== undefined ? { description } : {}),
         ...(location !== undefined ? { location } : {}),
         ...(website !== undefined ? { website } : {}),
+
+        // ── Classification ────────────────────────────────────────────────────
+        ...(subCategory !== undefined ? { subCategory } : {}),
+        ...(tribunalType !== undefined ? { tribunalType } : {}),
+        ...(jurisdictionLevel !== undefined ? { jurisdictionLevel } : {}),
+        ...(state !== undefined ? { state } : {}),
+        ...(district !== undefined ? { district } : {}),
+        ...(benchType !== undefined ? { benchType } : {}),
+
+        // ── Bench Info ────────────────────────────────────────────────────────
+        ...(benchName !== undefined ? { benchName } : {}),
+        ...(benchCode !== undefined ? { benchCode } : {}),
+        ...(principalBench !== undefined ? { principalBench } : {}),
+        ...(circuitBench !== undefined ? { circuitBench } : {}),
+
+        // ── Contact ───────────────────────────────────────────────────────────
+        ...(address !== undefined ? { address } : {}),
+        ...(city !== undefined ? { city } : {}),
+        ...(pincode !== undefined ? { pincode } : {}),
+        ...(email !== undefined ? { email } : {}),
+        ...(phone !== undefined ? { phone } : {}),
+        ...(fax !== undefined ? { fax } : {}),
+        ...(googleMapsLink !== undefined ? { googleMapsLink } : {}),
+
+        // ── Working Info ─────────────────────────────────────────────────────
+        ...(workingDays !== undefined ? { workingDays } : {}),
+        ...(workingHours !== undefined ? { workingHours } : {}),
+        ...(filingMode !== undefined ? { filingMode } : {}),
+        ...(eFilingAvailable !== undefined ? { eFilingAvailable } : {}),
+        ...(videoConferenceAvailable !== undefined ? { videoConferenceAvailable } : {}),
+
+        // ── Resources ────────────────────────────────────────────────────────
+        ...(causeListLink !== undefined ? { causeListLink } : {}),
+        ...(ordersLink !== undefined ? { ordersLink } : {}),
+        ...(judgmentsLink !== undefined ? { judgmentsLink } : {}),
+        ...(notificationsLink !== undefined ? { notificationsLink } : {}),
+        ...(circularsLink !== undefined ? { circularsLink } : {}),
+        ...(formsLink !== undefined ? { formsLink } : {}),
+        ...(rulesLink !== undefined ? { rulesLink } : {}),
+        ...(governingAct !== undefined ? { governingAct } : {}),
+        ...(governingActLink !== undefined ? { governingActLink } : {}),
+
+        // ── Administrative ───────────────────────────────────────────────────
+        ...(displayOrder !== undefined ? { displayOrder } : {}),
+        ...(isFeatured !== undefined ? { isFeatured } : {}),
+        ...(isActive !== undefined ? { isActive } : {}),
+        ...(lastVerifiedAt !== undefined ? { lastVerifiedAt } : {}),
+        ...(verifiedBy !== undefined ? { verifiedBy } : {}),
+
+        // ── Verification Metadata (Phase 4) ─────────────────────────────────
+        ...(sourceId !== undefined ? { sourceId } : {}),
+        ...(sourceName !== undefined ? { sourceName } : {}),
+        ...(sourceUrl !== undefined ? { sourceUrl } : {}),
+        ...(sourceType !== undefined ? { sourceType } : {}),
+        ...(verificationStatus !== undefined ? { verificationStatus } : {}),
+        ...(dataSource !== undefined ? { dataSource } : {}),
+        ...(lastSyncedAt !== undefined ? { lastSyncedAt } : {}),
+        ...(dataVersion !== undefined ? { dataVersion } : {}),
       },
       { new: true },
     );

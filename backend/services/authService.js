@@ -170,6 +170,7 @@ async function issueSessionAndTokens({ user, req, rotationParentSessionId = null
 }
 
 async function register({
+  req,
   name,
   fullName,
   email,
@@ -182,6 +183,14 @@ async function register({
   about,
   mobileNumber,
 }) {
+  // SECURITY (defense-in-depth): Never assign a privileged role (e.g., admin)
+  // through registration. The route layer also enforces this; this guard
+  // protects any other caller of this service.
+  const PUBLIC_SELF_SERVICE_ROLES = ["client", "lawyer"];
+  if (!role || !PUBLIC_SELF_SERVICE_ROLES.includes(String(role).toLowerCase())) {
+    role = "client";
+  }
+
   if (!email || !password || !role || !state || !city) {
     const err = new Error('Missing required registration fields');
     err.statusCode = 400;
@@ -213,11 +222,10 @@ async function register({
     about,
   });
 
-  // Create tokens (no email verification gating in this phase).
+  // Create tokens so newly registered users are authenticated immediately.
   // Later phase: only allow issue tokens after activation/email verified.
-  // We'll keep enterprise-ready by leaving hook points.
-
-  return { user };
+  const tokens = await issueSessionAndTokens({ user, req });
+  return { user, ...tokens };
 }
 
 async function login({ email, password, req }) {

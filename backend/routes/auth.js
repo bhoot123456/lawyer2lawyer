@@ -1,5 +1,6 @@
 const router = require("express").Router();
 
+const auth = require("../middleware/auth");
 const authService = require("../services/authService");
 
 router.post("/register", async (req, res) => {
@@ -20,6 +21,15 @@ router.post("/register", async (req, res) => {
       mobileNumber,
     } = payload;
 
+    // SECURITY: Public registration must never mint a privileged account.
+    // Only self-service roles may be self-assigned; anything else (including
+    // "admin") is forcibly downgraded to the default "client" role.
+    const ALLOWED_SELF_SERVICE_ROLES = ["client", "lawyer"];
+    let safeRole = (role || "client").toLowerCase().trim();
+    if (!ALLOWED_SELF_SERVICE_ROLES.includes(safeRole)) {
+      safeRole = "client";
+    }
+
     // Preserve existing required fields contract.
     if (!name && !fullName) {
       return res.status(400).json({ message: "Name is required" });
@@ -31,11 +41,12 @@ router.post("/register", async (req, res) => {
     }
 
     const { user, accessToken, refreshToken } = await authService.register({
+      req,
       name,
       fullName,
       email,
       password,
-      role,
+      role: safeRole,
       state,
       city,
       specialization,
@@ -152,6 +163,10 @@ router.post("/logout-all", async (req, res) => {
   }
 });
 
+// Get authenticated user profile
+router.get("/me", auth, async (req, res) => {
+  res.json({ success: true, user: req.user });
+});
 
 module.exports = router;
 

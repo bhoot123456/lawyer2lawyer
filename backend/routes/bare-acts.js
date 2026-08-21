@@ -1,21 +1,26 @@
 const router = require("express").Router();
-const bareActs = require("../data/bareActs");
 
-// GET all Bare Acts (title + pdfUrl)
-router.get("/", async (req, res) => {
-  try {
-    res.status(200).json({
-      success: true,
-      count: bareActs.length,
-      bareActs,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      message: "Cannot fetch bare acts",
-    });
-  }
-});
+const {
+  getBareActs,
+  getBareActById,
+  searchBareActs,
+  getBareActsByCategory,
+} = require("../controllers/bareActController");
+
+// GET /api/bare-acts
+// Backward compatibility: still returns `success`, `count`, and `bareActs`.
+// Adds optional pagination/sorting/search via query params.
+router.get("/", getBareActs);
+
+// GET /api/bare-acts/search?q=
+router.get("/search", searchBareActs);
+
+// GET /api/bare-acts/category/:category
+router.get("/category/:category", getBareActsByCategory);
+
+// GET /api/bare-acts/:id
+router.get("/:id", getBareActById);
 
 module.exports = router;
+
+

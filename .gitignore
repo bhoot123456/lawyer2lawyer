@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Diagnostic / temporary investigation files
+backend/_diag-*
+backend/test_reset.js
+
+# Local research/extraction artifacts
+backend/research-*.html
+backend/research-extraction-raw.json
+backend/district_page.html
+
+# Local logs / runtime artifacts
+*.log
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local research artifacts
+backend/research_*.html

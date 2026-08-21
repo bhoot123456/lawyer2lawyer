@@ -7,8 +7,6 @@ function getOpenRouterKey() {
 }
 
 function ensureOpenRouterKey() {
-  console.log("API Key loaded?", Boolean(process.env.OPENROUTER_API_KEY));
-
   const apiKey = getOpenRouterKey();
   if (!apiKey) {
     throw new Error("OPENROUTER_API_KEY is required for AI assistant functionality.");
@@ -16,6 +14,11 @@ function ensureOpenRouterKey() {
 }
 
 const OPENROUTER_BASE_URL = process.env.OPENROUTER_BASE_URL || "https://openrouter.ai/api/v1";
+
+// OpenRouter API request timeout (ms). Defaults to 15s; override via env.
+const OPENROUTER_TIMEOUT_MS = process.env.OPENROUTER_TIMEOUT_MS
+  ? Number(process.env.OPENROUTER_TIMEOUT_MS)
+  : 15000;
 
 // Default model can be overridden via OPENROUTER_MODEL env var.
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || "openai/gpt-5";
@@ -61,33 +64,16 @@ async function getOpenRouterClient() {
   return new OpenAI({
     apiKey: getOpenRouterKey(),
     baseURL: OPENROUTER_BASE_URL,
+    timeout: OPENROUTER_TIMEOUT_MS,
+    maxRetries: 2,
   });
 }
 
 function getOpenRouterExtraHeaders() {
   return {
-    "HTTP-Referer": "http://localhost:3000",
+    "HTTP-Referer": process.env.OPENROUTER_HTTP_REFERER || "https://lawyer2lawyer.example",
     "X-Title": "Lawyer2Lawyer",
   };
-}
-
-function serializeOpenRouterResponseForLogs(response) {
-  // Avoid gigantic nested objects while still keeping the critical parts.
-  try {
-    return {
-      id: response?.id,
-      model: response?.model,
-      status: response?.status,
-      headers: response?.headers,
-      data: response?.data,
-      choices: response?.choices,
-      usage: response?.usage,
-      // Keep raw for debugging
-      raw: response,
-    };
-  } catch {
-    return response;
-  }
 }
 
 function extractAssistantTextFromOpenRouter(response) {
@@ -142,8 +128,6 @@ async function requestOpenRouterResponse({ user, prompt, conversationMessages, m
 
   for (const model of modelsToTry) {
     try {
-      console.log("OpenRouter request model:", model);
-
       const response = await openai.chat.completions.create({
         model,
         messages: baseMessages,
@@ -151,9 +135,6 @@ async function requestOpenRouterResponse({ user, prompt, conversationMessages, m
         max_tokens: 900,
         extraHeaders: getOpenRouterExtraHeaders(),
       });
-
-      console.log("OpenRouter Response (complete):");
-      console.dir(serializeOpenRouterResponseForLogs(response), { depth: null });
 
       const output = extractAssistantTextFromOpenRouter(response);
       if (!output) {
@@ -235,24 +216,37 @@ function withUserFallback(user) {
 }
 
 async function createConversation({ userId, title, initialPrompt, metadata }) {
-  const user = await User.findById(userId).select("role state city");
-  if (!user) {
-    const err = new Error("User not found.");
-    err.statusCode = 404;
-    throw err;
-  }
+  // For public (unauthenticated) users, userId is undefined.
+  // Build a fallback user profile — no location/role data for anonymous users.
+  const userProfile = userId
+    ? await User.findById(userId).select("role state city").lean()
+    : null;
 
-  const conversation = await AIConversation.create({
-    userId,
+  const anonymousFallback = {
+    role: "unknown",
+    state: "",
+    city: "",
+  };
+
+  const userForPrompt = userProfile ? withUserFallback(userProfile) : anonymousFallback;
+
+  const conversationPayload = {
     title: title || (initialPrompt ? formatConversationTitle(initialPrompt) : "AI Conversation"),
     metadata: metadata || {},
     messages: [],
     lastUsedAt: new Date(),
-  });
+  };
+
+  // Only set userId if provided (null/undefined means anonymous conversation)
+  if (userId) {
+    conversationPayload.userId = userId;
+  }
+
+  const conversation = await AIConversation.create(conversationPayload);
 
   if (initialPrompt) {
     const assistantContent = await requestOpenRouterResponse({
-      user: withUserFallback(user),
+      user: userForPrompt,
       prompt: initialPrompt,
       conversationMessages: [],
       metadata,
@@ -268,18 +262,30 @@ async function createConversation({ userId, title, initialPrompt, metadata }) {
 }
 
 async function continueChat({ userId, conversationId, prompt, metadata }) {
-  const user = await User.findById(userId).select("role state city");
-  if (!user) {
-    const err = new Error("User not found.");
-    err.statusCode = 404;
-    throw err;
-  }
+  // For public (unauthenticated) users, userId is undefined.
+  // Use anonymous fallback profile when no user is available.
+  const userProfile = userId
+    ? await User.findById(userId).select("role state city").lean()
+    : null;
+
+  const anonymousFallback = {
+    role: "unknown",
+    state: "",
+    city: "",
+  };
+
+  const userForPrompt = userProfile ? withUserFallback(userProfile) : anonymousFallback;
 
   // If conversationId is invalid, missing, or belongs to another user, we must not fail the chat.
   // Instead, automatically create a new conversation and proceed.
   let conversation = null;
   if (conversationId) {
-    conversation = await AIConversation.findOne({ _id: conversationId, userId });
+    const query = { _id: conversationId };
+    // Only filter by userId if it exists (for authenticated users)
+    if (userId) {
+      query.userId = userId;
+    }
+    conversation = await AIConversation.findOne(query);
   }
 
   if (!conversation) {
@@ -300,7 +306,7 @@ async function continueChat({ userId, conversationId, prompt, metadata }) {
   }));
 
   const assistantContent = await requestOpenRouterResponse({
-    user: withUserFallback(user),
+    user: userForPrompt,
     prompt,
     conversationMessages: existingMessages,
     metadata,
@@ -323,22 +329,28 @@ async function sendChatMessage({ userId, prompt, conversationId, metadata }) {
     return await continueChat({ userId, conversationId, prompt, metadata });
   }
 
-  const user = await User.findById(userId).select("role state city");
-  if (!user) {
-    const err = new Error("User not found.");
-    err.statusCode = 404;
-    throw err;
-  }
+  // For public (unauthenticated) users, userId is undefined.
+  // Use anonymous fallback profile when no user is available.
+  const userProfile = userId
+    ? await User.findById(userId).select("role state city").lean()
+    : null;
+
+  const anonymousFallback = {
+    role: "unknown",
+    state: "",
+    city: "",
+  };
+
+  const userForPrompt = userProfile ? withUserFallback(userProfile) : anonymousFallback;
 
   const assistantContent = await requestOpenRouterResponse({
-    user: withUserFallback(user),
+    user: userForPrompt,
     prompt,
     conversationMessages: [],
     metadata,
   });
 
-  const conversation = await AIConversation.create({
-    userId,
+  const conversationPayload = {
     title: formatConversationTitle(prompt),
     metadata: metadata || {},
     messages: [
@@ -346,7 +358,14 @@ async function sendChatMessage({ userId, prompt, conversationId, metadata }) {
       { role: "assistant", content: assistantContent },
     ],
     lastUsedAt: new Date(),
-  });
+  };
+
+  // Only set userId if provided (null/undefined means anonymous conversation)
+  if (userId) {
+    conversationPayload.userId = userId;
+  }
+
+  const conversation = await AIConversation.create(conversationPayload);
 
   return conversation;
 }
@@ -380,7 +399,13 @@ async function listConversations({ userId, page = 1, limit = 20, pinned, search 
 }
 
 async function getConversation({ userId, conversationId }) {
-  return await AIConversation.findOne({ _id: conversationId, userId });
+  const query = { _id: conversationId };
+  // Only filter by userId if it exists (for authenticated users)
+  // Anonymous/public conversations have no userId field
+  if (userId) {
+    query.userId = userId;
+  }
+  return await AIConversation.findOne(query);
 }
 
 async function renameConversation({ userId, conversationId, title }) {
@@ -403,6 +428,62 @@ async function deleteConversation({ userId, conversationId }) {
     const err = new Error("Conversation not found.");
     err.statusCode = 404;
     throw err;
+  }
+}
+
+/**
+ * Reset (delete + recreate) a conversation atomically.
+ * For authenticated users (userId present): validates ownership.
+ * For anonymous users (userId absent): operates by conversationId only.
+ * Never leaves the system in a partially reset state.
+ * If conversationId is missing, simply creates a brand new empty conversation.
+ */
+async function resetConversation({ userId, conversationId, metadata }) {
+  // Phase 1: If a conversationId is provided, attempt deletion
+  if (conversationId) {
+    try {
+      const query = { _id: conversationId };
+      // Only filter by userId if the user is authenticated
+      if (userId) {
+        query.userId = userId;
+      }
+      await AIConversation.deleteOne(query);
+    } catch (err) {
+      // If deletion fails, we must NOT proceed — throw to avoid partial reset
+      const error = new Error(
+        `Failed to delete existing conversation: ${err.message}`,
+      );
+      error.statusCode = 500;
+      error.originalError = err;
+      throw error;
+    }
+  }
+
+  // Phase 2: Create a brand new empty conversation
+  try {
+    const conversationPayload = {
+      title: "AI Conversation",
+      metadata: metadata || {},
+      messages: [],
+      lastUsedAt: new Date(),
+    };
+
+    if (userId) {
+      conversationPayload.userId = userId;
+    }
+
+    const newConversation = await AIConversation.create(conversationPayload);
+    return newConversation;
+  } catch (err) {
+    // If creation fails after deletion, we've already deleted the old one.
+    // This is a safe state — the old conversation is gone, and a new one will
+    // be created on the next user message.
+    const error = new Error(
+      `Failed to create new conversation after reset: ${err.message}`,
+    );
+    error.statusCode = 500;
+    error.originalError = err;
+    throw error;
   }
 }
 
@@ -492,9 +573,9 @@ module.exports = {
   getConversation,
   renameConversation,
   deleteConversation,
+  resetConversation,
   setConversationPinned,
   exportConversation,
   searchConversations,
   getContextMetadata,
 };
-

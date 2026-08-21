@@ -3,6 +3,8 @@ const Case = require("../models/Case");
 const Booking = require("../models/Booking");
 const Article = require("../models/Article");
 const Tribunal = require("../models/Tribunal");
+const Notification = require("../models/Notification");
+const PoliceStation = require("../models/PoliceStation");
 
 // ============================
 // DASHBOARD
@@ -10,6 +12,11 @@ const Tribunal = require("../models/Tribunal");
 
 exports.getDashboardStats = async (req, res) => {
   try {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(todayStart);
+    todayEnd.setDate(todayEnd.getDate() + 1);
+
     const [
       totalUsers,
       totalLawyers,
@@ -23,6 +30,13 @@ exports.getDashboardStats = async (req, res) => {
       recentCases,
       casesByStatus,
       usersByState,
+      activeLawyers,
+      suspendedUsers,
+      publishedArticles,
+        draftArticles,
+        todaysHearings,
+        unreadNotifications,
+        totalPoliceStations,
     ] = await Promise.all([
       User.countDocuments({}),
       User.countDocuments({ role: "lawyer" }),
@@ -53,6 +67,13 @@ exports.getDashboardStats = async (req, res) => {
         { $sort: { count: -1 } },
         { $limit: 10 },
       ]),
+      User.countDocuments({ role: "lawyer", isActive: true, isSuspended: false }),
+      User.countDocuments({ isSuspended: true }),
+      Article.countDocuments({ status: "published" }),
+      Article.countDocuments({ status: "draft" }),
+      Case.countDocuments({ nextHearingDate: { $gte: todayStart, $lt: todayEnd } }),
+      Notification.countDocuments({ status: "unread" }),
+      PoliceStation.countDocuments({ status: "published" }),
     ]);
 
     res.json({
@@ -70,14 +91,13 @@ exports.getDashboardStats = async (req, res) => {
         recentCases,
         casesByStatus,
         usersByState,
-        activeLawyers: await User.countDocuments({
-          role: "lawyer",
-          isActive: true,
-          isSuspended: false,
-        }),
-        suspendedUsers: await User.countDocuments({ isSuspended: true }),
-        publishedArticles: await Article.countDocuments({ status: "published" }),
-        draftArticles: await Article.countDocuments({ status: "draft" }),
+        activeLawyers,
+        suspendedUsers,
+        publishedArticles,
+        draftArticles,
+        todaysHearings,
+        unreadNotifications,
+        totalPoliceStations,
       },
     });
   } catch (error) {

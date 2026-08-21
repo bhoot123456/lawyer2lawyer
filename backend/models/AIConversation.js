@@ -19,8 +19,11 @@ const aiConversationSchema = new mongoose.Schema(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      // Not required — public users can use AI without authentication.
+      // Authenticated users will have userId set for conversation ownership.
+      required: false,
       index: true,
+      default: undefined,
     },
     title: { type: String, required: true, trim: true, default: "AI Conversation" },
     pinned: { type: Boolean, default: false },

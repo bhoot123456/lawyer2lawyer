@@ -7,6 +7,7 @@ module.exports = async function (req, res, next) {
     return res.status(401).json({ message: "Authentication required" });
   }
 
+
   const token = authHeader.split(" ")[1];
   try {
     if (!process.env.JWT_SECRET) {
@@ -21,6 +22,7 @@ module.exports = async function (req, res, next) {
       return res.status(401).json({ message: "Invalid token" });
     }
     req.user = user;
+
     next();
   } catch (error) {
     return res.status(401).json({ message: "Invalid or expired token" });
