@@ -159,6 +159,36 @@ app.get("/", (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────
+// Android App Links — Digital Asset Links verification
+// GET /.well-known/assetlinks.json
+// Required for Android App Link autoVerify to succeed.
+// IMPORTANT: Replace REPLACE_WITH_EAS_SHA256_FINGERPRINT below
+// with the actual SHA256 certificate fingerprint from your EAS
+// Android production signing credential BEFORE deploying.
+// To obtain it: run `eas credentials -p android` (interactive),
+// then copy the SHA256 Fingerprint shown for the production keystore.
+// The fingerprint format is: AB:CD:EF:... (colon-separated hex, uppercase)
+// ─────────────────────────────────────────────────────────
+app.get("/.well-known/assetlinks.json", (_req, res) => {
+  const sha256Fingerprint =
+    process.env.ANDROID_SHA256_FINGERPRINT ||
+    "REPLACE_WITH_EAS_SHA256_FINGERPRINT";
+
+  res.setHeader("Content-Type", "application/json");
+  res.setHeader("Cache-Control", "public, max-age=3600");
+  res.json([
+    {
+      relation: ["delegate_permission/common.handle_all_urls"],
+      target: {
+        namespace: "android_app",
+        package_name: "com.lawyer2lawyer.mobile",
+        sha256_cert_fingerprints: [sha256Fingerprint],
+      },
+    },
+  ]);
+});
+
+// ─────────────────────────────────────────────────────────
 // Health checks (Step 13)
 // /health  — basic liveness (always returns 200 if process is alive)
 // /health/ready — readiness (200 only if database is connected)
@@ -298,16 +328,23 @@ mongoose
 // On SIGTERM/SIGINT: stop accepting new requests, finish active
 // requests, close MongoDB, then exit cleanly.
 // ─────────────────────────────────────────────────────────
-const gracefulShutdown = (signal) => {
+const gracefulShutdown = async (signal) => {
   logger.info("Shutting down gracefully", { signal });
 
+  const closeDb = async () => {
+    try {
+      await mongoose.connection.close();
+      logger.info("MongoDB connection closed");
+    } catch (err) {
+      logger.error("Error closing MongoDB connection", { error: err.message });
+    }
+  };
+
   if (server) {
-    server.close(() => {
+    server.close(async () => {
       logger.info("HTTP server closed");
-      mongoose.connection.close(false, () => {
-        logger.info("MongoDB connection closed");
-        process.exit(0);
-      });
+      await closeDb();
+      process.exit(0);
     });
 
     // Force-exit after 30 seconds if connections don't close
@@ -318,7 +355,8 @@ const gracefulShutdown = (signal) => {
       process.exit(1);
     }, 30000);
   } else {
-    mongoose.connection.close(false, () => process.exit(0));
+    await closeDb();
+    process.exit(0);
   }
 };
 
