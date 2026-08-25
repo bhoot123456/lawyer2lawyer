@@ -6,7 +6,7 @@ router.get("/", async (req, res) => {
   try {
     res.status(200).json({
       success: true,
-      ...taxCorporatePhase9,
+      ...taxCorporate,
     });
   } catch (error) {
     console.error(error);
