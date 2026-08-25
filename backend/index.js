@@ -78,9 +78,21 @@ app.use((req, res, next) => {
 app.set("trust proxy", isProduction ? 1 : 0);
 
 // ─────────────────────────────────────────────────────────
-// CORS (Step 3 — already hardened via corsOptions.js)
+// CORS (Step 3 — hardened via corsOptions.js)
+//
+// Production note: CORS_ORIGIN controls which NON-loopback browser origins
+// may call this API cross-origin. Loopback dev origins (localhost /
+// 127.0.0.1 / [::1]) are always allowed so local frontends keep working.
+// Warn loudly at boot if production is missing the variable, otherwise a
+// deployed web frontend silently fails with browser CORS errors.
 // ─────────────────────────────────────────────────────────
 app.use(cors(require("./config/corsOptions")));
+
+if (isProduction && !process.env.CORS_ORIGIN) {
+  logger.warn(
+    "CORS_ORIGIN is not configured in production. Browser cross-origin access is limited to loopback dev origins (localhost / 127.0.0.1 / [::1]). Set CORS_ORIGIN on Railway to a comma-separated list of trusted frontend origins (e.g. http://localhost:8081,https://your-frontend.example) if a deployed web frontend needs access.",
+  );
+}
 
 // ─────────────────────────────────────────────────────────
 // Request parsing (Step 1) — size limits prevent DoS
@@ -220,13 +232,32 @@ app.use((req, res) => {
 // Centralized error handler (Step 9)
 // In production: never exposes stack traces, file paths, or
 // internal details. In development: includes stack for debugging.
+//
+// Error classification (root-cause fix for "invalid ObjectId → 500"):
+// - Mongoose CastError       -> 400 (malformed identifier in URL/body)
+// - Mongoose ValidationError -> 400 (malformed payload)
+// - Mongo duplicate key      -> 409 (conflict)
+// Controllers that classify their own errors take precedence; this is
+// defense-in-depth for anything that reaches the global handler.
 // ─────────────────────────────────────────────────────────
+function classifyErrorStatus(err) {
+  if (err?.statusCode || err?.status) {
+    return err.statusCode || err.status;
+  }
+  if (err?.name === "CastError") return 400;
+  if (err?.name === "ValidationError") return 400;
+  if (err?.code === 11000) return 409;
+  return 500;
+}
+
 app.use((err, req, res, _next) => {
+  const classified = classifyErrorStatus(err);
+
   logger.error("Unhandled route error", {
     id: req.id,
     path: req.path,
     method: req.method,
-    status: res.statusCode,
+    status: classified,
     error: err.message,
   });
 
@@ -234,7 +265,7 @@ app.use((err, req, res, _next) => {
     return;
   }
 
-  const statusCode = err.statusCode || err.status || 500;
+  const statusCode = classified;
 
   if (isProduction) {
     // Production: only expose safe messages
@@ -282,8 +313,36 @@ const mongoOptions = {
 
 let server;
 
-mongoose
-  .connect(MONGO_URI, mongoOptions)
+const MONGO_CONNECT_MAX_ATTEMPTS = Number(process.env.MONGO_CONNECT_MAX_ATTEMPTS) || 5;
+const MONGO_CONNECT_RETRY_DELAY_MS = Number(process.env.MONGO_CONNECT_RETRY_DELAY_MS) || 3000;
+
+/**
+ * Connect to MongoDB with bounded retries so a transient network failure
+ * at boot does not crash the deployment before the process manager can
+ * stabilize. Fails permanently after MONGO_CONNECT_MAX_ATTEMPTS attempts.
+ */
+async function connectMongoWithRetry(attempt = 1) {
+  try {
+    await mongoose.connect(MONGO_URI, mongoOptions);
+  } catch (err) {
+    logger.error("MongoDB connection attempt failed", {
+      attempt,
+      maxAttempts: MONGO_CONNECT_MAX_ATTEMPTS,
+      error: err.message,
+    });
+
+    if (attempt >= MONGO_CONNECT_MAX_ATTEMPTS) {
+      throw err;
+    }
+
+    await new Promise((resolve) =>
+      setTimeout(resolve, MONGO_CONNECT_RETRY_DELAY_MS),
+    );
+    return connectMongoWithRetry(attempt + 1);
+  }
+}
+
+connectMongoWithRetry()
   .then(() => {
     logger.info("MongoDB connected", {
       db: mongoose.connection.name,
@@ -319,7 +378,9 @@ mongoose
     server.keepAliveTimeout = 65000;
   })
   .catch((err) => {
-    logger.error("MongoDB connection error", { error: err.message });
+    logger.error("MongoDB connection failed after all retries", {
+      error: err.message,
+    });
     process.exit(1);
   });
 
