@@ -5,6 +5,25 @@ const Article = require("../models/Article");
 const Tribunal = require("../models/Tribunal");
 const Notification = require("../models/Notification");
 const PoliceStation = require("../models/PoliceStation");
+const { isValidObjectId, sendClassifiedError } = require("../utils/httpError");
+
+/**
+ * Shared catch-block handler for this controller.
+ * Classifies Mongoose CastError -> 400, duplicate key -> 409,
+ * honours err.statusCode, and never leaks internals in production.
+ */
+function handleError(res, error, fallbackMessage) {
+  return sendClassifiedError(res, error, { fallbackMessage });
+}
+
+/** Guard for :id params — returns true (and sends 400) when invalid. */
+function rejectInvalidId(res, id, label = "identifier") {
+  if (!isValidObjectId(id)) {
+    res.status(400).json({ success: false, message: `Invalid ${label}` });
+    return true;
+  }
+  return false;
+}
 
 // ============================
 // DASHBOARD
@@ -673,14 +692,16 @@ exports.createArticle = async (req, res) => {
 
     // Check for duplicate slug
     const existingArticle = await Article.findOne({ slug });
+    // NOTE: `slug` is const — reassigning it threw "Assignment to constant
+    // variable" (TypeError → 500) whenever a duplicate title was submitted.
+    let finalSlug = slug;
     if (existingArticle) {
-      // Append a timestamp to make unique
-      slug += `-${Date.now()}`;
+      finalSlug = `${slug}-${Date.now()}`;
     }
 
     const article = new Article({
       title,
-      slug,
+      slug: finalSlug,
       content,
       excerpt: excerpt || content.substring(0, 200),
       category,

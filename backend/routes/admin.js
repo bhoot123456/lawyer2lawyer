@@ -10,6 +10,35 @@ const Case = require("../models/Case");
 // All admin routes require authentication + admin role
 router.use(auth, adminAuth);
 
+// ============================
+// BASELINE AUDIT TRAIL FOR LEGACY ADMIN MUTATIONS
+// Records who/what/when for every non-GET request routed through this
+// file. New CMS modules record full before/after diffs in the CRUD engine.
+// ============================
+const { recordAudit } = require("../admin/audit/auditService");
+const { deepSanitize } = require("../admin/audit/auditService");
+const LEGACY_ACTION_BY_METHOD = { post: "CREATE", put: "UPDATE", patch: "UPDATE", delete: "DELETE" };
+router.use(async (req, res, next) => {
+  const action = LEGACY_ACTION_BY_METHOD[req.method.toLowerCase()];
+  if (!action) return next();
+  // Skip the new admin-user management routes (they audit themselves with
+  // richer before/after detail).
+  if (req.path.startsWith("/admin-users")) return next();
+  res.on("finish", () => {
+    if (res.statusCode >= 400) return; // audit successful mutations only
+    recordAudit({
+      admin: req.user,
+      action,
+      module: "legacy_admin_routes",
+      recordId: req.params && req.params.id ? req.params.id : "",
+      recordLabel: req.originalUrl,
+      after: deepSanitize(req.body || {}),
+      req,
+    });
+  });
+  next();
+});
+
 
 // ============================
 // DASHBOARD
@@ -340,8 +369,12 @@ router.delete(
 
 // ============================
 // GET ALL USERS FOR ADMIN (reusable)
+// SECURITY: was previously unguarded; now requires explicit users.view.
 // ============================
-router.get("/users", async (req, res) => {
+router.get("/users", (req, res, next) => {
+  if (require("../middleware/adminAuth").isSuperAdmin(req.user)) return next();
+  return checkPermission("users.view")(req, res, next);
+}, async (req, res) => {
   try {
     const { role, page = 1, limit = 50, search, sortBy = "createdAt", sortOrder = "desc" } = req.query;
     const filter = {};
@@ -377,6 +410,44 @@ router.get("/users", async (req, res) => {
     console.error("Get users error:", error);
     res.status(500).json({ success: false, message: "Failed to fetch users" });
   }
+});
+
+// ============================
+// ADMIN USER MANAGEMENT (super-admin governed)
+// ============================
+const adminUsers = require("../admin/controllers/adminUsersController");
+const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+
+router.get(
+  "/admin-users/permission-catalog",
+  checkPermission("admin_users.view"),
+  adminUsers.permissionCatalog,
+);
+router.get(
+  "/admin-users",
+  checkPermission("admin_users.view"),
+  wrap(adminUsers.listAdmins),
+);
+router.post(
+  "/admin-users",
+  checkPermission("admin_users.create"),
+  wrap(adminUsers.createAdmin),
+);
+router.get(
+  "/admin-users/:id",
+  checkPermission("admin_users.view"),
+  wrap(adminUsers.getAdmin),
+);
+router.put("/admin-users/:id", wrap(adminUsers.updateAdmin));
+
+// Consistent JSON error responses for admin-user management.
+// eslint-disable-next-line no-unused-vars
+router.use((err, req, res, next) => {
+  if (err && err.status) {
+    return res.status(err.status).json({ success: false, message: err.message });
+  }
+  console.error("Admin users error:", err);
+  return res.status(500).json({ success: false, message: "Internal server error" });
 });
 
 module.exports = router;

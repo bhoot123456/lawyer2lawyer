@@ -29,7 +29,6 @@ router.post("/chat", rateLimit, optionalAuth, aiController.sendChatMessage);
 
 // Conversation creation and retrieval — public users can start and restore conversations
 router.post("/conversations", rateLimit, optionalAuth, aiController.createConversation);
-router.get("/conversations/:id", rateLimit, optionalAuth, aiController.getConversation);
 
 // ──────────────────────────────────────────────
 // PROTECTED AI endpoints (auth required)
@@ -37,13 +36,17 @@ router.get("/conversations/:id", rateLimit, optionalAuth, aiController.getConver
 // ──────────────────────────────────────────────
 
 // Conversation listing and management (auth-only)
+// NOTE: "/conversations/search" MUST be registered BEFORE "/conversations/:id"
+// otherwise GET /api/ai/conversations/search is captured by the :id route
+// (id="search") and returns a wrong 404/CastError instead of search results.
 router.get("/conversations", auth, aiController.listConversations);
+router.get("/conversations/search", auth, aiController.searchConversations);
+router.get("/conversations/:id", rateLimit, optionalAuth, aiController.getConversation);
 router.patch("/conversations/:id", auth, aiController.renameConversation);
 router.delete("/conversations/:id", auth, aiController.deleteConversation);
 router.post("/conversations/:id/pin", auth, aiController.pinConversation);
 router.post("/conversations/:id/unpin", auth, aiController.unpinConversation);
 router.post("/conversations/:id/export", auth, aiController.exportConversation);
-router.get("/conversations/search", auth, aiController.searchConversations);
 
 // Context metadata for the AI copilot (auth-only — requires user context)
 router.get("/context", auth, aiController.getContextMetadata);

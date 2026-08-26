@@ -1,5 +1,11 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const { hasExplicitPermission } = require("../admin/permissions/registry");
+
+/** True when the (already authenticated) user is the highest-level admin. */
+function isSuperAdmin(user) {
+  return !!user && user.role === "admin" && user.adminType === "super_admin";
+}
 
 /**
  * Middleware to verify that the request comes from an authenticated admin user.
@@ -34,7 +40,16 @@ module.exports = async function (req, res, next) {
 };
 
 /**
- * Check admin permission for specific module
+ * Check admin permission for a specific action.
+ *
+ * SECURITY MODEL (explicit grants only):
+ *   - authorization is evaluated from the SERVER-SIDE authenticated user;
+ *     client-supplied role/permission fields are never trusted.
+ *   - super_admin bypasses all checks.
+ *   - a permission is granted ONLY when it is explicitly `true` on the user
+ *     document (granular grant, or an explicit legacy `manage*` grant mapped
+ *     through the central registry).
+ *   - undefined / missing permissions are ALWAYS denied.
  */
 module.exports.checkPermission = function (permission) {
   return (req, res, next) => {
@@ -45,14 +60,19 @@ module.exports.checkPermission = function (permission) {
       });
     }
 
-    const permissions = req.user.permissions || {};
-    if (permissions[permission] === false) {
+    if (isSuperAdmin(req.user)) return next();
+
+    if (!hasExplicitPermission(req.user.permissions, permission)) {
       return res.status(403).json({
         success: false,
-        message: `Access denied. You don't have permission to manage this module.`,
+        message: "Access denied. You don't have permission to perform this action.",
+        code: "PERMISSION_DENIED",
+        requiredPermission: permission,
       });
     }
 
     next();
   };
 };
+
+module.exports.isSuperAdmin = isSuperAdmin;

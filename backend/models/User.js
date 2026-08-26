@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+﻿const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
@@ -50,20 +50,28 @@ const userSchema = new mongoose.Schema(
     consultationFee: { type: Number, default: 0 },
     availableForConsultation: { type: Boolean, default: false },
 
-    // Admin specific
-    permissions: {
-      manageLawyers: { type: Boolean, default: true },
-      manageClients: { type: Boolean, default: true },
-      manageCases: { type: Boolean, default: true },
-      manageArticles: { type: Boolean, default: true },
-      manageBareActs: { type: Boolean, default: true },
-      manageTribunals: { type: Boolean, default: true },
-      manageRevenue: { type: Boolean, default: true },
-      manageTax: { type: Boolean, default: true },
-      manageReports: { type: Boolean, default: true },
-      manageJudgeDirectory: { type: Boolean, default: true },
-      managePoliceStations: { type: Boolean, default: true },
+    // ── Admin hierarchy ──────────────────────────────────────────────
+    // role stays "admin" for backward compatibility with existing JWTs and
+    // login flows; adminType defines the administrative hierarchy.
+    adminType: {
+      type: String,
+      enum: [
+        "super_admin",
+        "content_admin",
+        "legal_data_admin",
+        "police_admin",
+        "court_admin",
+        "editor",
+        "viewer",
+      ],
     },
+    lastLoginAt: { type: Date },
+
+    // Admin specific
+    // Flat permission map: legacy keys ("manageLawyers") AND granular keys
+    // ("tribunals.edit"). Authorization requires an EXPLICIT true value;
+    // missing/undefined permissions are always denied (secure by default).
+    permissions: { type: mongoose.Schema.Types.Mixed, default: {} },
   },
   { timestamps: true },
 );

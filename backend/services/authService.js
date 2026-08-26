@@ -225,7 +225,10 @@ async function register({
   // Create tokens so newly registered users are authenticated immediately.
   // Later phase: only allow issue tokens after activation/email verified.
   const tokens = await issueSessionAndTokens({ user, req });
-  return { user, ...tokens };
+
+  // SECURITY: never return the raw Mongoose document — it contains the
+  // bcrypt password hash. Return the sanitized client-safe shape instead.
+  return { user: safeUserForClient(user), ...tokens };
 }
 
 async function login({ email, password, req }) {
