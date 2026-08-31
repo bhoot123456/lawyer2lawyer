@@ -1,5 +1,9 @@
 const JudgeDirectory = require("../models/JudgeDirectory");
 
+// Escape user-controlled search input before it reaches $regex so that
+// regex metacharacters cannot alter query semantics or enable ReDoS.
+const escapeRegex = (str) => String(str || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 /**
  * Public endpoint: Get all published judges for a given courtId.
  * Supports optional search query param.
@@ -22,11 +26,12 @@ exports.getJudgesByCourt = async (req, res) => {
     };
 
     if (search && search.trim()) {
+      const q = escapeRegex(search.trim());
       filter.$or = [
-        { judgeName: { $regex: search.trim(), $options: "i" } },
-        { courtRoom: { $regex: search.trim(), $options: "i" } },
-        { courtName: { $regex: search.trim(), $options: "i" } },
-        { email: { $regex: search.trim(), $options: "i" } },
+        { judgeName: { $regex: q, $options: "i" } },
+        { courtRoom: { $regex: q, $options: "i" } },
+        { courtName: { $regex: q, $options: "i" } },
+        { email: { $regex: q, $options: "i" } },
       ];
     }
 

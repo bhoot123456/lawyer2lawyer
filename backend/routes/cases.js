@@ -1,19 +1,22 @@
 const router = require("express").Router();
 const auth = require("../middleware/auth");
+const optionalAuth = require("../middleware/optionalAuth");
+const deviceAuth = require("../middleware/deviceAuth");
+const aiRateLimit = require("../middleware/rateLimit");
 const caseController = require("../controllers/caseController");
 
-// Case Management APIs (JWT protected)
+// Case Management APIs
 // Base path: /api/cases
 
-router.post("/", auth, caseController.createCase);
+router.post("/", [optionalAuth, deviceAuth, aiRateLimit], caseController.createCase);
 
-router.get("/", auth, caseController.getAllCases);
+router.get("/", [optionalAuth, deviceAuth], caseController.getAllCases);
 
-router.get("/:id", auth, caseController.getSingleCase);
+router.get("/:id", [optionalAuth, deviceAuth], caseController.getSingleCase);
 
-router.put("/:id", auth, caseController.updateCase);
+router.put("/:id", [optionalAuth, deviceAuth], caseController.updateCase);
 
-router.delete("/:id", auth, caseController.deleteCase);
+router.delete("/:id", [optionalAuth, deviceAuth], caseController.deleteCase);
 
 // Timeline
 router.post("/:id/timeline", auth, caseController.addTimelineEntry);

@@ -81,15 +81,15 @@ bareActSchema.index({ title: "text", actName: "text", shortName: "text", categor
 bareActSchema.index({ jurisdiction: 1 });
 bareActSchema.index({ pdfVerificationStatus: 1 });
 
-bareActSchema.pre("validate", function (next) {
+bareActSchema.pre("validate", async function () {
   // Auto-fill slug if missing (keeps admin CRUD safe)
+  // NOTE: mongoose 9 middleware is promise-based — no `next` callback.
   if (!this.slug) {
     const actName = this.actName || "";
     const year = this.year || "";
     const base = `${actName}::${year}`;
     this.slug = toSlug(base);
   }
-  next();
 });
 
 module.exports = mongoose.model("BareAct", bareActSchema);

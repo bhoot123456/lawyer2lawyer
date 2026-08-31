@@ -137,7 +137,7 @@ const corsOptions = {
   origin: corsOrigin,
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Device-Id"],
 };
 
 // Expose helpers for tests / diagnostics (harmless extra keys for the cors lib).

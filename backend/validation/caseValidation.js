@@ -51,13 +51,17 @@ function validateCaseCreatePayload(payload) {
   const errors = [];
 
   const caseNumber = normalizeString(payload?.caseNumber);
-  if (!isNonEmptyString(caseNumber)) errors.push("caseNumber is required");
+  // caseNumber may be omitted: caseService auto-generates one (ANON-<ts>-<rand>)
+  // when it is missing or blank, so treat it as optional at the transport layer.
+  if (caseNumber !== undefined && !isNonEmptyString(caseNumber)) {
+    errors.push("caseNumber must be a non-empty string");
+  }
 
   if (payload?.caseTitle !== undefined && typeof payload.caseTitle !== "string") {
     errors.push("caseTitle must be a string");
   }
 
-  const requiredOwnership = ["assignedTo"];
+  const requiredOwnership = []; // handled by caseService depending on user presence
   for (const k of requiredOwnership) {
     if (!payload?.[k]) errors.push(`${k} is required`);
   }

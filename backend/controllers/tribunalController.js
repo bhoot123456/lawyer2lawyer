@@ -1,9 +1,27 @@
 const Tribunal = require("../models/Tribunal");
 
 // GET all tribunals
+// Supports an optional `limit` query param (1..500). When omitted the
+// response is unchanged (full collection) for backward compatibility with
+// existing clients that fetch the whole list and filter client-side.
+const MAX_TRIBUNAL_LIMIT = 500;
+
 const getTribunals = async (req, res) => {
   try {
-    const tribunals = await Tribunal.find({});
+    const query = {};
+    const rawLimit = req.query?.limit;
+    if (rawLimit !== undefined && String(rawLimit).trim() !== "") {
+      const parsed = Number.parseInt(rawLimit, 10);
+      if (Number.isNaN(parsed) || parsed < 1) {
+        return res.status(400).json({
+          success: false,
+          message: "limit must be a positive integer",
+        });
+      }
+      query.limit = Math.min(parsed, MAX_TRIBUNAL_LIMIT);
+    }
+
+    const tribunals = await Tribunal.find({}).limit(query.limit || 0);
     res.status(200).json({
       success: true,
       count: tribunals.length,

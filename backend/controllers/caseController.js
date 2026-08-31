@@ -10,7 +10,7 @@ function sendError(res, statusCode, message, details) {
 
 exports.createCase = async (req, res) => {
   try {
-    const result = await caseService.createCase({ payload: req.body, user: req.user });
+    const result = await caseService.createCase({ payload: req.body, user: req.user, deviceId: req.deviceId });
     if (!result.ok) {
       return sendError(res, 400, result.message || "Unable to create case", result.details);
     }
@@ -28,7 +28,7 @@ exports.createCase = async (req, res) => {
 
 exports.updateCase = async (req, res) => {
   try {
-    const result = await caseService.updateCase({ id: req.params.id, payload: req.body, user: req.user });
+    const result = await caseService.updateCase({ id: req.params.id, payload: req.body, user: req.user, deviceId: req.deviceId });
     if (!result.ok) {
       return sendError(res, result.code || 400, result.message || "Unable to update case", result.details);
     }
@@ -42,7 +42,7 @@ exports.updateCase = async (req, res) => {
 
 exports.deleteCase = async (req, res) => {
   try {
-    const result = await caseService.deleteCase({ id: req.params.id, user: req.user });
+    const result = await caseService.deleteCase({ id: req.params.id, user: req.user, deviceId: req.deviceId });
     if (!result.ok) {
       return sendError(res, result.code || 400, result.message || "Unable to delete case");
     }
@@ -56,7 +56,7 @@ exports.deleteCase = async (req, res) => {
 
 exports.getSingleCase = async (req, res) => {
   try {
-    const result = await caseService.getCaseById({ id: req.params.id, user: req.user });
+    const result = await caseService.getCaseById({ id: req.params.id, user: req.user, deviceId: req.deviceId });
     if (!result.ok) {
       return sendError(res, result.code || 400, result.message || "Unable to fetch case");
     }
@@ -70,7 +70,7 @@ exports.getSingleCase = async (req, res) => {
 
 exports.getAllCases = async (req, res) => {
   try {
-    const result = await caseService.getAllCases({ query: req.query, user: req.user });
+    const result = await caseService.getAllCases({ query: req.query, user: req.user, deviceId: req.deviceId });
     if (!result.ok) {
       return sendError(res, 400, result.message || "Unable to fetch cases", result.details);
     }

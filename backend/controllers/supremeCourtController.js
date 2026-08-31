@@ -1,6 +1,10 @@
 const SupremeCourt = require("../models/SupremeCourt");
 const supremeCourtRooms = require("../data/supremeCourtData");
 
+// Escape user-controlled search input before it reaches $regex so that
+// regex metacharacters cannot alter query semantics or enable ReDoS.
+const escapeRegex = (str) => String(str || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 /**
  * GET /api/supreme-court/court-list
  * Returns all supreme court rooms with optional filtering and pagination.
@@ -24,7 +28,7 @@ exports.getCourtList = async (req, res) => {
     }
 
     if (search && search.trim()) {
-      filter.courtRoom = { $regex: search.trim(), $options: "i" };
+      filter.courtRoom = { $regex: escapeRegex(search.trim()), $options: "i" };
     }
 
     // Try to fetch from DB first

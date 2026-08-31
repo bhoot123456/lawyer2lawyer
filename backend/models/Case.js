@@ -163,8 +163,11 @@ const caseSchema = new Schema(
     caseTags: { type: [String], default: [] },
 
     // Ownership / assignment
-    createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    assignedTo: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    createdBy: { type: Schema.Types.ObjectId, ref: "User" },
+    assignedTo: { type: Schema.Types.ObjectId, ref: "User" },
+    
+    // Anonymous device scoping
+    deviceId: { type: String, trim: true, index: true, default: null },
 
     // Documents
     documents: { type: [documentSchema], default: [] },
@@ -184,7 +187,9 @@ const caseSchema = new Schema(
 );
 
 // Ensure totalExpense stays consistent when expenses are provided.
-caseSchema.pre("save", function (next) {
+// NOTE: mongoose 9 middleware is promise-based — hooks no longer receive a
+// `next` callback (passing one crashes with "next is not a function").
+caseSchema.pre("save", async function () {
   if (this.expenses) {
     const e = this.expenses;
     e.totalExpense =
@@ -194,7 +199,6 @@ caseSchema.pre("save", function (next) {
       (e.travel || 0) +
       (e.miscellaneous || 0);
   }
-  next();
 });
 
 // Extra indexes to support search/filter
