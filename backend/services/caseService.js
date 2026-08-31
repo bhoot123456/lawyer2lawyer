@@ -41,24 +41,31 @@ function toObjectIdIfPossible(id) {
   return id;
 }
 
+// Escape user-controlled search input before it reaches $regex so that
+// regex metacharacters cannot alter query semantics or enable ReDoS.
+// (Consistent with judgeDirectory/policeStation/supremeCourt controllers.)
+function escapeRegex(str) {
+  return String(str || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function buildCaseQueryFilters({ query, user, deviceId }) {
   // Filters: caseNumber, clientName, court, practiceArea, status, priority, advocate, nextHearing
   const filter = {};
 
   if (query?.caseNumber) {
-    filter.caseNumber = { $regex: String(query.caseNumber).trim(), $options: "i" };
+    filter.caseNumber = { $regex: escapeRegex(String(query.caseNumber).trim()), $options: "i" };
   }
 
   if (query?.clientName) {
-    filter.client = { $regex: String(query.clientName).trim(), $options: "i" };
+    filter.client = { $regex: escapeRegex(String(query.clientName).trim()), $options: "i" };
   }
 
   if (query?.court) {
-    filter.court = { $regex: String(query.court).trim(), $options: "i" };
+    filter.court = { $regex: escapeRegex(String(query.court).trim()), $options: "i" };
   }
 
   if (query?.practiceArea) {
-    filter.practiceArea = { $regex: String(query.practiceArea).trim(), $options: "i" };
+    filter.practiceArea = { $regex: escapeRegex(String(query.practiceArea).trim()), $options: "i" };
   }
 
   if (query?.status) {
@@ -70,7 +77,7 @@ function buildCaseQueryFilters({ query, user, deviceId }) {
   }
 
   if (query?.advocate) {
-    filter.advocate = { $regex: String(query.advocate).trim(), $options: "i" };
+    filter.advocate = { $regex: escapeRegex(String(query.advocate).trim()), $options: "i" };
   }
 
   if (query?.nextHearing) {

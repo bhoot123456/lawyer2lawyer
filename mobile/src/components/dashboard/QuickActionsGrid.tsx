@@ -18,19 +18,16 @@ const DEFAULT_ACTIONS: QuickAction[] = [
   { id: "add-case", title: "Add Case", icon: "briefcase-outline", screen: "/cases/new" },
   { id: "court-diary", title: "Court Diary", icon: "calendar-outline", screen: "/court-diary" },
   { id: "clients", title: "Clients", icon: "people-outline", screen: "/lawyers" },
-  { id: "payments", title: "Payments", icon: "cash-outline", screen: "/cases" },
   { id: "draft-library", title: "Draft Library", icon: "document-text-outline", screen: "/draft-library" },
   { id: "bare-acts", title: "Bare Acts", icon: "book-outline", screen: "/bare-acts" },
   { id: "judgments", title: "Judgments", icon: "scale-outline", screen: "/supreme-court" },
-  { id: "notifications", title: "Notifications", icon: "notifications-outline", screen: "/notifications" },
   { id: "ai-assistant", title: "AI Assistant", icon: "bulb-outline", screen: "/ai-assistant" },
   { id: "supreme-court", title: "Supreme Court", icon: "globe-outline", screen: "/supreme-court" },
   { id: "delhi-high-court", title: "Delhi High Court", icon: "business-outline", screen: "/delhi-courts" },
   { id: "district-courts", title: "District Courts", icon: "library-outline", screen: "/delhi-courts" },
   { id: "video-conference", title: "Video Conference", icon: "videocam-outline", screen: "/supreme-court" },
   { id: "calendar", title: "Calendar", icon: "calendar-number-outline", screen: "/court-diary" },
-  { id: "search", title: "Search", icon: "search-outline", screen: "/cases" },
-  { id: "settings", title: "Settings", icon: "settings-outline", screen: "/profile" },
+  { id: "search", title: "Search", icon: "search-outline", screen: "/search" },
 ];
 
 const QuickActionsGrid: React.FC<QuickActionsGridProps> = ({ actions }) => {

@@ -1,6 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
-import { router } from "expo-router";
+import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import GlassCard from "@/components/ui/GlassCard";
 import type { NotificationItem } from "./types";
@@ -71,9 +70,8 @@ const RecentNotifications: React.FC<RecentNotificationsProps> = ({
         <View style={styles.listContainer}>
           {notifications.slice(0, 4).map((notification, index) => (
             <React.Fragment key={notification.id || notification._id}>
-              <Pressable
+              <View
                 style={styles.listRow}
-                onPress={() => router.push("/notifications" as any)}
               >
                 <View style={styles.listIconWrap}>
                   <Ionicons name="notifications-outline" size={18} color={GOLD} />
@@ -86,7 +84,7 @@ const RecentNotifications: React.FC<RecentNotificationsProps> = ({
                     {notification.message || notification.body}
                   </Text>
                 </View>
-              </Pressable>
+              </View>
               {index < notifications.slice(0, 4).length - 1 && (
                 <View style={styles.divider} />
               )}

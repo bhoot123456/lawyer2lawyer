@@ -186,9 +186,26 @@ app.get("/", (req, res) => {
 // The fingerprint format is: AB:CD:EF:... (colon-separated hex, uppercase)
 // ─────────────────────────────────────────────────────────
 app.get("/.well-known/assetlinks.json", (_req, res) => {
-  const sha256Fingerprint =
-    process.env.ANDROID_SHA256_FINGERPRINT ||
-    "REPLACE_WITH_EAS_SHA256_FINGERPRINT";
+  const sha256Fingerprint = (process.env.ANDROID_SHA256_FINGERPRINT || "").trim();
+
+  // PRODUCTION SAFETY (no fabricated data):
+  // Android App Links must only advertise the REAL SHA256 fingerprint of the
+  // EAS Android production signing keystore (obtain via `eas credentials
+  // -p android`, interactive; see .env.example?. When it is not configured,
+  // this endpoint returns 404 instead of serving a placeholder/substituted
+  // value -- a fake digest would break autoVerify and misrepresent a real
+  // credential. The endpoint activates only once a genuine fingerprint is set.
+  const looksLikePlaceholder = /REPLACE|example/i.test(sha256Fingerprint);
+  if (!sha256Fingerprint || looksLikePlaceholder) {
+    logger.warn(
+      "ANDROID_SHA256_FINGERPRINT is not configured; /.well-known/assetlinks.json is disabled (no fabricated fingerprint served).",
+      );
+    return res.status(404).json({
+      success: false,
+      message: "Android App Links are not configured.",
+    });
+  }
+
 
   res.setHeader("Content-Type", "application/json");
   res.setHeader("Cache-Control", "public, max-age=3600");

@@ -7,6 +7,7 @@ import {
   TextInput,
   Animated,
   Keyboard,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -24,9 +25,14 @@ import { FeatureCard } from "../components";
 import AIDisclaimer from "@/components/legal/AIDisclaimer";
 
 const AILegalAssistantScreen: React.FC = () => {
-  const handleFeaturePress = useCallback((screen: string) => {
+  const handleFeaturePress = useCallback((title: string) => {
+    // The specialized AI tools are not yet connected to real AI and are
+    // therefore disabled for production (no fabricated legal output).
     Keyboard.dismiss();
-    router.push(`/${screen}` as any);
+    Alert.alert(
+      "Coming Soon",
+      `"${title}" is not available yet. Use the AI Assistant chat (sparkle bubble) for real-time legal research and drafting help.`
+    );
   }, []);
 
   return (
@@ -58,7 +64,7 @@ const AILegalAssistantScreen: React.FC = () => {
           />
           <TextInput
             style={styles.searchInput}
-            placeholder="COMMING SOON..."
+            placeholder="Coming soon..."
             placeholderTextColor={AI_TEXT_MUTED}
             editable={false}
           />
@@ -75,6 +81,11 @@ const AILegalAssistantScreen: React.FC = () => {
           <View style={styles.dividerLine} />
         </View>
 
+        <Text style={styles.comingSoonNote}>
+          These specialized tools are coming soon. For immediate help, use the
+          AI Assistant chat (sparkle bubble) for legal research and drafting.
+        </Text>
+
         {/* Feature Cards */}
         <View style={styles.featuresList}>
           {AI_FEATURES.map((feature, index) => (
@@ -83,7 +94,7 @@ const AILegalAssistantScreen: React.FC = () => {
               title={feature.title}
               subtitle={feature.subtitle}
               icon={feature.icon}
-              onPress={() => handleFeaturePress(feature.screen)}
+              onPress={() => handleFeaturePress(feature.title)}
               index={index}
             />
           ))}
@@ -202,6 +213,14 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 1.5,
     marginHorizontal: 12,
+  },
+  comingSoonNote: {
+    color: AI_TEXT_SECONDARY,
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "500",
+    marginBottom: 16,
+    paddingHorizontal: 2,
   },
   featuresList: {
     marginBottom: 16,

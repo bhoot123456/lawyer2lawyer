@@ -47,7 +47,7 @@ const NAV_ITEMS_ADMIN = [
   // Admin
   // ======================
   { label: "Admin Dashboard", route: "/admin", icon: "settings-outline" },
-  { label: "Admin Bare Acts", route: "/admin/bare-acts", icon: "book-outline" },
+  { label: "Admin Bare Acts", route: "/admin/bare-acts2", icon: "book-outline" },
   { label: "Admin Revenue (Phase 8)", route: "/admin/revenue-court-phase8", icon: "briefcase-outline" },
   { label: "Admin Tax (Phase 9)", route: "/admin/tax-corporate-phase9", icon: "briefcase-outline" },
   { label: "Admin Reports", route: "/admin/reports", icon: "document-text-outline" },

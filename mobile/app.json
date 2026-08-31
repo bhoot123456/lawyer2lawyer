@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "Lawyer2Lawyer",
+    "slug": "lawyer2lawyer",
     "version": "1.0.0",
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "mobile",
+    "scheme": "lawyer2lawyer",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
