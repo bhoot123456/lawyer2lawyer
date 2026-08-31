@@ -38,6 +38,8 @@ const NAV_ITEMS_PUBLIC = [
   { label: "Knowledge Hub (Phase 10)", route: "/knowledge-hub", icon: "library-outline" },
   { label: "Professionals", route: "/professionals", icon: "people-outline" },
   { label: "Cases", route: "/cases", icon: "briefcase-outline" },
+  { label: "Privacy Policy", route: "/privacy", icon: "shield-checkmark-outline" },
+  { label: "Terms of Service", route: "/terms", icon: "document-text-outline" },
 ];
 
 const NAV_ITEMS_ADMIN = [

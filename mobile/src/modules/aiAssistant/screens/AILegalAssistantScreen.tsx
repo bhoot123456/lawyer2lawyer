@@ -21,6 +21,7 @@ import {
   AI_FEATURES,
 } from "../constants";
 import { FeatureCard } from "../components";
+import AIDisclaimer from "@/components/legal/AIDisclaimer";
 
 const AILegalAssistantScreen: React.FC = () => {
   const handleFeaturePress = useCallback((screen: string) => {
@@ -101,6 +102,9 @@ const AILegalAssistantScreen: React.FC = () => {
             />
           </Animated.View>
         </View>
+
+        {/* AI Disclaimer */}
+        <AIDisclaimer />
       </ScrollView>
     </View>
   );
