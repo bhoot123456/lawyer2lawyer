@@ -13,6 +13,8 @@
                     "verify:tribunals":  "node verify-tribunals.js",
                     "test":  "node tests/rbac.test.js",
                     "test:smoke":  "node scripts/smoke-cms-local.js",
+                    "test:cases":  "node scripts/smoke-cases-anonymous.js",
+                    "test:cases:auth":  "node scripts/smoke-cases-authenticated.js",
                     "data:migrate":  "node scripts/migrate-static-content.js",
                     "data:migrate:dry-run":  "node scripts/migrate-static-content.js --dry-run",
                     "create:super-admin":  "node scripts/create-super-admin.js"
