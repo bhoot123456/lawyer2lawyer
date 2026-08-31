@@ -1,0 +1,20 @@
+// Dashboard Components Barrel Export
+export { default as DashboardHeader } from "./DashboardHeader";
+export { default as DailyBriefCard } from "./DailyBriefCard";
+export { default as DashboardStats } from "./DashboardStats";
+export { default as TodayTimeline } from "./TodayTimeline";
+export { default as TodayHearings } from "./TodayHearings";
+export { default as UpcomingHearings } from "./UpcomingHearings";
+export { default as PendingDrafts } from "./PendingDrafts";
+export { default as PendingClientCalls } from "./PendingClientCalls";
+export { default as RecentNotifications } from "./RecentNotifications";
+export { default as CourtHolidayCard } from "./CourtHolidayCard";
+export { default as CauseListCard } from "./CauseListCard";
+export { default as AIInsightsCard } from "./AIInsightsCard";
+export { default as LegalNewsCard } from "./LegalNewsCard";
+export { default as RecentActivityCard } from "./RecentActivityCard";
+export { default as QuickActionsGrid } from "./QuickActionsGrid";
+export { default as DashboardLoadingState } from "./DashboardLoadingState";
+export { default as DashboardErrorState } from "./DashboardErrorState";
+export { default as DashboardEmptyState } from "./DashboardEmptyState";
+export * from "./NextHearingCard";
