@@ -80,9 +80,10 @@ router.get("/:id", async (req, res) => {
   } catch (error) {
     console.error(error);
 
-    res.status(500).json({
+    const isCastError = error?.name === "CastError";
+    res.status(isCastError ? 400 : 500).json({
       success: false,
-      message: "Cannot fetch lawyer",
+      message: isCastError ? "Invalid lawyer identifier" : "Cannot fetch lawyer",
     });
   }
 });
