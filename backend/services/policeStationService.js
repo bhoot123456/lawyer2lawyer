@@ -14,6 +14,10 @@
 
 const PoliceStation = require("../models/PoliceStation");
 const PoliceHierarchyOffice = require("../models/PoliceHierarchyOffice");
+const DELHI_POLICE_STATIONS = require("../data/delhi-police-stations");
+const mongoose = require("mongoose");
+
+const isDbConnected = () => mongoose.connection.readyState === 1;
 
 /**
  * Build a lightweight projection for list views — excludes embedded
@@ -102,15 +106,43 @@ async function listStations(params = {}) {
   const skip = (pageNum - 1) * limitNum;
   const sort = { [sortBy === "name" ? "name" : sortBy]: sortOrder === "desc" ? -1 : 1 };
 
-  const [items, total] = await Promise.all([
-    PoliceStation.find(filter)
-      .sort(q ? { score: { $meta: "textScore" }, ...sort } : sort)
-      .skip(skip)
-      .limit(limitNum)
-      .select(LIST_PROJECTION)
-      .lean(),
-    PoliceStation.countDocuments(filter),
-  ]);
+  let items = [];
+  let total = 0;
+
+  if (isDbConnected()) {
+    try {
+      const [dbItems, dbTotal] = await Promise.all([
+        PoliceStation.find(filter)
+          .sort(q ? { score: { $meta: "textScore" }, ...sort } : sort)
+          .skip(skip)
+          .limit(limitNum)
+          .select(LIST_PROJECTION)
+          .lean(),
+        PoliceStation.countDocuments(filter),
+      ]);
+      items = dbItems;
+      total = dbTotal;
+    } catch (_err) {
+      console.warn("DB query failed in listStations, falling back to static dataset.");
+    }
+  }
+
+  if (items.length === 0 && DELHI_POLICE_STATIONS && DELHI_POLICE_STATIONS.length > 0) {
+    let filtered = [...DELHI_POLICE_STATIONS];
+    if (q) {
+      filtered = filtered.filter(
+        (s) =>
+          s.name?.toLowerCase().includes(q.toLowerCase()) ||
+          s.district?.toLowerCase().includes(q.toLowerCase()) ||
+          s.subdivision?.toLowerCase().includes(q.toLowerCase())
+      );
+    }
+    if (district) {
+      filtered = filtered.filter((s) => s.district?.toLowerCase().includes(String(district).toLowerCase()));
+    }
+    total = filtered.length;
+    items = filtered.slice(skip, skip + limitNum);
+  }
 
   const totalPages = Math.max(1, Math.ceil(total / limitNum));
 
@@ -135,10 +167,19 @@ async function listStations(params = {}) {
  * Full detail for a single published station.
  */
 async function getStationById(id) {
-  const station = await PoliceStation.findById(id)
-    .where({ ...PUBLIC_FILTER })
-    .select(DETAIL_PROJECTION)
-    .lean();
+  let station = null;
+  if (isDbConnected()) {
+    try {
+      station = await PoliceStation.findById(id)
+        .where({ ...PUBLIC_FILTER })
+        .select(DETAIL_PROJECTION)
+        .lean();
+    } catch (_e) {}
+  }
+
+  if (!station) {
+    station = DELHI_POLICE_STATIONS.find((s) => s._id === id || s.name?.toLowerCase() === id?.toLowerCase()) || null;
+  }
 
   if (!station) {
     return null;

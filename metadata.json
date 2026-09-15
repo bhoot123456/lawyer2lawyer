@@ -1,0 +1,6 @@
+{
+  "name": "Lawyer2Lawyer",
+  "description": "Legal networking, case management, and court intelligence platform for lawyers across India with Supreme Court live tracker, Bare Acts, Tribunals, and AI Assistant.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,4 +1,5 @@
 const Tribunal = require("../models/Tribunal");
+const staticTribunals = require("../data/tribunals");
 
 // GET all tribunals
 // Supports an optional `limit` query param (1..500). When omitted the
@@ -21,7 +22,23 @@ const getTribunals = async (req, res) => {
       query.limit = Math.min(parsed, MAX_TRIBUNAL_LIMIT);
     }
 
-    const tribunals = await Tribunal.find({}).limit(query.limit || 0);
+    let tribunals = [];
+    try {
+      tribunals = await Tribunal.find({}).limit(query.limit || 0);
+    } catch (_dbErr) {
+      console.warn("Tribunal DB query failed, using static fallback");
+    }
+
+    if (!tribunals || tribunals.length === 0) {
+      tribunals = staticTribunals.map((t, idx) => ({
+        _id: t._id || `tribunal-${idx + 1}`,
+        ...t,
+      }));
+      if (query.limit) {
+        tribunals = tribunals.slice(0, query.limit);
+      }
+    }
+
     res.status(200).json({
       success: true,
       count: tribunals.length,
@@ -40,7 +57,16 @@ const getTribunals = async (req, res) => {
 const getTribunalById = async (req, res) => {
   try {
     const { id } = req.params;
-    const tribunal = await Tribunal.findById(id);
+    let tribunal = null;
+    try {
+      tribunal = await Tribunal.findById(id);
+    } catch (_e) {}
+
+    if (!tribunal && Array.isArray(staticTribunals)) {
+      tribunal = staticTribunals.find(
+        (t) => String(t._id) === id || t.name === id || t.shortName === id || `tribunal-${staticTribunals.indexOf(t) + 1}` === id
+      );
+    }
 
     if (!tribunal) {
       return res.status(404).json({

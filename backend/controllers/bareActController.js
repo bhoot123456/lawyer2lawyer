@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const staticBareActs = require("../data/bareActs");
 
 const BareAct = require("../models/BareAct");
 
@@ -157,22 +158,54 @@ async function getBareActs(req, res) {
       updatedAt: 1,
     };
 
-    const [items, total] = await Promise.all([
-      BareAct.find(query)
-        .sort(
-          search
-            ? { score: { $meta: "textScore" }, ...sort }
-            : sort,
-        )
-        .skip(skip)
-        .limit(limit)
-        .select(projection)
-        .lean(false),
-      BareAct.countDocuments(query),
-    ]);
+    let items = [];
+    let total = 0;
+
+    try {
+      const [dbItems, dbTotal] = await Promise.all([
+        BareAct.find(query)
+          .sort(
+            search
+              ? { score: { $meta: "textScore" }, ...sort }
+              : sort,
+          )
+          .skip(skip)
+          .limit(limit)
+          .select(projection)
+          .lean(false),
+        BareAct.countDocuments(query),
+      ]);
+      items = dbItems || [];
+      total = dbTotal || 0;
+    } catch (dbErr) {
+      console.warn("BareAct DB query failed, using static fallback:", dbErr.message);
+    }
+
+    if (items.length === 0 && Array.isArray(staticBareActs)) {
+      let filtered = staticBareActs;
+      if (category) {
+        filtered = filtered.filter(
+          (a) => a.category && a.category.toLowerCase().includes(category.toLowerCase())
+        );
+      }
+      if (search) {
+        const s = search.toLowerCase();
+        filtered = filtered.filter(
+          (a) =>
+            (a.title && a.title.toLowerCase().includes(s)) ||
+            (a.actName && a.actName.toLowerCase().includes(s)) ||
+            (a.shortName && a.shortName.toLowerCase().includes(s)) ||
+            (Array.isArray(a.keywords) && a.keywords.some((k) => k.toLowerCase().includes(s)))
+        );
+      }
+      total = filtered.length;
+      items = filtered.slice(skip, skip + limit).map((a, idx) => ({
+        _id: a._id || `act-${skip + idx + 1}`,
+        ...a,
+      }));
+    }
 
     const totalPages = Math.max(1, Math.ceil(total / limit));
-
     const mapped = items.map(pickBareActFields);
 
     return res.status(200).json({
@@ -204,11 +237,23 @@ async function getBareActById(req, res) {
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid bare act id" });
+    let bareAct = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      try {
+        bareAct = await BareAct.findById(id);
+      } catch (_e) {}
     }
 
-    const bareAct = await BareAct.findById(id);
+    if (!bareAct && Array.isArray(staticBareActs)) {
+      bareAct = staticBareActs.find(
+        (a) =>
+          String(a._id) === id ||
+          a.shortName?.toLowerCase() === id.toLowerCase() ||
+          a.title?.toLowerCase() === id.toLowerCase() ||
+          `act-${staticBareActs.indexOf(a) + 1}` === id
+      );
+    }
+
     if (!bareAct) {
       return res.status(404).json({ success: false, message: "Bare act not found" });
     }

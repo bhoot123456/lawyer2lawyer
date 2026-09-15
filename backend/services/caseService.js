@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Case = require("../models/Case");
 const User = require("../models/User");
 const {
@@ -5,6 +6,119 @@ const {
   validateCaseUpdatePayload,
   validatePaginationAndSorting,
 } = require("../validation/caseValidation");
+
+const isDbConnected = () => mongoose.connection.readyState === 1;
+
+// In-memory cases store when MongoDB is offline
+const inMemoryCases = new Map([
+  [
+    "case-1",
+    {
+      _id: "case-1",
+      caseTitle: "State of NCT of Delhi vs. Vikram Malhotra",
+      caseNumber: "BAIL-402/2025",
+      client: "Vikram Malhotra",
+      advocate: "Adv. Rajesh Sharma",
+      court: "Tis Hazari Court (Central)",
+      judge: "Hon'ble Sh. Virender Kumar, ASJ-02",
+      oppositeParty: "State (NCT of Delhi)",
+      oppositeAdvocate: "Sh. A.K. Singh (Addl. PP)",
+      practiceArea: "Criminal",
+      caseType: "Regular Bail",
+      filingDate: new Date(Date.now() - 14 * 86400000).toISOString(),
+      registrationDate: new Date(Date.now() - 12 * 86400000).toISOString(),
+      nextHearingDate: new Date(Date.now() + 2 * 86400000).toISOString(),
+      currentStage: "Arguments on Bail",
+      status: "Active",
+      priority: "High",
+      description: "Application for regular bail in FIR No. 128/2024 PS Kotwali under Sections 316/318 BNS.",
+      importantNotes: "IO directed to file status report with CDR records by next date.",
+      caseTags: ["Bail", "BNS", "Tis Hazari"],
+      timeline: [
+        {
+          type: "Case Created",
+          description: "Bail application filed in Sessions Court",
+          createdAt: new Date(Date.now() - 14 * 86400000),
+        },
+        {
+          type: "Hearing",
+          description: "Notice issued to State. Reply summoned for next date.",
+          createdAt: new Date(Date.now() - 7 * 86400000),
+        },
+      ],
+      createdAt: new Date(Date.now() - 14 * 86400000),
+      updatedAt: new Date(),
+    },
+  ],
+  [
+    "case-2",
+    {
+      _id: "case-2",
+      caseTitle: "Pooja Singhania vs. Rahul Singhania",
+      caseNumber: "HMA-884/2024",
+      client: "Pooja Singhania",
+      advocate: "Adv. Meenakshi Lekhi",
+      court: "Saket District Court (South)",
+      judge: "Hon'ble Ms. Sunita Gupta, Principal Judge Family Court",
+      oppositeParty: "Rahul Singhania",
+      oppositeAdvocate: "Adv. K.P. Verma",
+      practiceArea: "Family Law",
+      caseType: "Matrimonial Dispute",
+      filingDate: new Date(Date.now() - 45 * 86400000).toISOString(),
+      registrationDate: new Date(Date.now() - 40 * 86400000).toISOString(),
+      nextHearingDate: new Date(Date.now() + 6 * 86400000).toISOString(),
+      currentStage: "Mediation / Settlement Talks",
+      status: "Active",
+      priority: "Medium",
+      description: "Petition under Section 13(1)(ia) of Hindu Marriage Act along with interim maintenance under S. 24.",
+      importantNotes: "Both parties directed to appear personally before Delhi Mediation Centre, Saket.",
+      caseTags: ["HMA", "Mediation", "Maintenance"],
+      timeline: [
+        {
+          type: "Case Created",
+          description: "Petition registered and summons ordered",
+          createdAt: new Date(Date.now() - 40 * 86400000),
+        },
+      ],
+      createdAt: new Date(Date.now() - 45 * 86400000),
+      updatedAt: new Date(),
+    },
+  ],
+  [
+    "case-3",
+    {
+      _id: "case-3",
+      caseTitle: "Apex Infra Buildtech vs. Delhi Metro Rail Corp",
+      caseNumber: "ARB-P-112/2025",
+      client: "Apex Infra Buildtech Pvt Ltd",
+      advocate: "Adv. Harish Salve Associate",
+      court: "Delhi High Court",
+      judge: "Hon'ble Mr. Justice Prathiba M. Singh",
+      oppositeParty: "Delhi Metro Rail Corporation Ltd",
+      oppositeAdvocate: "Senior Standing Counsel DMRC",
+      practiceArea: "Commercial & Arbitration",
+      caseType: "Section 9 Arbitration Petition",
+      filingDate: new Date(Date.now() - 20 * 86400000).toISOString(),
+      registrationDate: new Date(Date.now() - 18 * 86400000).toISOString(),
+      nextHearingDate: new Date(Date.now() + 10 * 86400000).toISOString(),
+      currentStage: "Final Arguments on Interim Injunction",
+      status: "Active",
+      priority: "High",
+      description: "Petition under S. 9 Arbitration & Conciliation Act seeking restraint against encashment of Bank Guarantee.",
+      importantNotes: "Status quo granted till next date of hearing.",
+      caseTags: ["Arbitration", "High Court", "Commercial"],
+      timeline: [
+        {
+          type: "Interim Order",
+          description: "Ad-interim injunction granted restraining encashment of bank guarantee.",
+          createdAt: new Date(Date.now() - 10 * 86400000),
+        },
+      ],
+      createdAt: new Date(Date.now() - 20 * 86400000),
+      updatedAt: new Date(),
+    },
+  ],
+]);
 
 function makeTimelineEntry({ type, description, actor, meta }) {
   return {
@@ -169,6 +283,42 @@ async function createCase({ payload, user, deviceId }) {
     timeline = []; // No actor for anonymous timeline
   }
 
+  if (!isDbConnected()) {
+    const newCase = {
+      _id: `case-${Date.now()}`,
+      caseTitle: payload.caseTitle,
+      caseNumber: finalCaseNumber,
+      client: payload.client,
+      advocate: payload.advocate,
+      court: payload.court,
+      judge: payload.judge,
+      oppositeParty: payload.oppositeParty,
+      oppositeAdvocate: payload.oppositeAdvocate,
+      practiceArea: payload.practiceArea,
+      caseType: payload.caseType,
+      filingDate: payload.filingDate || new Date().toISOString(),
+      registrationDate: payload.registrationDate || new Date().toISOString(),
+      nextHearingDate: payload.nextHearingDate,
+      currentStage: payload.currentStage || "Filing",
+      status: payload.status || "Active",
+      priority: payload.priority || "Medium",
+      description: payload.description,
+      importantNotes: payload.importantNotes,
+      caseTags: payload.caseTags || [],
+      createdBy,
+      assignedTo,
+      deviceId: finalDeviceId,
+      expenses: payload.expenses || [],
+      documents: payload.documents || [],
+      notes: payload.notes || [],
+      timeline,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    inMemoryCases.set(newCase._id, newCase);
+    return { ok: true, case: newCase };
+  }
+
   // Prevent creating with status/stage values invalid (validation already checked if provided)
   const doc = await Case.create({
     caseTitle: payload.caseTitle,
@@ -213,6 +363,14 @@ async function createCase({ payload, user, deviceId }) {
 }
 
 async function updateCase({ id, payload, user, deviceId }) {
+  if (!isDbConnected()) {
+    const existing = inMemoryCases.get(id);
+    if (!existing) return { ok: false, message: "Case not found", code: 404 };
+    Object.assign(existing, payload);
+    existing.updatedAt = new Date();
+    return { ok: true, case: existing };
+  }
+
   const existing = await Case.findById(id);
   if (!existing) return { ok: false, message: "Case not found", code: 404 };
 
@@ -266,6 +424,13 @@ async function updateCase({ id, payload, user, deviceId }) {
 }
 
 async function deleteCase({ id, user, deviceId }) {
+  if (!isDbConnected()) {
+    const existing = inMemoryCases.get(id);
+    if (!existing) return { ok: false, message: "Case not found", code: 404 };
+    inMemoryCases.delete(id);
+    return { ok: true };
+  }
+
   const existing = await Case.findById(id);
   if (!existing) return { ok: false, message: "Case not found", code: 404 };
 
@@ -278,6 +443,12 @@ async function deleteCase({ id, user, deviceId }) {
 }
 
 async function getCaseById({ id, user, deviceId }) {
+  if (!isDbConnected()) {
+    const doc = inMemoryCases.get(id);
+    if (!doc) return { ok: false, message: "Case not found", code: 404 };
+    return { ok: true, case: doc };
+  }
+
   const doc = await Case.findById(id);
   if (!doc) return { ok: false, message: "Case not found", code: 404 };
 
@@ -305,6 +476,23 @@ async function getAllCases({ query, user, deviceId }) {
   if (!pagination.ok) return pagination;
 
   const { page, limit, sort } = pagination;
+
+  if (!isDbConnected()) {
+    let items = Array.from(inMemoryCases.values());
+    if (query?.status) {
+      items = items.filter((c) => c.status?.toLowerCase() === query.status.toLowerCase());
+    }
+    if (query?.court) {
+      items = items.filter((c) => c.court?.toLowerCase().includes(query.court.toLowerCase()));
+    }
+    if (query?.caseNumber) {
+      items = items.filter((c) => c.caseNumber?.toLowerCase().includes(query.caseNumber.toLowerCase()));
+    }
+    const total = items.length;
+    const skip = (page - 1) * limit;
+    const paginated = items.slice(skip, skip + limit);
+    return { ok: true, cases: paginated, total, page, limit };
+  }
 
   const filter = buildCaseQueryFilters({ query, user, deviceId });
 
