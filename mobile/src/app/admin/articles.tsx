@@ -1,10 +1,12 @@
 import React, { useState, useCallback } from "react";
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, TextInput } from "react-native";
+import { colors } from "@/theme/designSystem";
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl, TextInput } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import AdminHeader from "@/components/admin/AdminHeader";
 import GlassCard from "@/components/ui/GlassCard";
 import SearchBar from "@/components/admin/SearchBar";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { getAdminArticles, deleteAdminArticle, publishAdminArticle, unpublishAdminArticle, updateAdminArticle } from "@/services/adminApi";
 
 export default function AdminArticlesScreen() {
@@ -19,6 +21,8 @@ export default function AdminArticlesScreen() {
   const [newCategory, setNewCategory] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  // Cross-platform confirm/notice dialogs (Alert.alert is a no-op on web).
+  const { confirm: confirmDialog, notice: noticeDialog, element: dialogElement } = useConfirmDialog();
 
   const fetchArticles = useCallback(async (pg = 1, srch = search, st = statusFilter) => {
     try {
@@ -51,18 +55,23 @@ export default function AdminArticlesScreen() {
       }
       fetchArticles(1);
     } catch (err) {
-      Alert.alert("Error", "Failed to update article status");
+      void noticeDialog({ title: "Error", message: "Failed to update article status", danger: true });
     }
   };
 
   const handleDelete = (id: string) => {
-    Alert.alert("Delete Article", "Delete this article? Cannot be undone.", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: async () => {
-        try { await deleteAdminArticle(id); setArticles((prev) => prev.filter((a) => a._id !== id)); }
-        catch (err) { Alert.alert("Error", "Failed to delete article"); }
-      }},
-    ]);
+    void (async () => {
+      // Shared ConfirmDialog renders on web too (RN Alert.alert is a no-op there).
+      const ok = await confirmDialog({
+        title: "Delete Article",
+        message: "Delete this article? Cannot be undone.",
+        confirmLabel: "Delete",
+        danger: true,
+      });
+      if (!ok) return;
+      try { await deleteAdminArticle(id); setArticles((prev) => prev.filter((a) => a._id !== id)); }
+      catch (err) { void noticeDialog({ title: "Error", message: "Failed to delete article", danger: true }); }
+    })();
   };
 
   const handleToggleFeatured = async (id: string, current: boolean) => {
@@ -70,7 +79,7 @@ export default function AdminArticlesScreen() {
       await updateAdminArticle(id, { isFeatured: !current });
       fetchArticles(1);
     } catch (err) {
-      Alert.alert("Error", "Failed to update article");
+      void noticeDialog({ title: "Error", message: "Failed to update article", danger: true });
     }
   };
 
@@ -103,7 +112,7 @@ export default function AdminArticlesScreen() {
           <Ionicons name="eye-outline" size={16} color="#3B82F6" />
           <Text style={[styles.actionText, { color: "#3B82F6" }]}>View</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: item.status === "published" ? "rgba(245, 158, 11, 0.15)" : "rgba(16, 185, 129, 0.15)", borderColor: "rgba(181, 141, 61, 0.2)" }]}
+        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: item.status === "published" ? "rgba(245, 158, 11, 0.15)" : "rgba(16, 185, 129, 0.15)", borderColor: colors.border.goldLight }]}
           onPress={() => handlePublish(item._id, item.status)}>
           <Ionicons name={item.status === "published" ? "eye-off-outline" : "eye-outline"} size={16} color={item.status === "published" ? "#F59E0B" : "#10B981"} />
           <Text style={[styles.actionText, { color: item.status === "published" ? "#F59E0B" : "#10B981" }]}>{item.status === "published" ? "Unpublish" : "Publish"}</Text>
@@ -124,7 +133,7 @@ export default function AdminArticlesScreen() {
 
   const handleCreateArticle = async () => {
     if (!newTitle || !newContent || !newCategory) {
-      Alert.alert("Validation", "Title, content, and category are required");
+      void noticeDialog({ title: "Missing information", message: "Title, content, and category are required", danger: true });
       return;
     }
     try {
@@ -136,7 +145,7 @@ export default function AdminArticlesScreen() {
       setNewCategory("");
       fetchArticles(1);
     } catch (err) {
-      Alert.alert("Error", "Failed to create article");
+      void noticeDialog({ title: "Error", message: "Failed to create article", danger: true });
     }
   };
 
@@ -168,7 +177,7 @@ export default function AdminArticlesScreen() {
           <SearchBar value={search} onChangeText={setSearch} placeholder="Search articles..." />
         </View>
         <TouchableOpacity style={styles.filterBtn} onPress={() => { setPage(1); fetchArticles(1, search, statusFilter); }}>
-          <Ionicons name="search-outline" size={20} color="#B58D3D" />
+          <Ionicons name="search-outline" size={20} color={colors.accent.gold} />
         </TouchableOpacity>
       </View>
 
@@ -186,38 +195,39 @@ export default function AdminArticlesScreen() {
         renderItem={renderArticle}
         keyExtractor={(item) => item._id}
         contentContainerStyle={styles.list}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchArticles(1); }} tintColor="#B58D3D" />}
-        ListEmptyComponent={loading ? <View style={styles.center}><ActivityIndicator size="large" color="#B58D3D" /></View> :
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchArticles(1); }} tintColor={colors.accent.gold} />}
+        ListEmptyComponent={loading ? <View style={styles.center}><ActivityIndicator size="large" color={colors.accent.gold} /></View> :
           <View style={styles.center}><Ionicons name="newspaper-outline" size={48} color="#64748B" /><Text style={styles.emptyText}>No articles found</Text></View>}
         onEndReached={() => { if (page < totalPages) { const np = page + 1; setPage(np); fetchArticles(np, search, statusFilter); } }}
         onEndReachedThreshold={0.5}
       />
+      {dialogElement}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0B0B0B" },
+  container: { flex: 1, backgroundColor: colors.bg.primary },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 40 },
   filterRow: { flexDirection: "row", paddingHorizontal: 16, paddingVertical: 8, gap: 8, alignItems: "center" },
   searchWrap: { flex: 1 },
-  filterBtn: { width: 46, height: 46, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(181, 141, 61, 0.1)", borderWidth: 1, borderColor: "rgba(181, 141, 61, 0.2)" },
+  filterBtn: { width: 46, height: 46, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: colors.accent.goldLight, borderWidth: 1, borderColor: colors.border.goldLight },
   statusFilterList: { maxHeight: 44, marginBottom: 8 },
   statusFilterContent: { paddingHorizontal: 16, gap: 8, alignItems: "center" },
-  statusFilterBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: "rgba(18, 18, 20, 0.6)", borderWidth: 1, borderColor: "rgba(181, 141, 61, 0.2)" },
-  statusFilterActive: { backgroundColor: "rgba(181, 141, 61, 0.15)", borderColor: "#B58D3D" },
+  statusFilterBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: "rgba(18, 18, 20, 0.6)", borderWidth: 1, borderColor: colors.border.goldLight },
+  statusFilterActive: { backgroundColor: colors.accent.goldLight, borderColor: colors.accent.gold },
   statusFilterText: { color: "#94A3B8", fontSize: 12, fontWeight: "700", textTransform: "capitalize" },
-  statusFilterTextActive: { color: "#B58D3D" },
+  statusFilterTextActive: { color: colors.accent.gold },
   list: { padding: 16, gap: 12, paddingBottom: 40 },
   newForm: { margin: 16, gap: 12 },
-  formTitle: { color: "#F8FAFC", fontSize: 16, fontWeight: "900" },
-  input: { backgroundColor: "rgba(18, 18, 20, 0.7)", borderWidth: 1, borderColor: "rgba(181, 141, 61, 0.2)", borderRadius: 12, padding: 12, color: "#F8FAFC", fontSize: 14, fontWeight: "600" },
+  formTitle: { color: "#F8FAFC", fontSize: 16, fontWeight: "800" },
+  input: { backgroundColor: "rgba(18, 18, 20, 0.7)", borderWidth: 1, borderColor: colors.border.goldLight, borderRadius: 12, padding: 12, color: "#F8FAFC", fontSize: 14, fontWeight: "600" },
   textArea: { minHeight: 100, textAlignVertical: "top" },
   formActions: { flexDirection: "row", gap: 12, justifyContent: "flex-end" },
-  cancelBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: "rgba(181, 141, 61, 0.2)" },
+  cancelBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: colors.border.goldLight },
   cancelBtnText: { color: "#94A3B8", fontWeight: "700", fontSize: 13 },
-  createBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10, backgroundColor: "rgba(181, 141, 61, 0.15)", borderWidth: 1, borderColor: "rgba(181, 141, 61, 0.3)" },
-  createBtnText: { color: "#B58D3D", fontWeight: "800", fontSize: 13 },
+  createBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10, backgroundColor: colors.accent.goldLight, borderWidth: 1, borderColor: colors.border.gold },
+  createBtnText: { color: colors.accent.gold, fontWeight: "800", fontSize: 13 },
   cardHeader: { flexDirection: "row", gap: 12 },
   cardContent: { flex: 1 },
   articleTitle: { color: "#F8FAFC", fontSize: 15, fontWeight: "800" },
@@ -225,8 +235,8 @@ const styles = StyleSheet.create({
   metaRow: { flexDirection: "row", gap: 6, marginTop: 8, alignItems: "center" },
   badge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, borderWidth: 1 },
   badgeText: { fontSize: 10, fontWeight: "800" },
-  categoryText: { color: "#64748B", fontSize: 11, fontWeight: "600" },
-  metaText: { color: "#64748B", fontSize: 11, fontWeight: "500", marginTop: 4 },
+  categoryText: { color: "#64748B", fontSize: 12, fontWeight: "600" },
+  metaText: { color: "#64748B", fontSize: 12, fontWeight: "500", marginTop: 4 },
   cardActions: { flexDirection: "row", gap: 8, marginTop: 12, flexWrap: "wrap" },
   actionBtn: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, borderWidth: 1 },
   actionText: { fontSize: 12, fontWeight: "700" },

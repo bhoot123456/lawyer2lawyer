@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
+import { colors } from "@/theme/designSystem";
 import {
   View,
   Text,
@@ -15,6 +16,7 @@ import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import AdminHeader from "@/components/admin/AdminHeader";
 import StatCard from "@/components/admin/StatCard";
 import GlassCard from "@/components/ui/GlassCard";
+import PremiumButton from "@/components/ui/PremiumButton";
 
 const CATEGORY_LABELS: Record<string, string> = {
   legal_data: "Legal Data",
@@ -54,25 +56,25 @@ const QUICK_ACTIONS = [
     label: "Manage Lawyers",
     icon: "people-outline" as const,
     route: "/admin/lawyers",
-    color: "#3B82F6",
+    color: colors.semantic.info,
   },
   {
     label: "Manage Clients",
     icon: "person-outline" as const,
     route: "/admin/clients",
-    color: "#10B981",
+    color: colors.semantic.success,
   },
   {
     label: "Manage Cases",
     icon: "briefcase-outline" as const,
     route: "/admin/cases",
-    color: "#F59E0B",
+    color: colors.semantic.warning,
   },
   {
     label: "Manage Articles",
     icon: "newspaper-outline" as const,
     route: "/admin/articles",
-    color: "#8B5CF6",
+    color: colors.semantic.info,
   },
 ];
 
@@ -131,7 +133,7 @@ export default function AdminDashboard() {
       <View style={styles.container}>
         <AdminHeader title="Admin Panel" subtitle="Loading..." />
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#B58D3D" />
+          <ActivityIndicator size="large" color={colors.accent.gold} />
         </View>
       </View>
     );
@@ -144,9 +146,7 @@ export default function AdminDashboard() {
         <View style={styles.center}>
           <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryBtn} onPress={fetchData}>
-            <Text style={styles.retryText}>Retry</Text>
-          </TouchableOpacity>
+          <PremiumButton label="Retry" onPress={fetchData} variant="secondary" />
         </View>
       </View>
     );
@@ -162,7 +162,7 @@ export default function AdminDashboard() {
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#B58D3D" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent.gold} />}
       >
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
@@ -170,25 +170,25 @@ export default function AdminDashboard() {
             title="Total Users"
             value={data?.totalUsers || 0}
             icon="people-outline"
-            color="#3B82F6"
+            color={colors.semantic.info}
           />
           <StatCard
             title="Lawyers"
             value={data?.totalLawyers || 0}
             icon="briefcase-outline"
-            color="#10B981"
+            color={colors.semantic.success}
           />
           <StatCard
             title="Clients"
             value={data?.totalClients || 0}
             icon="person-outline"
-            color="#8B5CF6"
+            color={colors.semantic.info}
           />
           <StatCard
             title="Cases"
             value={data?.totalCases || 0}
             icon="folder-open-outline"
-            color="#F59E0B"
+            color={colors.semantic.warning}
           />
           <StatCard
             title="Articles"
@@ -200,14 +200,14 @@ export default function AdminDashboard() {
             title="Pending Verifications"
             value={data?.pendingVerifications || 0}
             icon="shield-checkmark-outline"
-            color={data?.pendingVerifications ? "#EF4444" : "#10B981"}
+            color={data?.pendingVerifications ? colors.semantic.danger : colors.semantic.success}
             subtitle={data?.pendingVerifications ? "Requires attention" : "All clear"}
           />
           <StatCard
             title="Active Lawyers"
             value={data?.activeLawyers || 0}
             icon="checkmark-circle-outline"
-            color="#10B981"
+            color={colors.semantic.success}
           />
           <StatCard
             title="Tribunals"
@@ -235,11 +235,11 @@ export default function AdminDashboard() {
           ))}
           {has("admin_users.view") && (
             <TouchableOpacity
-              style={[styles.actionCard, { borderColor: "#B58D3D30" }]}
+              style={[styles.actionCard, { borderColor: colors.border.gold }]}
               onPress={() => router.push("/admin/admin-users" as any)}
             >
-              <View style={[styles.actionIcon, { backgroundColor: "#B58D3D15" }]}>
-                <Ionicons name="shield-outline" size={24} color="#B58D3D" />
+              <View style={[styles.actionIcon, { backgroundColor: colors.accent.goldLight }]}>
+                <Ionicons name="shield-outline" size={24} color={colors.accent.gold} />
               </View>
               <Text style={styles.actionLabel}>Admin Users</Text>
               <Ionicons name="chevron-forward-outline" size={18} color="#64748B" />
@@ -247,11 +247,11 @@ export default function AdminDashboard() {
           )}
           {(profile?.isSuperAdmin || has("audit_logs.view")) && (
             <TouchableOpacity
-              style={[styles.actionCard, { borderColor: "#B58D3D30" }]}
+              style={[styles.actionCard, { borderColor: colors.border.gold }]}
               onPress={() => router.push("/admin/audit-logs" as any)}
             >
-              <View style={[styles.actionIcon, { backgroundColor: "#B58D3D15" }]}>
-                <Ionicons name="receipt-outline" size={24} color="#B58D3D" />
+              <View style={[styles.actionIcon, { backgroundColor: colors.accent.goldLight }]}>
+                <Ionicons name="receipt-outline" size={24} color={colors.accent.gold} />
               </View>
               <Text style={styles.actionLabel}>Audit Logs</Text>
               <Ionicons name="chevron-forward-outline" size={18} color="#64748B" />
@@ -272,14 +272,14 @@ export default function AdminDashboard() {
                   {mods.map((mod: any) => (
                     <TouchableOpacity
                       key={mod.key}
-                      style={[styles.actionCard, { borderColor: "rgba(181,141,61,0.25)" }]}
+                      style={[styles.actionCard, { borderColor: colors.border.gold }]}
                       onPress={() => router.push(`/admin/cms/${mod.key}` as any)}
                     >
-                      <View style={[styles.actionIcon, { backgroundColor: "rgba(181,141,61,0.12)" }]}>
+                      <View style={[styles.actionIcon, { backgroundColor: colors.border.goldLight }]}>
                         <Ionicons
                           name={(CATEGORY_ICONS[category] || "documents-outline") as any}
                           size={22}
-                          color="#B58D3D"
+                          color={colors.accent.gold}
                         />
                       </View>
                       <Text style={styles.actionLabel}>{mod.label}</Text>
@@ -339,8 +339,8 @@ export default function AdminDashboard() {
                   {
                     color:
                       c.priority === "Urgent" ? "#EF4444" :
-                      c.priority === "High" ? "#F59E0B" :
-                      c.priority === "Medium" ? "#3B82F6" : "#10B981",
+                      c.priority === "High" ? colors.semantic.warning :
+                      c.priority === "Medium" ? colors.semantic.info : colors.semantic.success,
                   },
                 ]}
               >
@@ -363,7 +363,7 @@ export default function AdminDashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0B0B0B",
+    backgroundColor: colors.bg.primary,
   },
   center: {
     flex: 1,
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     color: "#F8FAFC",
     fontSize: 16,
-    fontWeight: "900",
+    fontWeight: "800",
     marginBottom: 12,
     marginTop: 4,
   },
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
   },
   actionLabel: {
     color: "#F8FAFC",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "800",
     flex: 1,
   },
@@ -437,11 +437,11 @@ const styles = StyleSheet.create({
   },
   statusRowBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(181, 141, 61, 0.1)",
+    borderBottomColor: colors.accent.goldLight,
   },
   statusLabel: {
     color: "#94A3B8",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "700",
     width: 100,
   },
@@ -454,13 +454,13 @@ const styles = StyleSheet.create({
   },
   statusBar: {
     height: "100%",
-    backgroundColor: "#B58D3D",
+    backgroundColor: colors.accent.gold,
     borderRadius: 4,
   },
   statusCount: {
     color: "#F8FAFC",
-    fontSize: 13,
-    fontWeight: "900",
+    fontSize: 12,
+    fontWeight: "800",
     width: 40,
     textAlign: "right",
   },
@@ -472,13 +472,13 @@ const styles = StyleSheet.create({
   },
   activityRowBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(181, 141, 61, 0.1)",
+    borderBottomColor: colors.accent.goldLight,
   },
   activityDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#B58D3D",
+    backgroundColor: colors.accent.gold,
   },
   activityContent: {
     flex: 1,
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   activityPriority: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "800",
     textTransform: "uppercase",
   },
@@ -505,20 +505,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginTop: 12,
     textAlign: "center",
-  },
-  retryBtn: {
-    marginTop: 16,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: "rgba(181, 141, 61, 0.15)",
-    borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.3)",
-  },
-  retryText: {
-    color: "#B58D3D",
-    fontWeight: "800",
-    fontSize: 14,
   },
   emptyWrap: {
     alignItems: "center",

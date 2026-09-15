@@ -1,20 +1,21 @@
-// ============================================================
+﻿// ============================================================
 // AI Legal Assistant - Constants & Feature Metadata
 // ============================================================
 
 import type { AIFeatureMeta } from "../types";
+import { colors } from "@/theme/designSystem";
 
-/** Gold accent color used throughout the AI module */
-export const AI_GOLD = "#B58D3D";
-export const AI_GOLD_LIGHT = "rgba(181, 141, 61, 0.35)";
-export const AI_GOLD_DARK = "#9A752C";
-export const AI_BG = "#0B0B0B";
-export const AI_CARD_BG = "rgba(18, 18, 20, 0.55)";
-export const AI_TEXT_PRIMARY = "#F8FAFC";
-export const AI_TEXT_SECONDARY = "#B0B4BA";
-export const AI_TEXT_MUTED = "#64748B";
-export const AI_ERROR_RED = "#EF4444";
-export const AI_SUCCESS_GREEN = "#22C55E";
+/** Gold accent color used throughout the AI module (canonical design-system token) */
+export const AI_GOLD = colors.accent.gold;
+export const AI_GOLD_LIGHT = colors.border.gold;
+export const AI_GOLD_DARK = colors.accent.goldDark;
+export const AI_BG = colors.bg.primary;
+export const AI_CARD_BG = colors.bg.elevated;
+export const AI_TEXT_PRIMARY = colors.text.primary;
+export const AI_TEXT_SECONDARY = colors.text.secondary;
+export const AI_TEXT_MUTED = colors.text.muted;
+export const AI_ERROR_RED = colors.semantic.danger;
+export const AI_SUCCESS_GREEN = colors.semantic.success;
 
 /** Simulated delay range for mock AI responses (ms) */
 export const MOCK_DELAY_MIN = 1500;

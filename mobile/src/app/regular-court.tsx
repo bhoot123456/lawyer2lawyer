@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { colors } from "@/theme/designSystem";
 import {
   View,
   Text,
@@ -7,13 +8,13 @@ import {
   Pressable,
   Linking,
   Platform,
-  Alert,
   ActivityIndicator,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { blurActiveElement } from "@/utils/blurActiveElement";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { getJudgesByCourt } from "@/services/judgeDirectoryApi";
 
 /* ------------------------------------------------------------------ */
@@ -77,7 +78,7 @@ function JudgeCard({
       {/* Court Room */}
       <View style={styles.cardRow}>
         <View style={styles.iconBox}>
-          <Ionicons name="business-outline" size={18} color="#B58D3D" />
+          <Ionicons name="business-outline" size={18} color={colors.accent.gold} />
         </View>
         <View style={styles.cardField}>
           <Text style={styles.cardFieldLabel}>Court Room</Text>
@@ -88,7 +89,7 @@ function JudgeCard({
       {/* HMJ Justice Name */}
       <View style={styles.cardRow}>
         <View style={styles.iconBox}>
-          <Ionicons name="person-outline" size={18} color="#B58D3D" />
+          <Ionicons name="person-outline" size={18} color={colors.accent.gold} />
         </View>
         <View style={styles.cardField}>
           <Text style={styles.cardFieldLabel}>HMJ</Text>
@@ -105,13 +106,13 @@ function JudgeCard({
         ]}
       >
         <View style={styles.iconBox}>
-          <Ionicons name="videocam-outline" size={18} color="#B58D3D" />
+          <Ionicons name="videocam-outline" size={18} color={colors.accent.gold} />
         </View>
         <View style={styles.cardField}>
           <Text style={styles.cardFieldLabel}>VC Link</Text>
           <Text style={styles.linkValue}>Join VC</Text>
         </View>
-        <Ionicons name="open-outline" size={16} color="#B58D3D" />
+        <Ionicons name="open-outline" size={16} color={colors.accent.gold} />
       </Pressable>
 
       {/* Meeting ID */}
@@ -123,13 +124,13 @@ function JudgeCard({
         ]}
       >
         <View style={styles.iconBox}>
-          <Ionicons name="key-outline" size={18} color="#B58D3D" />
+          <Ionicons name="key-outline" size={18} color={colors.accent.gold} />
         </View>
         <View style={styles.cardField}>
           <Text style={styles.cardFieldLabel}>Meeting ID</Text>
           <Text style={styles.cardFieldValue}>{judge.meetingId}</Text>
         </View>
-        <Ionicons name="copy-outline" size={16} color="#B58D3D" />
+        <Ionicons name="copy-outline" size={16} color={colors.accent.gold} />
       </Pressable>
 
       {/* Email */}
@@ -141,7 +142,7 @@ function JudgeCard({
         ]}
       >
         <View style={styles.iconBox}>
-          <Ionicons name="mail-outline" size={18} color="#B58D3D" />
+          <Ionicons name="mail-outline" size={18} color={colors.accent.gold} />
         </View>
         <View style={styles.cardField}>
           <Text style={styles.cardFieldLabel}>Email</Text>
@@ -149,7 +150,7 @@ function JudgeCard({
             {judge.email}
           </Text>
         </View>
-        <Ionicons name="open-outline" size={16} color="#B58D3D" />
+        <Ionicons name="open-outline" size={16} color={colors.accent.gold} />
       </Pressable>
     </View>
   );
@@ -162,7 +163,7 @@ function JudgeCard({
 function EmptyState() {
   return (
     <View style={styles.emptyState}>
-      <Ionicons name="people-outline" size={48} color="#B58D3D" />
+      <Ionicons name="people-outline" size={48} color={colors.accent.gold} />
       <Text style={styles.emptyStateTitle}>No judges available.</Text>
     </View>
   );
@@ -183,6 +184,8 @@ export default function RegularCourtScreen() {
   const [judges, setJudges] = useState<Judge[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Cross-platform confirm/notice dialogs (Alert.alert is a no-op on web).
+  const { notice: noticeDialog, element: dialogElement } = useConfirmDialog();
 
   useEffect(() => {
     if (!courtId) {
@@ -226,10 +229,10 @@ export default function RegularCourtScreen() {
         await Clipboard.setStringAsync(meetingId);
         showToast("Meeting ID copied");
       } catch {
-        Alert.alert("Error", "Failed to copy Meeting ID");
+        void noticeDialog({ title: "Error", message: "Failed to copy Meeting ID", danger: true });
       }
     },
-    [showToast]
+    [showToast, noticeDialog]
   );
 
   const handleOpenVCLink = useCallback((url: string) => {
@@ -305,6 +308,7 @@ const keyExtractor = useCallback((item: Judge) => item._id, []);
   );
 
   return (
+    <>
     <View style={styles.container}>
       <FlatList
         data={judges}
@@ -320,7 +324,9 @@ const keyExtractor = useCallback((item: Judge) => item._id, []);
         showsVerticalScrollIndicator={false}
       />
       {toast}
-    </View>
+      {dialogElement}
+      </View>
+    </>
   );
 }
 
@@ -351,9 +357,9 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: "rgba(181, 141, 61, 0.1)",
+    backgroundColor: colors.accent.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.25)",
+    borderColor: colors.border.gold,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -366,14 +372,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: "rgba(181, 141, 61, 0.12)",
+    backgroundColor: colors.border.goldLight,
     alignItems: "center",
     justifyContent: "center",
   },
   headerTitle: {
     color: "#1E293B",
     fontSize: 22,
-    fontWeight: "900",
+    fontWeight: "800",
     letterSpacing: 0.3,
   },
   headerSubtitle: {
@@ -391,15 +397,15 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   sectionTitle: {
-    color: "#B58D3D",
+    color: colors.accent.gold,
     fontSize: 14,
-    fontWeight: "900",
+    fontWeight: "800",
     letterSpacing: 0.3,
     textTransform: "uppercase",
   },
   sectionCount: {
     color: "#64748B",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "700",
   },
 
@@ -421,6 +427,9 @@ const styles = StyleSheet.create({
       android: {
         elevation: 3,
       },
+      web: {
+        boxShadow: "0px 2px 8px rgba(0,0,0,0.06)",
+      },
     }),
   },
   cardRow: {
@@ -432,7 +441,7 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 10,
-    backgroundColor: "rgba(181,141,61,0.1)",
+    backgroundColor: colors.accent.goldLight,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -441,8 +450,8 @@ const styles = StyleSheet.create({
   },
   cardFieldLabel: {
     color: "#64748B",
-    fontSize: 11,
-    fontWeight: "900",
+    fontSize: 12,
+    fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.3,
   },
@@ -453,7 +462,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   linkValue: {
-    color: "#B58D3D",
+    color: colors.accent.gold,
     fontSize: 14,
     fontWeight: "800",
     marginTop: 1,
@@ -497,6 +506,9 @@ const styles = StyleSheet.create({
       },
       android: {
         elevation: 8,
+      },
+      web: {
+        boxShadow: "0px 4px 12px rgba(0,0,0,0.15)",
       },
     }),
   },

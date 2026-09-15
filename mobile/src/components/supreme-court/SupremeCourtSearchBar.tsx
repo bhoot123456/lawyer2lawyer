@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { SupremeCourtSearchBarProps } from "@/types/supremeCourt";
+import { colors } from "@/theme/designSystem";
 
 /**
  * SupremeCourtSearchBar – Search input for filtering court rooms by number.
@@ -67,7 +68,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.06)",
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.2)",
+    borderColor: colors.border.goldLight,
     paddingHorizontal: 14,
     height: 50,
   },

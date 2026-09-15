@@ -7,8 +7,13 @@
  */
 import { useCallback, useEffect, useState } from "react";
 import { getAdminProfile, type AdminProfile } from "@/services/adminApi";
+import { registerSessionClearedHandler } from "@/services/api";
 
 let cache: AdminProfile | null = null;
+
+registerSessionClearedHandler(() => {
+  cache = null;
+});
 
 export function useAdminPermissions() {
   const [profile, setProfile] = useState<AdminProfile | null>(cache);

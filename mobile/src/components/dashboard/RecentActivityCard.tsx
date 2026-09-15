@@ -72,7 +72,7 @@ const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
         <Text style={styles.sectionHeader}>Recent Activity</Text>
         <GlassCard borderColor={colors.border.goldLight} accent={GOLD} elevation={1}>
           <View style={styles.emptyContainer}>
-            <Ionicons name="time-outline" size={32} color={GOLD} />
+            <Ionicons name="time-outline" size={34} color={GOLD} />
             <Text style={styles.emptyText}>No recent activity</Text>
           </View>
         </GlassCard>

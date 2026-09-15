@@ -1,9 +1,29 @@
 import React, { useMemo, useState, useEffect } from "react";
+import { colors, radii, spacing, typography } from "@/theme/designSystem";
 import { View, Text, TextInput, StyleSheet, Pressable } from "react-native";
-import { KeyboardAwareView } from "@/components/ui/KeyboardAwareView";
 import { getAuthToken } from "@/services/api";
+import { parseValidDate, safeToISOString } from "@/utils/dateUtils";
 
 type Mode = "create" | "edit";
+
+// Must exactly mirror the backend enums in backend/models/Case.js and
+// backend/validation/caseValidation.js — the payload is only ever built
+// from these values, so it can never drift out of the allowed sets.
+const STATUS_OPTIONS = [
+  "Pending",
+  "Filed",
+  "Notice Issued",
+  "Reply Filed",
+  "Evidence",
+  "Arguments",
+  "Reserved",
+  "Disposed",
+  "Closed",
+] as const;
+
+const CURRENT_STAGE_OPTIONS = ["Draft", ...STATUS_OPTIONS] as const;
+
+const PRIORITY_OPTIONS = ["Low", "Medium", "High", "Urgent"] as const;
 
 type Props = {
   mode: Mode;
@@ -18,24 +38,82 @@ const Field = ({
   onChangeText,
   placeholder,
   keyboardType,
+  autoCapitalize,
+  autoCorrect,
+  returnKeyType,
+  onSubmitEditing,
+  error,
 }: {
   label: string;
   value: string;
   onChangeText: (v: string) => void;
   placeholder?: string;
   keyboardType?: any;
+  autoCapitalize?: any;
+  autoCorrect?: boolean;
+  returnKeyType?: any;
+  onSubmitEditing?: () => void;
+  error?: string;
+}) => {
+  return (
+    <View style={styles.field}>
+      <Text style={styles.label} accessibilityRole="text">{label}</Text>
+      <TextInput
+        placeholder={placeholder}
+        placeholderTextColor={colors.text.muted}
+        value={value}
+        keyboardType={keyboardType}
+        autoCapitalize={autoCapitalize ?? "sentences"}
+        autoCorrect={autoCorrect ?? true}
+        returnKeyType={returnKeyType ?? "next"}
+        onSubmitEditing={onSubmitEditing}
+        blurOnSubmit={false}
+        onChangeText={onChangeText}
+        style={[styles.input, error ? styles.inputError : null]}
+        accessibilityLabel={label}
+      />
+      {!!error && <Text style={styles.errorText}>{error}</Text>}
+    </View>
+  );
+};
+
+// Enum-backed selector rendered as selectable chips. The backend validates
+// status/currentStage/priority against strict enums — free-text input there
+// used to produce 400 "Invalid status" responses. Chips keep the payload
+// always within the allowed values, on both web and native, with no extra
+// dependency.
+const SelectField = ({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: readonly string[];
+  onChange: (v: string) => void;
 }) => {
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
-      <TextInput
-        placeholder={placeholder}
-        placeholderTextColor="rgba(181, 141, 61, 0.35)"
-        value={value}
-        keyboardType={keyboardType}
-        onChangeText={onChangeText}
-        style={styles.input}
-      />
+      <View style={styles.chipRow}>
+        {options.map((opt) => {
+          const selected = value === opt;
+          return (
+            <Pressable
+              key={opt}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
+              onPress={() => onChange(opt)}
+              style={[styles.chip, selected ? styles.chipSelected : null]}
+            >
+              <Text style={[styles.chipText, selected ? styles.chipTextSelected : null]}>
+                {opt}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 };
@@ -65,18 +143,23 @@ export default function CaseForm({
   );
   const [caseType, setCaseType] = useState(String(initialValues?.caseType ?? ""));
 
-  const [filingDate, setFilingDate] = useState(
-    initialValues?.filingDate ? String(initialValues.filingDate).slice(0, 10) : "",
-  );
+  // Convert any incoming date-ish value (ISO string, timestamp, Date) into a
+  // YYYY-MM-DD input value. Garbage from the API/drafts becomes "" rather
+  // than an unparseable input; the form still renders and lets the user fix it.
+  const toDateInput = (value: unknown): string => {
+    if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}/.test(value.trim())) {
+      return value.trim().slice(0, 10);
+    }
+    const iso = safeToISOString(value);
+    return iso ? iso.slice(0, 10) : "";
+  };
+
+  const [filingDate, setFilingDate] = useState(toDateInput(initialValues?.filingDate));
   const [registrationDate, setRegistrationDate] = useState(
-    initialValues?.registrationDate
-      ? String(initialValues.registrationDate).slice(0, 10)
-      : "",
+    toDateInput(initialValues?.registrationDate),
   );
   const [nextHearingDate, setNextHearingDate] = useState(
-    initialValues?.nextHearingDate
-      ? String(initialValues.nextHearingDate).slice(0, 10)
-      : "",
+    toDateInput(initialValues?.nextHearingDate),
   );
 
   const [currentStage, setCurrentStage] = useState(
@@ -116,6 +199,9 @@ export default function CaseForm({
       .map((t: string) => t.trim())
       .filter(Boolean);
 
+    // safeToISOString never throws: empty/invalid input yields `undefined`
+    // instead of a "RangeError: Invalid time value" crash during render.
+    // Invalid dates are surfaced as inline validation errors instead.
     return {
       caseTitle,
       caseNumber,
@@ -132,13 +218,9 @@ export default function CaseForm({
       practiceArea,
       caseType,
 
-      filingDate: filingDate ? new Date(filingDate).toISOString() : undefined,
-      registrationDate: registrationDate
-        ? new Date(registrationDate).toISOString()
-        : undefined,
-      nextHearingDate: nextHearingDate
-        ? new Date(nextHearingDate).toISOString()
-        : undefined,
+      filingDate: safeToISOString(filingDate),
+      registrationDate: safeToISOString(registrationDate),
+      nextHearingDate: safeToISOString(nextHearingDate),
 
       currentStage,
       status,
@@ -178,8 +260,47 @@ export default function CaseForm({
   ]);
 
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Inline validation messages for the free-text date fields. A field the
+  // user has typed into but that is not a valid date is flagged here —
+  // validation is shown as UI, never as a JavaScript exception.
+  const dateFieldErrors = useMemo(() => {
+    const errFor = (raw: string) => {
+      const trimmed = raw.trim();
+      if (!trimmed) return undefined; // empty = optional, fine
+      return parseValidDate(trimmed)
+        ? undefined
+        : "Use a valid date in YYYY-MM-DD format";
+    };
+    return {
+      filingDate: errFor(filingDate),
+      registrationDate: errFor(registrationDate),
+      nextHearingDate: errFor(nextHearingDate),
+    };
+  }, [filingDate, registrationDate, nextHearingDate]);
 
   const submit = async () => {
+    if (submitting) return; // double-submit guard
+    setSubmitError(null);
+
+    // Inline validation BEFORE any network request. Invalid data never
+    // reaches the backend when it can be rejected locally; the backend
+    // still validates independently.
+    if (!caseTitle.trim()) {
+      setSubmitError("Case Title is required.");
+      return;
+    }
+
+    if (
+      dateFieldErrors.filingDate ||
+      dateFieldErrors.registrationDate ||
+      dateFieldErrors.nextHearingDate
+    ) {
+      setSubmitError("Please correct the highlighted date fields before saving.");
+      return;
+    }
+
     setSubmitting(true);
     try {
       const tags = caseTagsCsv
@@ -187,9 +308,15 @@ export default function CaseForm({
         .map((t: string) => t.trim())
         .filter(Boolean);
 
+      // Optional identifiers keep the meaning of "not provided": blank
+      // fields are omitted entirely (never sent as ""). The backend then
+      // auto-generates a case number for anonymous users when omitted.
+      // (Sending `caseNumber: ""` used to cause POST /api/cases -> 400.)
+      const trimmedCaseNumber = caseNumber.trim();
+      const trimmedAssignedTo = assignedTo.trim();
+
       const base: any = {
-        caseTitle,
-        assignedTo,
+        caseTitle: caseTitle.trim(),
         client,
         advocate,
         court,
@@ -209,37 +336,51 @@ export default function CaseForm({
         notes: payloadPreview.notes,
       };
 
-      if (mode === "create") base.caseNumber = caseNumber;
+      if (mode === "create" && trimmedCaseNumber) {
+        base.caseNumber = trimmedCaseNumber;
+      }
+      if (trimmedAssignedTo) {
+        base.assignedTo = trimmedAssignedTo;
+      }
 
-      if (filingDate) base.filingDate = new Date(filingDate).toISOString();
-      if (registrationDate)
-        base.registrationDate = new Date(registrationDate).toISOString();
-      if (nextHearingDate)
-        base.nextHearingDate = new Date(nextHearingDate).toISOString();
+      // Optional dates keep the meaning of "not provided": only valid values
+      // are sent; empty fields send nothing. safeToISOString never throws.
+      const filingDateISO = safeToISOString(filingDate);
+      const registrationDateISO = safeToISOString(registrationDate);
+      const nextHearingDateISO = safeToISOString(nextHearingDate);
+      if (filingDateISO) base.filingDate = filingDateISO;
+      if (registrationDateISO) base.registrationDate = registrationDateISO;
+      if (nextHearingDateISO) base.nextHearingDate = nextHearingDateISO;
 
       await onSubmit(base);
+    } catch (err: any) {
+      // Expected API/network failures surface as UI state, not a crash.
+      const serverMessage = err?.response?.data?.message || err?.response?.data?.error;
+      setSubmitError(serverMessage || err?.message || "Could not save the case. Please try again.");
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <KeyboardAwareView contentContainerStyle={styles.container}>
+    <View style={styles.container}>
       <Text style={styles.title}>
         {mode === "create" ? "Create Case" : "Edit Case"}
       </Text>
 
       {mode === "create" && (
         <Field
-          label="Case Number"
+          label="Case Number (optional)"
           value={caseNumber}
           onChangeText={setCaseNumber}
-          placeholder="Unique case number"
+          placeholder="Leave blank to auto-generate"
+          autoCapitalize="none"
+          autoCorrect={false}
         />
       )}
 
       <Field
-        label="Case Title"
+        label="Case Title *"
         value={caseTitle}
         onChangeText={setCaseTitle}
         placeholder="e.g., Writ Petition"
@@ -254,10 +395,10 @@ export default function CaseForm({
         />
       )}
 
-      <Field label="Client" value={client} onChangeText={setClient} />
-      <Field label="Advocate" value={advocate} onChangeText={setAdvocate} />
-      <Field label="Court" value={court} onChangeText={setCourt} />
-      <Field label="Judge" value={judge} onChangeText={setJudge} />
+      <Field label="Client" value={client} onChangeText={setClient} autoCapitalize="words" autoCorrect={false} />
+      <Field label="Advocate" value={advocate} onChangeText={setAdvocate} autoCapitalize="words" autoCorrect={false} />
+      <Field label="Court" value={court} onChangeText={setCourt} autoCapitalize="words" autoCorrect={false} />
+      <Field label="Judge" value={judge} onChangeText={setJudge} autoCapitalize="words" autoCorrect={false} />
       <Field
         label="Opposite Party"
         value={oppositeParty}
@@ -280,60 +421,76 @@ export default function CaseForm({
         value={filingDate}
         onChangeText={setFilingDate}
         placeholder="YYYY-MM-DD"
+        error={dateFieldErrors.filingDate}
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="numbers-and-punctuation"
       />
       <Field
         label="Registration Date"
         value={registrationDate}
         onChangeText={setRegistrationDate}
         placeholder="YYYY-MM-DD"
+        error={dateFieldErrors.registrationDate}
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="numbers-and-punctuation"
       />
       <Field
         label="Next Hearing Date"
         value={nextHearingDate}
         onChangeText={setNextHearingDate}
         placeholder="YYYY-MM-DD"
+        error={dateFieldErrors.nextHearingDate}
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="numbers-and-punctuation"
       />
 
-      <Field
+      <SelectField
         label="Current Stage"
         value={currentStage}
-        onChangeText={setCurrentStage}
-        placeholder="Pending / Filed / ..."
+        options={CURRENT_STAGE_OPTIONS}
+        onChange={setCurrentStage}
       />
-      <Field
+      <SelectField
         label="Status"
         value={status}
-        onChangeText={setStatus}
-        placeholder="Pending / Filed / ..."
+        options={STATUS_OPTIONS}
+        onChange={setStatus}
       />
-      <Field
+      <SelectField
         label="Priority"
         value={priority}
-        onChangeText={setPriority}
-        placeholder="Low / Medium / High / Urgent"
+        options={PRIORITY_OPTIONS}
+        onChange={setPriority}
       />
 
       <View style={styles.field}>
-        <Text style={styles.label}>Description</Text>
+        <Text style={styles.label} accessibilityRole="text">Description</Text>
         <TextInput
           value={description}
           onChangeText={setDescription}
           placeholder="Short description"
-          placeholderTextColor="rgba(181, 141, 61, 0.35)"
-          style={[styles.input, { height: 90 }]}
+          placeholderTextColor={colors.text.muted}
+          style={[styles.input, { height: 90, textAlignVertical: "top" }]}
           multiline
+          returnKeyType="default"
+          accessibilityLabel="Description"
         />
       </View>
 
       <View style={styles.field}>
-        <Text style={styles.label}>Important Notes</Text>
+        <Text style={styles.label} accessibilityRole="text">Important Notes</Text>
         <TextInput
           value={importantNotes}
           onChangeText={setImportantNotes}
           placeholder="Important notes"
-          placeholderTextColor="rgba(181, 141, 61, 0.35)"
-          style={[styles.input, { height: 90 }]}
+          placeholderTextColor={colors.text.muted}
+          style={[styles.input, { height: 90, textAlignVertical: "top" }]}
           multiline
+          returnKeyType="default"
+          accessibilityLabel="Important Notes"
         />
       </View>
 
@@ -342,96 +499,130 @@ export default function CaseForm({
         value={caseTagsCsv}
         onChangeText={setCaseTagsCsv}
         placeholder="tag1,tag2"
+        autoCapitalize="none"
+        autoCorrect={false}
+        returnKeyType="done"
+        onSubmitEditing={submit}
       />
 
       <View style={styles.submitRow}>
+        {!!submitError && (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>{submitError}</Text>
+          </View>
+        )}
         <Pressable
           style={[styles.btn, submitting ? { opacity: 0.7 } : null]}
           onPress={submit}
           disabled={submitting}
+          accessibilityRole="button"
+          accessibilityLabel={submitLabel ?? (mode === "create" ? "Create case" : "Save changes")}
+          accessibilityHint="Saves the case details"
+          accessibilityState={{ disabled: submitting, busy: submitting }}
+          hitSlop={8}
         >
           <Text style={styles.btnText}>
             {submitting ? "Saving..." : submitLabel ?? (mode === "create" ? "Create" : "Save")}
           </Text>
         </Pressable>
       </View>
-
-      {/* Lightweight preview hint (helps debugging if backend rejects payload) */}
-      <View style={styles.hintBox}>
-        <Text style={styles.hintTitle}>Payload keys</Text>
-        <Text style={styles.hintText} numberOfLines={3}>
-          {Object.keys(payloadPreview)
-            .filter((k) => {
-              const v = (payloadPreview as any)[k];
-              return v !== undefined;
-            })
-            .join(", ")}
-        </Text>
-      </View>
-    </KeyboardAwareView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-    gap: 12,
+    padding: spacing.md,
+    gap: spacing.md,
   },
   title: {
-    color: "#F8FAFC",
-    fontSize: 18,
-    fontWeight: "900",
-    marginBottom: 6,
+    color: colors.text.primary,
+    fontSize: typography.h3.fontSize,
+    fontWeight: typography.h3.fontWeight,
+    marginBottom: spacing.xs,
   },
   field: {
-    gap: 6,
+    gap: spacing.xs,
   },
   label: {
-    color: "rgba(181, 141, 61, 0.9)",
-    fontWeight: "800",
-    fontSize: 12,
+    color: colors.accent.gold,
+    fontWeight: typography.label.fontWeight,
+    fontSize: typography.label.fontSize,
+    letterSpacing: typography.label.letterSpacing,
   },
   input: {
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.25)",
-    backgroundColor: "rgba(18, 18, 20, 0.35)",
-    color: "#F8FAFC",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderColor: colors.border.default,
+    backgroundColor: colors.bg.elevated,
+    color: colors.text.primary,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+    minHeight: 48,
+    fontSize: 16,
   },
   submitRow: {
-    marginTop: 6,
+    marginTop: spacing.xs,
   },
   btn: {
-    backgroundColor: "rgba(181, 141, 61, 0.14)",
+    backgroundColor: colors.accent.gold,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.55)",
-    borderRadius: 14,
-    paddingVertical: 12,
+    borderColor: colors.accent.goldDark,
+    borderRadius: radii.lg,
+    paddingVertical: spacing.md,
+    minHeight: 52,
     alignItems: "center",
+    justifyContent: "center",
   },
   btnText: {
-    color: "#D4AF37",
-    fontWeight: "900",
-    fontSize: 14,
+    color: colors.text.inverse,
+    fontWeight: typography.button.fontWeight,
+    fontSize: typography.button.fontSize,
+    letterSpacing: typography.button.letterSpacing,
   },
-  hintBox: {
-    marginTop: 12,
-    padding: 12,
+  inputError: {
+    borderColor: colors.semantic.danger,
+  },
+  chipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
+  chip: {
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.18)",
-    borderRadius: 12,
-    backgroundColor: "rgba(181, 141, 61, 0.06)",
+    borderColor: colors.border.default,
+    backgroundColor: colors.bg.elevated,
+    borderRadius: radii.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+    minHeight: 44,
+    justifyContent: "center",
   },
-  hintTitle: {
-    color: "rgba(181, 141, 61, 0.95)",
-    fontWeight: "900",
-    marginBottom: 4,
+  chipSelected: {
+    backgroundColor: colors.accent.goldSubtle,
+    borderColor: colors.accent.gold,
   },
-  hintText: {
-    color: "rgba(248, 250, 252, 0.85)",
-    fontWeight: "700",
-    fontSize: 12,
+  chipText: {
+    color: colors.text.secondary,
+    fontWeight: typography.caption.fontWeight,
+    fontSize: typography.caption.fontSize,
+  },
+  chipTextSelected: {
+    color: colors.accent.gold,
+    fontWeight: typography.caption.fontWeight,
+  },
+  errorBox: {
+    marginBottom: spacing.sm,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.semantic.dangerSubtle,
+    borderRadius: radii.md,
+    backgroundColor: colors.semantic.dangerSubtle,
+  },
+  errorText: {
+    color: colors.semantic.danger,
+    fontWeight: typography.caption.fontWeight,
+    fontSize: typography.caption.fontSize,
+    marginTop: spacing.xs,
   },
 });

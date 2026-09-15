@@ -1,9 +1,11 @@
 import React, { useState, useCallback } from "react";
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity, Alert } from "react-native";
+import { colors } from "@/theme/designSystem";
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity } from "react-native";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import AdminHeader from "@/components/admin/AdminHeader";
 import GlassCard from "@/components/ui/GlassCard";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { getAdminLawyerById, updateAdminLawyer, verifyLawyer } from "@/services/adminApi";
 
 type InfoRowProps = {
@@ -23,6 +25,8 @@ export default function AdminLawyerDetailScreen() {
   const [lawyer, setLawyer] = useState<any>(null);
   const [casesCount, setCasesCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  // Cross-platform confirm/notice dialogs (Alert.alert is a no-op on web).
+  const { confirm: confirmDialog, notice: noticeDialog, element: dialogElement } = useConfirmDialog();
 
   const fetchLawyer = useCallback(async () => {
     try {
@@ -49,7 +53,7 @@ export default function AdminLawyerDetailScreen() {
       const res = await updateAdminLawyer(id as string, { isActive: !lawyer.isActive });
       if (res?.success) setLawyer(res.data);
     } catch (err) {
-      Alert.alert("Error", "Failed to update lawyer status");
+      void noticeDialog({ title: "Error", message: "Failed to update lawyer status", danger: true });
     }
   };
 
@@ -58,7 +62,7 @@ export default function AdminLawyerDetailScreen() {
       const res = await verifyLawyer(id as string, status);
       if (res?.success) setLawyer(res.data);
     } catch (err) {
-      Alert.alert("Error", "Failed to verify lawyer");
+      void noticeDialog({ title: "Error", message: "Failed to verify lawyer", danger: true });
     }
   };
 
@@ -66,7 +70,7 @@ export default function AdminLawyerDetailScreen() {
     return (
       <View style={styles.container}>
         <AdminHeader title="Lawyer Details" showBack />
-        <View style={styles.center}><ActivityIndicator size="large" color="#B58D3D" /></View>
+        <View style={styles.center}><ActivityIndicator size="large" color={colors.accent.gold} /></View>
       </View>
     );
   }
@@ -160,7 +164,7 @@ export default function AdminLawyerDetailScreen() {
             <GlassCard>
               {lawyer.documents.map((doc: any, idx: number) => (
                 <View key={idx} style={styles.docRow}>
-                  <Ionicons name="document-outline" size={18} color="#B58D3D" />
+                  <Ionicons name="document-outline" size={18} color={colors.accent.gold} />
                   <Text style={styles.docName}>{doc.name}</Text>
                 </View>
               ))}
@@ -194,43 +198,44 @@ export default function AdminLawyerDetailScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      {dialogElement}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0B0B0B" },
+  container: { flex: 1, backgroundColor: colors.bg.primary },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   content: { padding: 16, gap: 16, paddingBottom: 40 },
   errorText: { color: "#EF4444", fontSize: 14, fontWeight: "600", marginTop: 12 },
-  sectionTitle: { color: "#F8FAFC", fontSize: 15, fontWeight: "900", marginTop: 4 },
+  sectionTitle: { color: "#F8FAFC", fontSize: 15, fontWeight: "800", marginTop: 4 },
 
   profileHeader: { flexDirection: "row", gap: 16, alignItems: "center", marginBottom: 16 },
-  profileAvatar: { width: 60, height: 60, borderRadius: 30, backgroundColor: "rgba(181, 141, 61, 0.15)", alignItems: "center", justifyContent: "center" },
-  profileAvatarText: { color: "#B58D3D", fontSize: 24, fontWeight: "900" },
+  profileAvatar: { width: 60, height: 60, borderRadius: 30, backgroundColor: colors.accent.goldLight, alignItems: "center", justifyContent: "center" },
+  profileAvatarText: { color: colors.accent.gold, fontSize: 24, fontWeight: "800" },
   profileInfo: { flex: 1 },
-  profileName: { color: "#F8FAFC", fontSize: 18, fontWeight: "900" },
-  profileEmail: { color: "#94A3B8", fontSize: 13, fontWeight: "600", marginTop: 2 },
+  profileName: { color: "#F8FAFC", fontSize: 18, fontWeight: "800" },
+  profileEmail: { color: "#94A3B8", fontSize: 12, fontWeight: "600", marginTop: 2 },
   badge: { alignSelf: "flex-start", paddingHorizontal: 10, paddingVertical: 3, borderRadius: 12, borderWidth: 1, marginTop: 6 },
-  badgeText: { fontSize: 11, fontWeight: "800", textTransform: "capitalize" },
+  badgeText: { fontSize: 12, fontWeight: "800", textTransform: "capitalize" },
 
-  statsRow: { flexDirection: "row", justifyContent: "space-around", paddingTop: 12, borderTopWidth: 1, borderTopColor: "rgba(181, 141, 61, 0.1)" },
+  statsRow: { flexDirection: "row", justifyContent: "space-around", paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.accent.goldLight },
   statItem: { alignItems: "center" },
-  statValue: { color: "#F8FAFC", fontSize: 18, fontWeight: "900" },
-  statLabel: { color: "#64748B", fontSize: 11, fontWeight: "700" },
+  statValue: { color: "#F8FAFC", fontSize: 18, fontWeight: "800" },
+  statLabel: { color: "#64748B", fontSize: 12, fontWeight: "700" },
 
-  infoRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "rgba(181, 141, 61, 0.06)" },
-  infoLabel: { color: "#94A3B8", fontSize: 13, fontWeight: "600", flex: 1 },
-  infoValue: { color: "#F8FAFC", fontSize: 13, fontWeight: "700", flex: 1, textAlign: "right" },
+  infoRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.accent.goldSubtle },
+  infoLabel: { color: "#94A3B8", fontSize: 12, fontWeight: "600", flex: 1 },
+  infoValue: { color: "#F8FAFC", fontSize: 12, fontWeight: "700", flex: 1, textAlign: "right" },
 
   tagsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  tag: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, backgroundColor: "rgba(181, 141, 61, 0.1)", borderWidth: 1, borderColor: "rgba(181, 141, 61, 0.2)" },
-  tagText: { color: "#B58D3D", fontSize: 12, fontWeight: "700" },
+  tag: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, backgroundColor: colors.accent.goldLight, borderWidth: 1, borderColor: colors.border.goldLight },
+  tagText: { color: colors.accent.gold, fontSize: 12, fontWeight: "700" },
 
   docRow: { flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 8 },
-  docName: { color: "#F8FAFC", fontSize: 13, fontWeight: "600", flex: 1 },
+  docName: { color: "#F8FAFC", fontSize: 12, fontWeight: "600", flex: 1 },
 
   actionsWrap: { gap: 10 },
-  actionBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 14, borderRadius: 14, borderWidth: 1, borderColor: "rgba(181, 141, 61, 0.2)" },
+  actionBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 14, borderRadius: 14, borderWidth: 1, borderColor: colors.border.goldLight },
   actionBtnText: { fontSize: 14, fontWeight: "800" },
 });

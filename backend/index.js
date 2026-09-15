@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 const helmet = require("helmet");
 
 const authRoutes = require("./routes/auth");
+const courtdeskRoutes = require("./routes/courtdesk");
 const lawyerRoutes = require("./routes/lawyers");
 
 const stateRoutes = require("./routes/states");
@@ -54,6 +55,33 @@ if (isProduction) {
     process.exit(1);
   }
 }
+
+// ─────────────────────────────────────────────────────────
+// Strong secret enforcement (production only).
+// Prevents shipping with trivially-brute-forceable values like
+// "secret123" that would allow token forgery if the signing key
+// is compromised. Minimum 32 characters recommended for HS256.
+// ─────────────────────────────────────────────────────────
+{
+  const jwtSecret = process.env.JWT_SECRET;
+  if (jwtSecret && jwtSecret.length < 32) {
+    logger.error("JWT_SECRET too short for production", {
+      length: jwtSecret.length,
+      minRequired: 32,
+    });
+    process.exit(1);
+  }
+
+  const refreshSecret = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
+  if (refreshSecret && refreshSecret.length < 32) {
+    logger.error("JWT_REFRESH_SECRET too short for production", {
+      length: refreshSecret.length,
+      minRequired: 32,
+    });
+    process.exit(1);
+  }
+}
+
 
 // ─────────────────────────────────────────────────────────
 // Security headers (Step 5)
@@ -132,6 +160,9 @@ app.use((req, res, next) => {
 app.use("/api/auth", authRateLimit, authRoutes);
 
 app.use("/api/lawyers", lawyerRoutes);
+
+// CourtDesk — lawyer-private surface (Phase 1); JWT-only, no deviceAuth
+app.use("/api/courtdesk", courtdeskRoutes);
 
 app.use("/api/states", stateRoutes);
 

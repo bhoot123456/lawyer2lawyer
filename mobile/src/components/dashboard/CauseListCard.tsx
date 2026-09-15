@@ -60,7 +60,7 @@ const CauseListCard: React.FC<CauseListCardProps> = ({
         <Text style={styles.sectionHeader}>Cause List</Text>
         <GlassCard borderColor={colors.border.goldLight} accent={GOLD} elevation={1}>
           <View style={styles.emptyContainer}>
-            <Ionicons name="list-outline" size={32} color={GOLD} />
+            <Ionicons name="list-outline" size={34} color={GOLD} />
             <Text style={styles.emptyText}>No cause list entries for today</Text>
           </View>
         </GlassCard>

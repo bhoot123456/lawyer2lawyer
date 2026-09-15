@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+﻿import React, { memo } from "react";
 import {
   View,
   TextInput,
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
   },
   label: {
     color: AI_TEXT_SECONDARY,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "700",
     marginBottom: 6,
     letterSpacing: 0.3,

@@ -13,6 +13,7 @@ import { router } from "expo-router";
 import LawyerCard from "@/components/LawyerCard";
 import { coverageStates, featuredCities } from "@/constants/coverage";
 import { KeyboardAwareView } from "@/components/ui/KeyboardAwareView";
+import { colors } from "@/theme/designSystem";
 
 export default function SearchLawyerScreen({ navigation }) {
   const [specialization, setSpecialization] = useState("");
@@ -220,7 +221,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   chipSelected: {
-    backgroundColor: "#B58D3D",
+    backgroundColor: colors.accent.gold,
     borderColor: "#9A752C",
   },
   chipText: { color: "#64748B", fontWeight: "700" },

@@ -100,7 +100,7 @@ const TodayTimeline: React.FC<TodayTimelineProps> = ({
         <Text style={styles.sectionHeader}>Today&apos;s Timeline</Text>
         <GlassCard borderColor={colors.border.goldLight} accent={GOLD} elevation={1}>
           <View style={styles.emptyContainer}>
-            <Ionicons name="calendar-outline" size={32} color={GOLD} />
+            <Ionicons name="calendar-outline" size={34} color={GOLD} />
             <Text style={styles.emptyText}>Nothing scheduled for today</Text>
           </View>
         </GlassCard>

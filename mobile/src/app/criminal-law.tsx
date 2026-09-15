@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#eeecec" },
   body: {
     padding: 16,
-    paddingBottom: 28,
+    paddingBottom: 110,
     gap: 14,
   },
   sectionWrap: { marginTop: 6 },

@@ -16,7 +16,7 @@ router.get("/:id", [optionalAuth, deviceAuth], caseController.getSingleCase);
 
 router.put("/:id", [optionalAuth, deviceAuth], caseController.updateCase);
 
-router.delete("/:id", [optionalAuth, deviceAuth], caseController.deleteCase);
+router.delete("/:id", [optionalAuth, deviceAuth, aiRateLimit], caseController.deleteCase);
 
 // Timeline
 router.post("/:id/timeline", auth, caseController.addTimelineEntry);

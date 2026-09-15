@@ -1,5 +1,5 @@
-import React, { ReactNode } from "react";
-import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
+import React, { ReactNode, useState } from "react";
+import { Pressable, Platform, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 
 import { colors, radii, shadows } from "@/theme/designSystem";
 
@@ -58,6 +58,22 @@ export default function GlassCard({
   onPress,
   elevation = 2,
 }: GlassCardProps) {
+  // Hooks must be declared before any early return
+  const [hovered, setHovered] = useState(false);
+  const isWeb = Platform.OS === "web";
+
+  if (!onPress) {
+    return (
+      <GlassContent
+        style={[{ borderRadius: DEFAULT_RADIUS }, style]}
+        borderColor={borderColor}
+        elevation={elevation}
+      >
+        {children}
+      </GlassContent>
+    );
+  }
+
   const card = (
     <GlassContent
       style={[{ borderRadius: DEFAULT_RADIUS }, style]}
@@ -68,16 +84,18 @@ export default function GlassCard({
     </GlassContent>
   );
 
-  if (!onPress) return card;
-
   return (
     <View style={styles.pressWrap}>
       <Pressable
         onPress={onPress}
+        // @ts-expect-error — onMouseEnter/onMouseLeave are web-only props (react-native-web)
+        onMouseEnter={isWeb ? () => setHovered(true) : undefined}
+        onMouseLeave={isWeb ? () => setHovered(false) : undefined}
         style={({ pressed }) => [
           StyleSheet.absoluteFill,
           { borderRadius: DEFAULT_RADIUS },
           pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
+          hovered && isWeb && { opacity: 0.92, transform: [{ scale: 0.99 }] },
         ]}
       >
         <View

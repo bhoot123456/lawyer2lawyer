@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+﻿import React, { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import GlassCard from "@/components/ui/GlassCard";
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   },
   statNumber: {
     fontSize: typography.h2.fontSize,
-    fontWeight: "900",
+    fontWeight: "800",
     letterSpacing: 0.5,
   },
   statLabel: {

@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from "react";
+import { colors } from "@/theme/designSystem";
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Pressable, TextInput } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { getCaseById, addTimelineEntry } from "@/services/caseApi";
+import { getAuthToken, normalizeApiError } from "@/services/api";
 
 export default function TimelineScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [caseDoc, setCaseDoc] = useState<any>(null);
   const [type, setType] = useState("Other");
   const [description, setDescription] = useState("");
@@ -16,7 +20,7 @@ export default function TimelineScreen() {
       setLoading(true);
       try {
         const res = await getCaseById(id);
-        setCaseDoc(res);
+        setCaseDoc(res?.case ?? res);
       } finally {
         setLoading(false);
       }
@@ -24,9 +28,34 @@ export default function TimelineScreen() {
     load();
   }, [id]);
 
+  const handleAddEntry = async () => {
+    if (!id || submitting) return;
+    if (!description.trim()) {
+      setSubmitError("Please provide a description for the timeline entry.");
+      return;
+    }
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        setSubmitError("Please sign in as a lawyer/admin to add timeline entries.");
+        return;
+      }
+      await addTimelineEntry(id, { type, description: description.trim() });
+      const res = await getCaseById(id);
+      setCaseDoc(res?.case ?? res);
+      setDescription("");
+    } catch (e: any) {
+      setSubmitError(normalizeApiError(e));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {loading && <ActivityIndicator size="small" color="#B58D3D" />}
+      {loading && <ActivityIndicator size="small" color={colors.accent.gold} />}
 
       <Text style={styles.title}>Timeline</Text>
 
@@ -37,7 +66,7 @@ export default function TimelineScreen() {
           onChangeText={setType}
           style={styles.input}
           placeholder="Other / ..."
-          placeholderTextColor="rgba(181, 141, 61, 0.35)"
+          placeholderTextColor={colors.border.gold}
         />
 
         <Text style={styles.label}>Description</Text>
@@ -46,21 +75,22 @@ export default function TimelineScreen() {
           onChangeText={setDescription}
           style={[styles.input, { height: 90 }]}
           placeholder="Add timeline description"
-          placeholderTextColor="rgba(181, 141, 61, 0.35)"
+          placeholderTextColor={colors.border.gold}
           multiline
         />
 
+        {submitError ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>{submitError}</Text>
+          </View>
+        ) : null}
+
         <Pressable
-          style={styles.btn}
-          onPress={async () => {
-            if (!id) return;
-            await addTimelineEntry(id!, { type, description });
-            const res = await getCaseById(id!);
-            setCaseDoc(res);
-            setDescription("");
-          }}
+          style={[styles.btn, submitting && { opacity: 0.7 }]}
+          onPress={handleAddEntry}
+          disabled={submitting}
         >
-          <Text style={styles.btnText}>Add Entry</Text>
+          <Text style={styles.btnText}>{submitting ? "Adding..." : "Add Entry"}</Text>
         </Pressable>
       </View>
 
@@ -92,24 +122,24 @@ const styles = StyleSheet.create({
   title: {
     color: "#F8FAFC",
     fontSize: 20,
-    fontWeight: "900",
+    fontWeight: "800",
   },
   form: {
     backgroundColor: "rgba(255,255,255,0.05)",
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.20)",
+    borderColor: colors.border.goldLight,
     padding: 14,
     gap: 10,
   },
   label: {
-    color: "rgba(181, 141, 61, 0.95)",
-    fontWeight: "900",
+    color: colors.accent.gold,
+    fontWeight: "800",
     fontSize: 12,
   },
   input: {
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.25)",
+    borderColor: colors.border.gold,
     backgroundColor: "rgba(18, 18, 20, 0.35)",
     color: "#F8FAFC",
     borderRadius: 12,
@@ -117,16 +147,16 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   btn: {
-    backgroundColor: "rgba(181, 141, 61, 0.14)",
+    backgroundColor: colors.accent.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.55)",
+    borderColor: colors.border.gold,
     borderRadius: 14,
     paddingVertical: 12,
     alignItems: "center",
   },
   btnText: {
     color: "#D4AF37",
-    fontWeight: "900",
+    fontWeight: "800",
     fontSize: 14,
   },
   list: {
@@ -136,15 +166,15 @@ const styles = StyleSheet.create({
   item: {
     backgroundColor: "rgba(255,255,255,0.04)",
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.18)",
+    borderColor: colors.accent.goldLight,
     borderRadius: 16,
     padding: 14,
     gap: 6,
   },
   itemType: {
     color: "#F8FAFC",
-    fontWeight: "900",
-    fontSize: 13,
+    fontWeight: "800",
+    fontSize: 12,
   },
   itemDesc: {
     color: "rgba(248, 250, 252, 0.80)",
@@ -152,22 +182,34 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   itemDate: {
-    color: "rgba(181, 141, 61, 0.85)",
+    color: colors.accent.gold,
     fontWeight: "800",
-    fontSize: 11,
+    fontSize: 12,
   },
   backBtn: {
     marginTop: 8,
-    backgroundColor: "rgba(181, 141, 61, 0.10)",
+    backgroundColor: colors.accent.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.35)",
+    borderColor: colors.border.gold,
     borderRadius: 14,
     paddingVertical: 12,
     alignItems: "center",
   },
   backText: {
-    color: "rgba(181, 141, 61, 0.95)",
-    fontWeight: "900",
+    color: colors.accent.gold,
+    fontWeight: "800",
+  },
+  errorBox: {
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: "rgba(239, 68, 68, 0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(239, 68, 68, 0.35)",
+  },
+  errorText: {
+    color: "#fca5a5",
+    fontSize: 12,
+    fontWeight: "700",
   },
 });
 

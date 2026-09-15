@@ -5,6 +5,7 @@ const Article = require("../models/Article");
 const Tribunal = require("../models/Tribunal");
 const Notification = require("../models/Notification");
 const PoliceStation = require("../models/PoliceStation");
+const caseService = require("../services/caseService");
 const { isValidObjectId, sendClassifiedError } = require("../utils/httpError");
 
 /**
@@ -566,12 +567,20 @@ exports.updateCaseAdmin = async (req, res) => {
 
 exports.deleteCaseAdmin = async (req, res) => {
   try {
-    const caseData = await Case.findByIdAndDelete(req.params.id);
+    // Admin deletes bypass device/JWT scoping (the admin panel explicitly
+    // manages every case), but go through the SAME cascade cleanup + audit
+    // trail as the public route so no orphans ever remain and the deletion is
+    // clearly recorded as an admin action.
+    if (rejectInvalidId(res, req.params.id, "case id")) return;
+
+    const caseData = await Case.findById(req.params.id);
     if (!caseData) {
       return res.status(404).json({ success: false, message: "Case not found" });
     }
 
-    res.json({ success: true, message: "Case deleted successfully" });
+    await caseService.removeCaseAndReferences({ caseDoc: caseData, actor: req.user, req });
+
+    res.json({ success: true, id: String(caseData._id), message: "Case deleted successfully" });
   } catch (error) {
     console.error("Delete case admin error:", error);
     res.status(500).json({ success: false, message: "Failed to delete case" });

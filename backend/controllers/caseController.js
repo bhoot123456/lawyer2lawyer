@@ -1,4 +1,5 @@
 const caseService = require("../services/caseService");
+const logger = require("../utils/logger");
 
 function sendError(res, statusCode, message, details) {
   return res.status(statusCode).json({
@@ -42,14 +43,18 @@ exports.updateCase = async (req, res) => {
 
 exports.deleteCase = async (req, res) => {
   try {
-    const result = await caseService.deleteCase({ id: req.params.id, user: req.user, deviceId: req.deviceId });
+    const result = await caseService.deleteCase({ id: req.params.id, user: req.user, deviceId: req.deviceId, req: req });
     if (!result.ok) {
       return sendError(res, result.code || 400, result.message || "Unable to delete case");
     }
-    return res.json({ success: true });
+    return res.json({ success: true, id: result.id });
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error(err);
+    // Server-side errors are logged with the structured logger; the client
+    // only ever sees a sanitized generic message (no stack traces).
+    logger.error("DELETE /api/cases/:id failed", {
+      id: req.params && req.params.id,
+      error: err.message,
+    });
     return sendError(res, 500, "Unable to delete case");
   }
 };
@@ -101,6 +106,7 @@ exports.addTimelineEntry = async (req, res) => {
       description,
       actor: req.user._id,
       meta,
+      user: req.user,
     });
 
     if (!result.ok) {

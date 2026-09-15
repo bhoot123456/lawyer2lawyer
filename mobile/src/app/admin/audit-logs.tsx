@@ -1,4 +1,5 @@
-import React, { useCallback, useState } from "react";
+﻿import React, { useCallback, useState } from "react";
+import { colors } from "@/theme/designSystem";
 import {
   View,
   Text,
@@ -15,9 +16,10 @@ import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { getAuditLogs, type AuditLogEntry } from "@/services/adminApi";
 
 const ACTION_COLORS: Record<string, string> = {
-  CREATE: "#10B981", UPDATE: "#3B82F6", DELETE: "#EF4444",
-  PUBLISH: "#10B981", UNPUBLISH: "#F59E0B", ARCHIVE: "#64748B",
-  RESTORE: "#8B5CF6", VERIFY: "#B58D3D",
+  CREATE: colors.semantic.success, UPDATE: colors.semantic.info, DELETE: colors.semantic.danger,
+  "case.delete": colors.semantic.danger,
+  PUBLISH: colors.semantic.success, UNPUBLISH: colors.semantic.warning, ARCHIVE: colors.text.muted,
+  RESTORE: colors.semantic.info, VERIFY: colors.accent.gold,
 };
 
 export default function AuditLogsScreen() {
@@ -78,7 +80,7 @@ export default function AuditLogsScreen() {
         />
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View style={{ flexDirection: "row", gap: 8 }}>
-            {["", "CREATE", "UPDATE", "DELETE", "PUBLISH", "ARCHIVE", "VERIFY"].map((a) => (
+            {["", "CREATE", "UPDATE", "DELETE", "case.delete", "PUBLISH", "ARCHIVE", "VERIFY"].map((a) => (
               <TouchableOpacity key={a || "all"}
                 style={[styles.chip, actionFilter === a && styles.chipActive]}
                 onPress={() => setActionFilter(a)}>
@@ -91,7 +93,7 @@ export default function AuditLogsScreen() {
 
       {error !== "" && <Text style={styles.error}>{error}</Text>}
       {loading ? (
-        <ActivityIndicator style={{ marginTop: 40 }} size="large" color="#B58D3D" />
+        <ActivityIndicator style={{ marginTop: 40 }} size="large" color={colors.accent.gold} />
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40, gap: 10 }}>
           {logs.map((log) => {
@@ -136,12 +138,12 @@ export default function AuditLogsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0B0B0B" },
+  container: { flex: 1, backgroundColor: colors.bg.primary },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24, gap: 10 },
   noAccess: { color: "#94A3B8", fontWeight: "700", textAlign: "center" },
   input: {
     backgroundColor: "rgba(255,255,255,0.04)", borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.2)", borderRadius: 12,
+    borderColor: colors.border.goldLight, borderRadius: 12,
     color: "#F8FAFC", paddingHorizontal: 12, paddingVertical: 10,
     fontSize: 14, fontWeight: "600",
   },
@@ -149,19 +151,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999,
     borderWidth: 1, borderColor: "rgba(148,163,184,0.3)",
   },
-  chipActive: { borderColor: "#B58D3D", backgroundColor: "rgba(181,141,61,0.15)" },
+  chipActive: { borderColor: colors.accent.gold, backgroundColor: colors.accent.goldLight },
   chipText: { color: "#94A3B8", fontSize: 12, fontWeight: "700" },
-  chipTextActive: { color: "#B58D3D" },
+  chipTextActive: { color: colors.accent.gold },
   card: {
     backgroundColor: "rgba(18,18,20,0.6)", borderRadius: 14, borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.15)", padding: 14,
+    borderColor: colors.accent.goldLight, padding: 14,
   },
   rowBetween: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  action: { fontSize: 14, fontWeight: "900" },
-  when: { color: "#64748B", fontSize: 11, fontWeight: "600" },
-  who: { color: "#CBD5E1", fontSize: 13, fontWeight: "700", marginTop: 4 },
-  what: { color: "#94A3B8", fontSize: 13, fontWeight: "600", marginTop: 2 },
-  fields: { color: "#64748B", fontSize: 11, fontWeight: "600", marginTop: 4 },
-  json: { color: "#64748B", fontSize: 10, marginTop: 4 },
+  action: { fontSize: 14, fontWeight: "800" },
+  when: { color: "#64748B", fontSize: 12, fontWeight: "600" },
+  who: { color: "#CBD5E1", fontSize: 12, fontWeight: "700", marginTop: 4 },
+  what: { color: "#94A3B8", fontSize: 12, fontWeight: "600", marginTop: 2 },
+  fields: { color: "#64748B", fontSize: 12, fontWeight: "600", marginTop: 4 },
+  json: { color: "#64748B", fontSize: 12, marginTop: 4 },
   error: { color: "#EF4444", fontWeight: "700", paddingHorizontal: 16, marginTop: 8 },
 });

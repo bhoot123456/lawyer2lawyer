@@ -1,10 +1,12 @@
 import React, { useState, useCallback } from "react";
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from "react-native";
+import { colors } from "@/theme/designSystem";
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import AdminHeader from "@/components/admin/AdminHeader";
 import GlassCard from "@/components/ui/GlassCard";
 import SearchBar from "@/components/admin/SearchBar";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { getAdminClients, deleteAdminClient, updateAdminClient } from "@/services/adminApi";
 
 export default function AdminClientsScreen() {
@@ -14,6 +16,8 @@ export default function AdminClientsScreen() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  // Cross-platform confirm/notice dialogs (Alert.alert is a no-op on web).
+  const { confirm: confirmDialog, notice: noticeDialog, element: dialogElement } = useConfirmDialog();
 
   const fetchClients = useCallback(async (pg = 1, srch = search) => {
     try {
@@ -37,13 +41,18 @@ export default function AdminClientsScreen() {
   useFocusEffect(useCallback(() => { fetchClients(1); }, []));
 
   const handleDelete = (id: string, name: string) => {
-    Alert.alert("Delete Client", `Delete ${name}? This cannot be undone.`, [
-      { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: async () => {
-        try { await deleteAdminClient(id); setClients((prev) => prev.filter((c) => c._id !== id)); }
-        catch (err) { Alert.alert("Error", "Failed to delete client"); }
-      }},
-    ]);
+    void (async () => {
+      // Shared ConfirmDialog renders on web too (RN Alert.alert is a no-op there).
+      const ok = await confirmDialog({
+        title: "Delete Client",
+        message: `Delete ${name}? This cannot be undone.`,
+        confirmLabel: "Delete",
+        danger: true,
+      });
+      if (!ok) return;
+      try { await deleteAdminClient(id); setClients((prev) => prev.filter((c) => c._id !== id)); }
+      catch (err) { void noticeDialog({ title: "Error", message: "Failed to delete client", danger: true }); }
+    })();
   };
 
   const handleToggleActive = async (id: string, currentStatus: boolean) => {
@@ -53,7 +62,7 @@ export default function AdminClientsScreen() {
         setClients((prev) => prev.map((c) => (c._id === id ? res.data : c)));
       }
     } catch (err) {
-      Alert.alert("Error", "Failed to update client status");
+      void noticeDialog({ title: "Error", message: "Failed to update client status", danger: true });
     }
   };
 
@@ -76,7 +85,7 @@ export default function AdminClientsScreen() {
           <Ionicons name="eye-outline" size={16} color="#3B82F6" />
           <Text style={[styles.actionText, { color: "#3B82F6" }]}>View</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: item.isActive ? "rgba(245, 158, 11, 0.15)" : "rgba(16, 185, 129, 0.15)", borderColor: "rgba(181, 141, 61, 0.2)" }]}
+        <TouchableOpacity style={[styles.actionBtn, { backgroundColor: item.isActive ? "rgba(245, 158, 11, 0.15)" : "rgba(16, 185, 129, 0.15)", borderColor: colors.border.goldLight }]}
           onPress={() => handleToggleActive(item._id, item.isActive)}>
           <Ionicons name={item.isActive ? "pause-outline" : "play-outline"} size={16} color={item.isActive ? "#F59E0B" : "#10B981"} />
           <Text style={[styles.actionText, { color: item.isActive ? "#F59E0B" : "#10B981" }]}>{item.isActive ? "Suspend" : "Activate"}</Text>
@@ -98,7 +107,7 @@ export default function AdminClientsScreen() {
           <SearchBar value={search} onChangeText={setSearch} placeholder="Search clients..." />
         </View>
         <TouchableOpacity style={styles.filterBtn} onPress={() => { setPage(1); fetchClients(1, search); }}>
-          <Ionicons name="search-outline" size={20} color="#B58D3D" />
+          <Ionicons name="search-outline" size={20} color={colors.accent.gold} />
         </TouchableOpacity>
       </View>
       <FlatList
@@ -106,30 +115,31 @@ export default function AdminClientsScreen() {
         renderItem={renderClient}
         keyExtractor={(item) => item._id}
         contentContainerStyle={styles.list}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchClients(1); }} tintColor="#B58D3D" />}
-        ListEmptyComponent={loading ? <View style={styles.center}><ActivityIndicator size="large" color="#B58D3D" /></View> :
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchClients(1); }} tintColor={colors.accent.gold} />}
+        ListEmptyComponent={loading ? <View style={styles.center}><ActivityIndicator size="large" color={colors.accent.gold} /></View> :
           <View style={styles.center}><Ionicons name="people-outline" size={48} color="#64748B" /><Text style={styles.emptyText}>No clients found</Text></View>}
         onEndReached={() => { if (page < totalPages) { const np = page + 1; setPage(np); fetchClients(np, search); } }}
         onEndReachedThreshold={0.5}
       />
+      {dialogElement}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0B0B0B" },
+  container: { flex: 1, backgroundColor: colors.bg.primary },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 40 },
   filterRow: { flexDirection: "row", paddingHorizontal: 16, paddingVertical: 8, gap: 8, alignItems: "center" },
   searchWrap: { flex: 1 },
-  filterBtn: { width: 46, height: 46, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(181, 141, 61, 0.1)", borderWidth: 1, borderColor: "rgba(181, 141, 61, 0.2)" },
+  filterBtn: { width: 46, height: 46, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: colors.accent.goldLight, borderWidth: 1, borderColor: colors.border.goldLight },
   list: { padding: 16, gap: 12, paddingBottom: 40 },
   cardRow: { flexDirection: "row", gap: 12, alignItems: "center" },
-  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: "rgba(181, 141, 61, 0.15)", alignItems: "center", justifyContent: "center" },
-  avatarText: { color: "#B58D3D", fontSize: 18, fontWeight: "900" },
+  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.accent.goldLight, alignItems: "center", justifyContent: "center" },
+  avatarText: { color: colors.accent.gold, fontSize: 18, fontWeight: "800" },
   cardContent: { flex: 1 },
   cardName: { color: "#F8FAFC", fontSize: 15, fontWeight: "800" },
   cardEmail: { color: "#64748B", fontSize: 12, fontWeight: "500" },
-  cardMeta: { color: "#94A3B8", fontSize: 11, fontWeight: "600", marginTop: 2 },
+  cardMeta: { color: "#94A3B8", fontSize: 12, fontWeight: "600", marginTop: 2 },
   statusDot: { width: 10, height: 10, borderRadius: 5 },
   cardActions: { flexDirection: "row", gap: 8, marginTop: 12, flexWrap: "wrap" },
   actionBtn: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, borderWidth: 1 },

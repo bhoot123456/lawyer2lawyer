@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+import { colors } from "@/theme/designSystem";
 import {
   View,
   Text,
@@ -144,7 +145,7 @@ const SupremeCourtCard: React.FC<SupremeCourtCardProps> = ({
             accessibilityLabel={`Copy VC link for ${court.courtRoom}`}
             accessibilityRole="button"
           >
-            <Ionicons name="link-outline" size={16} color="#B58D3D" />
+            <Ionicons name="link-outline" size={16} color={colors.accent.gold} />
             <Text style={styles.detailLabel}>VC Link</Text>
             <Text style={styles.detailValue} numberOfLines={1}>
               {court.vcLink.replace(/^https?:\/\//, "")}
@@ -154,7 +155,7 @@ const SupremeCourtCard: React.FC<SupremeCourtCardProps> = ({
               onPress={handleCopyLink}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Ionicons name="copy-outline" size={14} color="#B58D3D" />
+              <Ionicons name="copy-outline" size={14} color={colors.accent.gold} />
               <Text style={styles.copyText}>Copy</Text>
             </TouchableOpacity>
           </TouchableOpacity>
@@ -163,7 +164,7 @@ const SupremeCourtCard: React.FC<SupremeCourtCardProps> = ({
         {/* Meeting ID Row */}
         {court.meetingId ? (
           <View style={styles.detailRow}>
-            <Ionicons name="videocam-outline" size={16} color="#B58D3D" />
+            <Ionicons name="videocam-outline" size={16} color={colors.accent.gold} />
             <Text style={styles.detailLabel}>Meeting ID</Text>
             <Text style={styles.detailValue} selectable>
               {court.meetingId}
@@ -174,7 +175,7 @@ const SupremeCourtCard: React.FC<SupremeCourtCardProps> = ({
         {/* Email Row */}
         {court.email ? (
           <View style={styles.detailRow}>
-            <Ionicons name="mail-outline" size={16} color="#B58D3D" />
+            <Ionicons name="mail-outline" size={16} color={colors.accent.gold} />
             <Text style={styles.detailLabel}>Email</Text>
             <Text style={styles.detailValue} selectable>
               {court.email}
@@ -222,7 +223,7 @@ const SupremeCourtCard: React.FC<SupremeCourtCardProps> = ({
           accessibilityLabel={`Share ${court.courtRoom} details`}
           accessibilityRole="button"
         >
-          <Ionicons name="share-outline" size={16} color="#B58D3D" />
+          <Ionicons name="share-outline" size={16} color={colors.accent.gold} />
           <Text style={[styles.actionButtonText, styles.shareButtonText]}>
             Share
           </Text>
@@ -240,7 +241,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.04)",
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.2)",
+    borderColor: colors.border.goldLight,
     padding: 16,
     position: "relative",
     overflow: "hidden",
@@ -253,6 +254,9 @@ const styles = StyleSheet.create({
       },
       android: {
         elevation: 6,
+      },
+      web: {
+        boxShadow: "0px 4px 12px rgba(0,0,0,0.15)",
       },
     }),
   },
@@ -268,16 +272,16 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: "rgba(181, 141, 61, 0.12)",
+    backgroundColor: colors.border.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.25)",
+    borderColor: colors.border.gold,
     alignItems: "center",
     justifyContent: "center",
   },
   courtRoomName: {
     color: "#F8FAFC",
     fontSize: 17,
-    fontWeight: "900",
+    fontWeight: "800",
     letterSpacing: 0.3,
   },
   statusBadge: {
@@ -321,7 +325,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.1)",
+    borderColor: colors.accent.goldLight,
   },
   detailLabel: {
     color: "rgba(248, 250, 252, 0.6)",
@@ -331,7 +335,7 @@ const styles = StyleSheet.create({
   },
   detailValue: {
     color: "#F8FAFC",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "700",
     flex: 1,
   },
@@ -339,14 +343,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "rgba(181, 141, 61, 0.1)",
+    backgroundColor: colors.accent.goldLight,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 8,
   },
   copyText: {
-    color: "#B58D3D",
-    fontSize: 11,
+    color: colors.accent.gold,
+    fontSize: 12,
     fontWeight: "800",
   },
   footer: {
@@ -363,27 +367,27 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   joinButton: {
-    backgroundColor: "#B58D3D",
+    backgroundColor: colors.accent.gold,
   },
   shareButton: {
-    backgroundColor: "rgba(181, 141, 61, 0.1)",
+    backgroundColor: colors.accent.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.25)",
+    borderColor: colors.border.gold,
   },
   actionButtonDisabled: {
     backgroundColor: "rgba(100, 116, 139, 0.2)",
     borderWidth: 0,
   },
   actionButtonText: {
-    fontSize: 13,
-    fontWeight: "900",
+    fontSize: 12,
+    fontWeight: "800",
     letterSpacing: 0.3,
   },
   joinButtonText: {
     color: "#FFFFFF",
   },
   shareButtonText: {
-    color: "#B58D3D",
+    color: colors.accent.gold,
   },
   actionButtonTextDisabled: {
     color: "#64748B",
@@ -394,7 +398,7 @@ const styles = StyleSheet.create({
     left: 20,
     right: 20,
     height: 2,
-    backgroundColor: "rgba(181, 141, 61, 0.2)",
+    backgroundColor: colors.border.goldLight,
     borderTopLeftRadius: 2,
     borderTopRightRadius: 2,
   },

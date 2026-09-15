@@ -2,6 +2,7 @@ import React, { memo, useEffect, useMemo } from "react";
 import { View, Text, StyleSheet, Animated, Easing } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AI_GOLD, AI_GOLD_LIGHT, AI_CARD_BG, AI_TEXT_SECONDARY } from "../constants";
+import { colors } from "@/theme/designSystem";
 
 const LoadingCard: React.FC = () => {
   const spinAnim = useMemo(() => new Animated.Value(0), []);
@@ -117,7 +118,7 @@ const styles = StyleSheet.create({
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: "rgba(181, 141, 61, 0.1)",
+    backgroundColor: colors.accent.goldLight,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
@@ -136,12 +137,12 @@ const styles = StyleSheet.create({
   dot: {
     color: AI_GOLD,
     fontSize: 24,
-    fontWeight: "900",
+    fontWeight: "800",
     marginLeft: 1,
   },
   subtext: {
     color: AI_TEXT_SECONDARY,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "500",
   },
 });

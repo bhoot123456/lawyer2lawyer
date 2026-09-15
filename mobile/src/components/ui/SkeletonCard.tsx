@@ -60,6 +60,7 @@ const styles = StyleSheet.create({
       shadowOpacity: 0.08,
       shadowRadius: 8,
       elevation: 2,
+      boxShadow: "0px 2px 8px rgba(0,0,0,0.08)",
     } as any),
   },
   header: {

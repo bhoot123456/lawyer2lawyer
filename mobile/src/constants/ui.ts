@@ -1,10 +1,13 @@
+// DEPRECATED: prefer "@/theme/designSystem" + useThemeColors() from "@/theme/ThemeProvider".
+// This file remains only for backward compatibility (UI.* usages) — do not add new tokens here.
+﻿import { colors } from "@/theme/designSystem";
 export const UI = {
   brand: {
     primary: "#D4AF37", // gold
-    primaryDark: "#B8942A",
+    primaryDark: colors.accent.gold,
   },
   colors: {
-    bg: "#0B0B0B",
+    bg: colors.bg.primary,
     surface: "#161616",
     surface2: "#0F0F0F",
     panel: "#161616",
@@ -29,6 +32,7 @@ export const UI = {
       shadowOpacity: 0.18,
       shadowRadius: 6,
       elevation: 3,
+      boxShadow: "0px 2px 6px rgba(0,0,0,0.18)" as const,
     },
     md: {
       shadowColor: "#000",
@@ -36,6 +40,7 @@ export const UI = {
       shadowOpacity: 0.22,
       shadowRadius: 14,
       elevation: 6,
+      boxShadow: "0px 6px 14px rgba(0,0,0,0.22)" as const,
     },
   },
   spacing: {

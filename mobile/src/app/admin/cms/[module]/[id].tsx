@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { colors } from "@/theme/designSystem";
 import {
   View,
   Text,
@@ -239,7 +240,7 @@ export default function CmsRecordScreen() {
           <Switch
             value={!!value}
             onValueChange={(v) => setValue(field, v)}
-            trackColor={{ false: "#334155", true: "#B58D3D" }}
+            trackColor={{ false: "#334155", true: colors.accent.gold }}
             thumbColor="#F8FAFC"
           />
         </View>
@@ -266,7 +267,7 @@ export default function CmsRecordScreen() {
     return (
       <View style={styles.container}>
         <AdminHeader title="Loading..." showBack />
-        <ActivityIndicator style={{ marginTop: 60 }} size="large" color="#B58D3D" />
+        <ActivityIndicator style={{ marginTop: 60 }} size="large" color={colors.accent.gold} />
       </View>
     );
   }
@@ -311,7 +312,7 @@ export default function CmsRecordScreen() {
           onPress={save}
           disabled={saving || !metaLoaded}
         >
-          {saving ? <ActivityIndicator size="small" color="#0B0B0B" /> : <Text style={styles.saveBtnText}>Save</Text>}
+          {saving ? <ActivityIndicator size="small" color={colors.bg.primary} /> : <Text style={styles.saveBtnText}>Save</Text>}
         </TouchableOpacity>
       </View>
 
@@ -340,11 +341,11 @@ function MetaRow({ label, value }: { label: string; value: string }) {
 // local namespace to avoid clashing with outer `styles`
 const s = StyleSheet.create({
   fieldRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 8 },
-  fieldLabel: { color: "#CBD5E1", fontSize: 13, fontWeight: "700", flex: 1 },
+  fieldLabel: { color: "#CBD5E1", fontSize: 12, fontWeight: "700", flex: 1 },
   fieldWrap: { marginBottom: 12 },
   input: {
     backgroundColor: "rgba(255,255,255,0.04)", borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.2)", borderRadius: 10,
+    borderColor: colors.border.goldLight, borderRadius: 10,
     color: "#F8FAFC", paddingHorizontal: 12, paddingVertical: 10,
     fontSize: 14, fontWeight: "600", marginTop: 4,
   },
@@ -354,32 +355,32 @@ const s = StyleSheet.create({
 });
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0B0B0B" },
+  container: { flex: 1, backgroundColor: colors.bg.primary },
   multiline: { minHeight: 90, textAlignVertical: "top" },
   error: { color: "#EF4444", fontWeight: "800", marginBottom: 12, textAlign: "center" },
   success: { color: "#10B981", fontWeight: "800", marginBottom: 12, textAlign: "center" },
   metaCard: {
     backgroundColor: "rgba(18,18,20,0.6)", borderRadius: 14, borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.15)", padding: 14, marginBottom: 14,
+    borderColor: colors.accent.goldLight, padding: 14, marginBottom: 14,
   },
   sectionCard: {
     backgroundColor: "rgba(18,18,20,0.6)", borderRadius: 14, borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.15)", padding: 14, marginBottom: 14,
+    borderColor: colors.accent.goldLight, padding: 14, marginBottom: 14,
   },
   sectionTitle: {
-    color: "#B58D3D", fontSize: 13, fontWeight: "900", textTransform: "uppercase",
+    color: colors.accent.gold, fontSize: 12, fontWeight: "800", textTransform: "uppercase",
     letterSpacing: 0.5, marginBottom: 10,
   },
   saveBar: {
     position: "absolute", bottom: 0, left: 0, right: 0,
     flexDirection: "row", gap: 10, padding: 16,
     backgroundColor: "rgba(11,11,11,0.95)", borderTopWidth: 1,
-    borderTopColor: "rgba(181,141,61,0.15)",
+    borderTopColor: colors.accent.goldLight,
   },
   btn: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 14, borderRadius: 12 },
   cancelBtn: { backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: "rgba(148,163,184,0.25)" },
   cancelBtnText: { color: "#94A3B8", fontWeight: "800" },
-  saveBtn: { backgroundColor: "#B58D3D" },
-  saveBtnText: { color: "#0B0B0B", fontWeight: "900" },
+  saveBtn: { backgroundColor: colors.accent.gold },
+  saveBtnText: { color: colors.bg.primary, fontWeight: "800" },
   disabled: { opacity: 0.9 },
 });

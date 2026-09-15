@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from "react";
+import { colors } from "@/theme/designSystem";
 import { View, Text, StyleSheet, ActivityIndicator, Pressable, TextInput } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { getCaseById, addNote } from "@/services/caseApi";
+import { getAuthToken, normalizeApiError } from "@/services/api";
 import { KeyboardAwareView } from "@/components/ui/KeyboardAwareView";
 
 export default function NotesScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [caseDoc, setCaseDoc] = useState<any>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -17,7 +21,7 @@ export default function NotesScreen() {
     setLoading(true);
     try {
       const res = await getCaseById(id);
-      setCaseDoc(res);
+      setCaseDoc(res?.case ?? res);
     } finally {
       setLoading(false);
     }
@@ -30,34 +34,60 @@ export default function NotesScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  const handleAddNote = async () => {
+    if (!id || submitting) return;
+    if (!title.trim()) {
+      setSubmitError("Please enter a note title.");
+      return;
+    }
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        setSubmitError("Please sign in as a lawyer/admin to attach notes to this case.");
+        return;
+      }
+      await addNote(id, { title: title.trim(), description: description.trim(), date: date ? new Date(date).toISOString() : undefined });
+      setTitle("");
+      setDescription("");
+      setDate("");
+      await load();
+    } catch (e: any) {
+      setSubmitError(normalizeApiError(e));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <KeyboardAwareView contentContainerStyle={styles.container}>
-      {loading && <ActivityIndicator size="small" color="#B58D3D" />}
+      {loading && <ActivityIndicator size="small" color={colors.accent.gold} />}
 
       <Text style={styles.title}>Notes</Text>
 
       <View style={styles.form}>
         <Text style={styles.label}>Title</Text>
-        <TextInput value={title} onChangeText={setTitle} style={styles.input} placeholder="Note title" placeholderTextColor="rgba(181, 141, 61, 0.35)" />
+        <TextInput value={title} onChangeText={setTitle} style={styles.input} placeholder="Note title" placeholderTextColor={colors.border.gold} />
 
         <Text style={styles.label}>Description</Text>
-        <TextInput value={description} onChangeText={setDescription} style={[styles.input, { height: 90 }]} placeholder="Note description" placeholderTextColor="rgba(181, 141, 61, 0.35)" multiline />
+        <TextInput value={description} onChangeText={setDescription} style={[styles.input, { height: 90 }]} placeholder="Note description" placeholderTextColor={colors.border.gold} multiline />
 
         <Text style={styles.label}>Date (YYYY-MM-DD)</Text>
-        <TextInput value={date} onChangeText={setDate} style={styles.input} placeholder="Optional" placeholderTextColor="rgba(181, 141, 61, 0.35)" />
+        <TextInput value={date} onChangeText={setDate} style={styles.input} placeholder="Optional" placeholderTextColor={colors.border.gold} />
+
+        {submitError ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>{submitError}</Text>
+          </View>
+        ) : null}
 
         <Pressable
-          style={styles.btn}
-          onPress={async () => {
-            if (!id) return;
-            await addNote(id!, { title, description, date: date ? new Date(date).toISOString() : undefined });
-            setTitle("");
-            setDescription("");
-            setDate("");
-            await load();
-          }}
+          style={[styles.btn, submitting && { opacity: 0.7 }]}
+          onPress={handleAddNote}
+          disabled={submitting}
         >
-          <Text style={styles.btnText}>Add Note</Text>
+          <Text style={styles.btnText}>{submitting ? "Adding..." : "Add Note"}</Text>
         </Pressable>
       </View>
 
@@ -82,18 +112,30 @@ export default function NotesScreen() {
 
 const styles = StyleSheet.create({
   container: { padding: 16, gap: 12, paddingBottom: 110 },
-  title: { color: "#F8FAFC", fontSize: 20, fontWeight: "900" },
-  form: { backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 16, borderWidth: 1, borderColor: "rgba(181, 141, 61, 0.20)", padding: 14, gap: 10 },
-  label: { color: "rgba(181, 141, 61, 0.95)", fontWeight: "900", fontSize: 12 },
-  input: { borderWidth: 1, borderColor: "rgba(181, 141, 61, 0.25)", backgroundColor: "rgba(18, 18, 20, 0.35)", color: "#F8FAFC", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10 },
-  btn: { backgroundColor: "rgba(181, 141, 61, 0.14)", borderWidth: 1, borderColor: "rgba(181, 141, 61, 0.55)", borderRadius: 14, paddingVertical: 12, alignItems: "center" },
-  btnText: { color: "#D4AF37", fontWeight: "900", fontSize: 14 },
+  title: { color: "#F8FAFC", fontSize: 20, fontWeight: "800" },
+  form: { backgroundColor: "rgba(255,255,255,0.05)", borderRadius: 16, borderWidth: 1, borderColor: colors.border.goldLight, padding: 14, gap: 10 },
+  label: { color: colors.accent.gold, fontWeight: "800", fontSize: 12 },
+  input: { borderWidth: 1, borderColor: colors.border.gold, backgroundColor: "rgba(18, 18, 20, 0.35)", color: "#F8FAFC", borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10 },
+  btn: { backgroundColor: colors.accent.goldLight, borderWidth: 1, borderColor: colors.border.gold, borderRadius: 14, paddingVertical: 12, alignItems: "center" },
+  btnText: { color: "#D4AF37", fontWeight: "800", fontSize: 14 },
   list: { gap: 10 },
-  item: { backgroundColor: "rgba(255,255,255,0.04)", borderWidth: 1, borderColor: "rgba(181, 141, 61, 0.18)", borderRadius: 16, padding: 14, gap: 6 },
-  itemTitle: { color: "#F8FAFC", fontWeight: "900", fontSize: 13 },
+  item: { backgroundColor: "rgba(255,255,255,0.04)", borderWidth: 1, borderColor: colors.accent.goldLight, borderRadius: 16, padding: 14, gap: 6 },
+  itemTitle: { color: "#F8FAFC", fontWeight: "800", fontSize: 13 },
   itemDesc: { color: "rgba(248, 250, 252, 0.80)", fontWeight: "700", fontSize: 12 },
-  itemDate: { color: "rgba(181, 141, 61, 0.85)", fontWeight: "800", fontSize: 11 },
-  backBtn: { marginTop: 8, backgroundColor: "rgba(181, 141, 61, 0.10)", borderWidth: 1, borderColor: "rgba(181, 141, 61, 0.35)", borderRadius: 14, paddingVertical: 12, alignItems: "center" },
-  backText: { color: "rgba(181, 141, 61, 0.95)", fontWeight: "900" },
+  itemDate: { color: colors.accent.gold, fontWeight: "800", fontSize: 11 },
+  backBtn: { marginTop: 8, backgroundColor: colors.accent.goldLight, borderWidth: 1, borderColor: colors.border.gold, borderRadius: 14, paddingVertical: 12, alignItems: "center" },
+  backText: { color: colors.accent.gold, fontWeight: "800" },
+  errorBox: {
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: "rgba(239, 68, 68, 0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(239, 68, 68, 0.35)",
+  },
+  errorText: {
+    color: "#fca5a5",
+    fontSize: 12,
+    fontWeight: "700",
+  },
 });
 

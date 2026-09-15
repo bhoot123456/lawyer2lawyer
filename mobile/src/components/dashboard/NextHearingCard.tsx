@@ -1,8 +1,9 @@
-import React from "react";
+﻿import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import type { HearingItem } from "./types";
+import { colors, shadows } from "@/theme/designSystem";
 
 type Props = {
   hearings: HearingItem[];
@@ -14,7 +15,7 @@ export function NextHearingCard({ hearings, loading }: Props) {
   if (!hearings || hearings.length === 0) {
     return (
       <View style={styles.cardEmpty}>
-        <Ionicons name="calendar-outline" size={24} color="rgba(181, 141, 61, 0.4)" />
+        <Ionicons name="calendar-outline" size={28} color={colors.border.gold} />
         <Text style={styles.emptyText}>No upcoming hearings scheduled.</Text>
       </View>
     );
@@ -40,7 +41,10 @@ export function NextHearingCard({ hearings, loading }: Props) {
 
   return (
     <Pressable
-      style={styles.card}
+      style={({ pressed }) => [
+        styles.card,
+        pressed && styles.cardPressed,
+      ]}
       onPress={() => router.push(`/cases/${next.id}` as any)}
     >
       <View style={styles.header}>
@@ -70,6 +74,12 @@ const styles = StyleSheet.create({
     padding: 16,
     marginHorizontal: 16,
     gap: 8,
+    // Featured content sits one level above routine list rows.
+    ...shadows.level2,
+  },
+  cardPressed: {
+    opacity: 0.92,
+    transform: [{ scale: 0.98 }],
   },
   cardEmpty: {
     backgroundColor: "rgba(255, 255, 255, 0.03)",
@@ -102,7 +112,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: "#D4AF37",
-    fontWeight: "900",
+    fontWeight: "800",
     fontSize: 10,
     textTransform: "uppercase",
   },
@@ -113,7 +123,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: "#F8FAFC",
-    fontWeight: "900",
+    fontWeight: "800",
     fontSize: 18,
     marginTop: 4,
   },

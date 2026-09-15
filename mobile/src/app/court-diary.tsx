@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+﻿import React, { useCallback, useMemo, useState } from "react";
+import { colors } from "@/theme/designSystem";
 import {
   View,
   Text,
@@ -6,9 +7,11 @@ import {
   Pressable,
   ScrollView,
   TextInput,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
+import { getCases } from "@/services/caseApi";
 
 import GlassCard from "@/components/ui/GlassCard";
 
@@ -70,72 +73,50 @@ export default function CourtDiary() {
   const today = useMemo(() => startOfDay(new Date()), []);
   const [selectedDate, setSelectedDate] = useState<Date>(today);
   const [monthCursor, setMonthCursor] = useState<Date>(new Date(today));
+  const [rawCases, setRawCases] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Placeholder items for UI scaffolding.
-  // In next iteration, wire to backend + cases (nextHearingDate) + diary events.
+  const fetchCases = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await getCases({ query: { limit: 100 } });
+      setRawCases(Array.isArray(res?.cases) ? res.cases : []);
+    } catch {
+      setRawCases([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchCases();
+    }, [fetchCases])
+  );
+
+  // Derive real hearing items from active cases with upcoming hearing dates
   const items: CourtItem[] = useMemo(() => {
-    const t0 = formatISODateOnly(today);
-    const t1 = formatISODateOnly(addDays(today, 1));
-    const t2 = formatISODateOnly(addDays(today, 2));
-    const t3 = formatISODateOnly(addDays(today, 5));
-
-    return [
-      {
-        id: "h1",
-        date: t0,
-        time: "10:30 AM",
-        title: "Criminal Case (High Court)",
-        place: "High Court",
-        type: "Hearing",
-        status: "Scheduled",
-      },
-      {
-        id: "h2",
-        date: t0,
-        time: "02:00 PM",
-        title: "Writ Petition (District Court)",
-        place: "District Court",
-        type: "Hearing",
-        status: "Pending",
-      },
-      {
-        id: "t1",
-        date: t0,
-        time: "",
-        title: "Draft appearance memo",
-        place: "Supreme Court Registry",
-        type: "Task",
-        status: "To-do",
-      },
-      {
-        id: "t2",
-        date: t1,
-        time: "",
-        title: "Collect client documents",
-        place: "Case #1042",
-        type: "Task",
-        status: "To-do",
-      },
-      {
-        id: "h3",
-        date: t2,
-        time: "11:15 AM",
-        title: "Civil Appeal (High Court)",
-        place: "High Court",
-        type: "Hearing",
-        status: "Reserved",
-      },
-      {
-        id: "t3",
-        date: t3,
-        time: "",
-        title: "Prepare written submissions",
-        place: "District Court",
-        type: "Task",
-        status: "To-do",
-      },
-    ];
-  }, [today]);
+    return rawCases
+      .filter((c) => !!c.nextHearingDate)
+      .map((c) => {
+        const d = new Date(c.nextHearingDate);
+        const valid = !Number.isNaN(d.getTime());
+        const dateStr = valid ? formatISODateOnly(d) : "";
+        const timeStr = valid
+          ? d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+          : "";
+        return {
+          id: String(c._id || c.id),
+          date: dateStr,
+          time: timeStr,
+          title: c.caseTitle || `Case #${c.caseNumber || "Untitled"}`,
+          place: c.court || "Court",
+          type: "Hearing" as const,
+          status: c.status || "Scheduled",
+        };
+      })
+      .filter((it) => !!it.date);
+  }, [rawCases]);
 
   const greeting = useMemo(() => getGreeting(), []);
 
@@ -158,7 +139,7 @@ export default function CourtDiary() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* Header */}
-      <GlassCard borderColor="rgba(181, 141, 61, 0.35)" accent="#B58D3D">
+      <GlassCard borderColor={colors.border.gold} accent={colors.accent.gold}>
         <View style={styles.headerRow}>
           <View style={styles.badgeIcon}>
             <Ionicons name="time-outline" size={20} color="#D4AF37" />
@@ -171,7 +152,7 @@ export default function CourtDiary() {
             onPress={() => router.push("/cases")}
             style={styles.quickBtn}
           >
-            <Ionicons name="briefcase-outline" size={16} color="#B58D3D" />
+            <Ionicons name="briefcase-outline" size={16} color={colors.accent.gold} />
             <Text style={styles.quickBtnText}>Cases</Text>
           </Pressable>
         </View>
@@ -183,18 +164,18 @@ export default function CourtDiary() {
           onPress={() => setMonthCursor((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1))}
           style={styles.navBtn}
         >
-          <Ionicons name="chevron-back" size={18} color="#B58D3D" />
+          <Ionicons name="chevron-back" size={18} color={colors.accent.gold} />
         </Pressable>
         <Text style={styles.monthLabel}>{monthLabel}</Text>
         <Pressable
           onPress={() => setMonthCursor((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1))}
           style={styles.navBtn}
         >
-          <Ionicons name="chevron-forward" size={18} color="#B58D3D" />
+          <Ionicons name="chevron-forward" size={18} color={colors.accent.gold} />
         </Pressable>
       </View>
 
-      <GlassCard borderColor="rgba(181, 141, 61, 0.25)" accent="#B58D3D">
+      <GlassCard borderColor={colors.border.gold} accent={colors.accent.gold}>
         <View style={styles.weekdaysRow}>
           {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((w) => (
             <Text key={w} style={styles.weekday}>
@@ -233,10 +214,10 @@ export default function CourtDiary() {
 
       {/* Agenda */}
       <Text style={styles.sectionHeader}>Agenda • {selectedISO}</Text>
-      <GlassCard borderColor="rgba(181, 141, 61, 0.25)" accent="#B58D3D">
+      <GlassCard borderColor={colors.border.gold} accent={colors.accent.gold}>
         {selectedItems.length === 0 ? (
           <View style={styles.emptyWrap}>
-            <Ionicons name="calendar-outline" size={18} color="#B58D3D" />
+            <Ionicons name="calendar-outline" size={18} color={colors.accent.gold} />
             <Text style={styles.emptyText}>No hearings/tasks scheduled for this day.</Text>
           </View>
         ) : (
@@ -245,7 +226,7 @@ export default function CourtDiary() {
               <View
                 style={[
                   styles.itemIcon,
-                  it.type === "Hearing" ? { backgroundColor: "rgba(181,141,61,0.12)" } : { backgroundColor: "rgba(148,163,184,0.14)" },
+                  it.type === "Hearing" ? { backgroundColor: colors.border.goldLight } : { backgroundColor: "rgba(148,163,184,0.14)" },
                 ]}
               >
                 <Ionicons
@@ -277,7 +258,7 @@ export default function CourtDiary() {
 
       {/* Quick Add (UI only for now) */}
       <Text style={styles.sectionHeader}>Quick Add</Text>
-      <GlassCard borderColor="rgba(181, 141, 61, 0.25)" accent="#B58D3D">
+      <GlassCard borderColor={colors.border.gold} accent={colors.accent.gold}>
         <View style={styles.addRow}>
           <View style={styles.addCol}>
             <Text style={styles.addLabel}>Type</Text>
@@ -303,7 +284,7 @@ export default function CourtDiary() {
         </View>
 
         <Pressable style={styles.ctaBtn} onPress={() => router.push("/cases/new")}> 
-          <Ionicons name="add-circle-outline" size={18} color="#0B0B0B" />
+          <Ionicons name="add-circle-outline" size={18} color={colors.bg.primary} />
           <Text style={styles.ctaText}>Add via Case Diary</Text>
         </Pressable>
       </GlassCard>
@@ -318,7 +299,7 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 16,
     paddingBottom: 110,
-    backgroundColor: "#0B0B0B",
+    backgroundColor: colors.bg.primary,
   },
   headerRow: {
     flexDirection: "row",
@@ -329,16 +310,16 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 16,
-    backgroundColor: "rgba(181,141,61,0.12)",
+    backgroundColor: colors.border.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.25)",
+    borderColor: colors.border.gold,
     alignItems: "center",
     justifyContent: "center",
   },
   headerTitle: {
     color: "#F8FAFC",
     fontSize: 18,
-    fontWeight: "900",
+    fontWeight: "800",
   },
   headerSub: {
     color: "#B0B4BA",
@@ -354,12 +335,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.25)",
-    backgroundColor: "rgba(181,141,61,0.10)",
+    borderColor: colors.border.gold,
+    backgroundColor: colors.accent.goldLight,
   },
   quickBtnText: {
-    color: "#B58D3D",
-    fontWeight: "900",
+    color: colors.accent.gold,
+    fontWeight: "800",
     fontSize: 12,
   },
 
@@ -374,15 +355,15 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.25)",
-    backgroundColor: "rgba(181,141,61,0.08)",
+    borderColor: colors.border.gold,
+    backgroundColor: colors.accent.goldSubtle,
     alignItems: "center",
     justifyContent: "center",
   },
   monthLabel: {
     color: "#F8FAFC",
     fontSize: 16,
-    fontWeight: "900",
+    fontWeight: "800",
   },
 
   weekdaysRow: {
@@ -392,8 +373,8 @@ const styles = StyleSheet.create({
   },
   weekday: {
     color: "rgba(248,250,252,0.75)",
-    fontWeight: "900",
-    fontSize: 11,
+    fontWeight: "800",
+    fontSize: 12,
   },
 
   grid: {
@@ -409,16 +390,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "rgba(255,255,255,0.02)",
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.14)",
+    borderColor: colors.accent.goldLight,
     marginBottom: 10,
   },
   dayCellActive: {
-    backgroundColor: "rgba(181,141,61,0.18)",
-    borderColor: "rgba(181,141,61,0.55)",
+    backgroundColor: colors.accent.goldLight,
+    borderColor: colors.border.gold,
   },
   dayText: {
     color: "rgba(248,250,252,0.75)",
-    fontWeight: "900",
+    fontWeight: "800",
     fontSize: 12,
   },
   dayTextActive: {
@@ -428,7 +409,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     color: "#F8FAFC",
     fontSize: 16,
-    fontWeight: "900",
+    fontWeight: "800",
     letterSpacing: 0.2,
     marginTop: 4,
   },
@@ -450,7 +431,7 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(181,141,61,0.10)",
+    borderBottomColor: colors.accent.goldLight,
   },
   itemIcon: {
     width: 36,
@@ -459,12 +440,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.18)",
+    borderColor: colors.accent.goldLight,
   },
   itemTitle: {
     color: "#F8FAFC",
-    fontSize: 13,
-    fontWeight: "900",
+    fontSize: 12,
+    fontWeight: "800",
   },
   itemSub: {
     color: "rgba(248,250,252,0.72)",
@@ -473,17 +454,17 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   statusPill: {
-    backgroundColor: "rgba(181,141,61,0.12)",
+    backgroundColor: colors.border.goldLight,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.50)",
+    borderColor: colors.border.gold,
     paddingHorizontal: 10,
     paddingVertical: 4,
     maxWidth: 120,
   },
   statusPillText: {
     color: "#D4AF37",
-    fontWeight: "900",
+    fontWeight: "800",
     fontSize: 10,
   },
 
@@ -496,20 +477,20 @@ const styles = StyleSheet.create({
   addCol: {
     flex: 1,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.16)",
+    borderColor: colors.accent.goldLight,
     backgroundColor: "rgba(255,255,255,0.03)",
     borderRadius: 14,
     padding: 10,
   },
   addLabel: {
     color: "rgba(248,250,252,0.70)",
-    fontWeight: "900",
-    fontSize: 11,
+    fontWeight: "800",
+    fontSize: 12,
   },
   addValue: {
     color: "#F8FAFC",
-    fontWeight: "900",
-    fontSize: 13,
+    fontWeight: "800",
+    fontSize: 12,
     marginTop: 6,
   },
   pickerRow: {
@@ -520,8 +501,8 @@ const styles = StyleSheet.create({
   },
   pickerText: {
     color: "#D4AF37",
-    fontWeight: "900",
-    fontSize: 13,
+    fontWeight: "800",
+    fontSize: 12,
   },
 
   formRow: {
@@ -529,7 +510,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.16)",
+    borderColor: colors.accent.goldLight,
     backgroundColor: "rgba(255,255,255,0.03)",
     borderRadius: 14,
     paddingHorizontal: 14,
@@ -548,7 +529,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#D4AF37",
   },
   ctaText: {
-    color: "#0B0B0B",
+    color: colors.bg.primary,
     fontWeight: "1000" as any,
     fontSize: 14,
     letterSpacing: 0.2,

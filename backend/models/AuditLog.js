@@ -25,6 +25,7 @@ const auditLogSchema = new mongoose.Schema(
         "CREATE",
         "UPDATE",
         "DELETE",
+        "case.delete",
         "RESTORE",
         "PUBLISH",
         "UNPUBLISH",

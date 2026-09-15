@@ -1,4 +1,5 @@
-import { api, getAuthToken } from "@/services/api";
+import { api, getAuthToken, clearSession } from "@/services/api";
+import { parseValidDate } from "@/utils/dateUtils";
 import type {
   AdvocateProfile,
   HearingItem,
@@ -15,12 +16,29 @@ import type {
 
 const asArray = <T>(value: unknown): T[] => (Array.isArray(value) ? value : []);
 
+/**
+ * True when the error is an HTTP 401 from a personal-data endpoint.
+ *
+ * Personal endpoints (/client-calls, /activity/recent, /dashboard/stats,
+ * /draft-library) require a valid user JWT. In the no-login architecture a
+ * stored token can exist but be stale/expired/revoked (left over from an
+ * earlier session). A 401 reaching these fetchers means the refresh
+ * interceptor could not recover the session, i.e. the stored session is dead:
+ * clear it so the app falls back to the anonymous (device-scoped) experience
+ * and stops sending doomed requests. Expected failures resolve to empty
+ * states — they never crash the UI.
+ */
+function isUnauthorized(error: unknown): boolean {
+  return (error as any)?.response?.status === 401;
+}
+
 // Default advocate profile used when no user is authenticated (no-login architecture).
+// Neutral fallbacks only — never imply a real professional identity.
 const DEFAULT_PROFILE: AdvocateProfile = {
   id: "default",
   name: "Advocate",
-  enrollmentNumber: "EN-XXXX",
-  courtName: "Delhi High Court",
+  enrollmentNumber: "N/A",
+  courtName: "",
   isOnline: true,
 };
 
@@ -51,10 +69,15 @@ export async function getTodayHearings(): Promise<HearingItem[]> {
       judge: c.judge,
       courtRoom: c.courtRoom,
       hearingTime: c.nextHearingDate
-        ? new Date(c.nextHearingDate).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })
+        ? (() => {
+            const parsed = parseValidDate(c.nextHearingDate);
+            return parsed
+              ? parsed.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "";
+          })()
         : "",
       nextHearingDate: c.nextHearingDate,
       status: c.status || "Scheduled",
@@ -91,18 +114,23 @@ export async function getUpcomingHearings(): Promise<HearingItem[]> {
         judge: c.judge,
         courtRoom: c.courtRoom,
         hearingTime: c.nextHearingDate
-          ? new Date(c.nextHearingDate).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
+          ? (() => {
+              const parsed = parseValidDate(c.nextHearingDate);
+              return parsed
+                ? parsed.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : "";
+            })()
           : "",
         nextHearingDate: c.nextHearingDate,
         status: c.status || "Scheduled",
       }))
       .filter((h) => {
         if (!h.nextHearingDate) return false;
-        const d = new Date(h.nextHearingDate);
-        return !Number.isNaN(d.getTime()) && d >= startOfToday;
+        const parsed = parseValidDate(h.nextHearingDate);
+        return !!(parsed && parsed >= startOfToday);
       });
   } catch {
     return [];
@@ -128,7 +156,8 @@ export async function getPendingDrafts(): Promise<DraftItem[]> {
       dueDate: d.dueDate,
       status: d.status || "Pending",
     }));
-  } catch {
+  } catch (e) {
+    if (isUnauthorized(e)) await clearSession(); // stale session — self-heal
     return [];
   }
 }
@@ -151,7 +180,8 @@ export async function getPendingClientCalls(): Promise<ClientCallItem[]> {
       purpose: c.purpose,
       status: c.status || "Pending",
     }));
-  } catch {
+  } catch (e) {
+    if (isUnauthorized(e)) await clearSession(); // stale session — self-heal
     return [];
   }
 }
@@ -253,7 +283,8 @@ export async function getRecentActivity(): Promise<ActivityItem[]> {
       timestamp: a.timestamp || a.createdAt,
       icon: a.icon,
     }));
-  } catch {
+  } catch (e) {
+    if (isUnauthorized(e)) await clearSession(); // stale session — self-heal
     return [];
   }
 }
@@ -300,7 +331,8 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       clientMeetings: stats.clientMeetings || 0,
       pendingDrafts: stats.pendingDrafts || 0,
     };
-  } catch {
+  } catch (e) {
+    if (isUnauthorized(e)) await clearSession(); // stale session — self-heal
     return {
       todayHearings: 0,
       activeCases: 0,

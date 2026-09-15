@@ -1,6 +1,6 @@
 import React from "react";
+import { colors } from "@/theme/designSystem";
 import {
-  Alert,
   Linking,
   Pressable,
   ScrollView,
@@ -13,32 +13,16 @@ import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { blurActiveElement } from "@/utils/blurActiveElement";
 import { openCaseHistory, openCurrentRoster, openJudgments, openOrders } from "@/utils/openOfficialCourtLink";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 const PHYSICAL_DISPLAY_BOARD_URL =
   "https://delhihighcourt.nic.in/app/physical-display-board";
 
-async function openPhysicalDisplayBoard(): Promise<void> {
-  try {
-    const canOpen = await Linking.canOpenURL(PHYSICAL_DISPLAY_BOARD_URL);
-    if (!canOpen) {
-      Alert.alert(
-        "Unable to Open Display Board",
-        "The Official Delhi High Court Physical Display Board is currently unavailable. Please try again later.",
-      );
-      return;
-    }
-    try {
-      await WebBrowser.openBrowserAsync(PHYSICAL_DISPLAY_BOARD_URL);
-    } catch {
-      await Linking.openURL(PHYSICAL_DISPLAY_BOARD_URL);
-    }
-  } catch {
-    Alert.alert(
-      "Unable to Open Display Board",
-      "The Official Delhi High Court Physical Display Board is currently unavailable. Please try again later.",
-    );
-  }
-}
+const DISPLAY_BOARD_UNAVAILABLE = {
+  title: "Unable to Open Display Board",
+  message:
+    "The Official Delhi High Court Physical Display Board is currently unavailable. Please try again later.",
+} as const;
 
 type QuickService = {
   title: string;
@@ -73,7 +57,7 @@ function LinkRow({
         pressed ? { opacity: 0.92 } : null,
       ]}
     >
-      <Ionicons name="link-outline" size={16} color="#B58D3D" />
+      <Ionicons name="link-outline" size={16} color={colors.accent.gold} />
       <Text style={styles.linkLabel} numberOfLines={1}>
         {label}
       </Text>
@@ -93,7 +77,17 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ServiceCard({ title, icon, url, courtId, courtName }: QuickService & { courtId?: string; courtName?: string }) {
+type DisplayBoardOpener = () => void;
+
+function ServiceCard({
+  title,
+  icon,
+  url,
+  courtId,
+  courtName,
+  onDisplayBoard,
+  onNotice,
+}: QuickService & { courtId?: string; courtName?: string; onDisplayBoard: DisplayBoardOpener; onNotice: (opts: { title: string; message: string }) => void }) {
   return (
     <Pressable
       onPress={() => {
@@ -111,7 +105,7 @@ function ServiceCard({ title, icon, url, courtId, courtName }: QuickService & { 
           });
         } else if (title === "PHYSICAL DISPLAY BOARD") {
           blurActiveElement();
-          openPhysicalDisplayBoard();
+          onDisplayBoard();
         } else if (title === "CURRENT ROSTER") {
           openCurrentRoster();
         } else if (title === "CASE HISTORY") {
@@ -123,7 +117,7 @@ function ServiceCard({ title, icon, url, courtId, courtName }: QuickService & { 
         } else if (url) {
           Linking.openURL(url);
         } else {
-          Alert.alert("Coming Soon", "This feature will be available soon.");
+          onNotice({ title: "Coming Soon", message: "This feature will be available soon." });
         }
       }}
       style={({ pressed }) => [
@@ -133,13 +127,13 @@ function ServiceCard({ title, icon, url, courtId, courtName }: QuickService & { 
     >
       <View style={styles.serviceContent}>
         <View style={styles.serviceIcon}>
-          <Ionicons name={icon} size={30} color="#B58D3D" />
+          <Ionicons name={icon} size={30} color={colors.accent.gold} />
         </View>
         <Text style={styles.serviceTitle} numberOfLines={1}>
           {title}
         </Text>
       </View>
-      <Ionicons name="chevron-forward" size={30} color="#B58D3D" />
+      <Ionicons name="chevron-forward" size={30} color={colors.accent.gold} />
     </Pressable>
   );
 }
@@ -369,6 +363,26 @@ const DELHI_COURTS: (CourtInfo & { id: string })[] = [
 ];
 
 export default function DelhiCourtsScreen() {
+  // Cross-platform notice dialogs (Alert.alert is a no-op on web).
+  const { notice: noticeDialog, element: dialogElement } = useConfirmDialog();
+
+  const openPhysicalDisplayBoard = async (): Promise<void> => {
+    try {
+      const canOpen = await Linking.canOpenURL(PHYSICAL_DISPLAY_BOARD_URL);
+      if (!canOpen) {
+        noticeDialog({ ...DISPLAY_BOARD_UNAVAILABLE });
+        return;
+      }
+      try {
+        await WebBrowser.openBrowserAsync(PHYSICAL_DISPLAY_BOARD_URL);
+      } catch {
+        await Linking.openURL(PHYSICAL_DISPLAY_BOARD_URL);
+      }
+    } catch {
+      noticeDialog({ ...DISPLAY_BOARD_UNAVAILABLE });
+    }
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.body}>
@@ -395,7 +409,14 @@ export default function DelhiCourtsScreen() {
             <View style={styles.serviceSection}>
               <Text style={styles.serviceSectionTitle}>Quick Services</Text>
               {c.quickServices.map((service) => (
-                <ServiceCard key={service.title} {...service} courtId={c.id} courtName={c.name} />
+                <ServiceCard
+                  key={service.title}
+                  {...service}
+                  courtId={c.id}
+                  courtName={c.name}
+                  onDisplayBoard={() => void openPhysicalDisplayBoard()}
+                  onNotice={(opts) => void noticeDialog(opts)}
+                />
               ))}
             </View>
 
@@ -407,12 +428,13 @@ export default function DelhiCourtsScreen() {
         ))}
 
         <View style={styles.footerHint}>
-          <Ionicons name="information-circle-outline" size={16} color="#B58D3D" />
+          <Ionicons name="information-circle-outline" size={16} color={colors.accent.gold} />
           <Text style={styles.footerHintText}>
             Information is indicative—always verify latest fee/counter/working-hour instructions from the court registry.
           </Text>
         </View>
       </ScrollView>
+      {dialogElement}
     </View>
   );
 }
@@ -421,7 +443,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FAF9F6" },
   body: {
     padding: 16,
-    paddingBottom: 28,
+    paddingBottom: 110,
     gap: 14,
   },
 
@@ -429,12 +451,12 @@ const styles = StyleSheet.create({
   title: {
     color: "#1E293B",
     fontSize: 26,
-    fontWeight: "900",
+    fontWeight: "800",
     letterSpacing: 0.3,
   },
   subtitle: {
     color: "#64748B",
-    fontSize: 13,
+    fontSize: 12,
     marginTop: 8,
     lineHeight: 18,
     fontWeight: "700",
@@ -451,7 +473,7 @@ const styles = StyleSheet.create({
   courtName: {
     color: "#D4AF37",
     fontSize: 18,
-    fontWeight: "900",
+    fontWeight: "800",
   },
 
   serviceSection: {
@@ -459,9 +481,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   serviceSectionTitle: {
-    color: "#B58D3D",
+    color: colors.accent.gold,
     fontSize: 14,
-    fontWeight: "900",
+    fontWeight: "800",
     letterSpacing: 0.3,
     textTransform: "uppercase",
   },
@@ -486,13 +508,13 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 10,
-    backgroundColor: "rgba(181,141,61,0.1)",
+    backgroundColor: colors.accent.goldLight,
     alignItems: "center",
     justifyContent: "center",
   },
   serviceTitle: {
     color: "#1E293B",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "800",
     flex: 1,
   },
@@ -503,11 +525,11 @@ const styles = StyleSheet.create({
   fieldLabel: {
     color: "#64748B",
     fontSize: 12,
-    fontWeight: "900",
+    fontWeight: "800",
   },
   fieldValue: {
     color: "#1E293B",
-    fontSize: 13,
+    fontSize: 12,
     lineHeight: 18,
     fontWeight: "700",
   },
@@ -525,12 +547,12 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    backgroundColor: "rgba(181,141,61,0.06)",
+    backgroundColor: colors.accent.goldSubtle,
   },
   linkLabel: {
-    color: "#B58D3D",
-    fontSize: 13,
-    fontWeight: "900",
+    color: colors.accent.gold,
+    fontSize: 12,
+    fontWeight: "800",
     minWidth: 90,
   },
   linkHost: {

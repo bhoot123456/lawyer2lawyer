@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from "react-native";
 import { router, usePathname } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
-import { logout, isAuthenticated, getAuthToken } from "@/services/api";
-import { colors, radii, shadows, spacing, typography } from "@/theme/designSystem";
+import { logout, getAuthToken } from "@/services/api";
+import { colors, radii, shadows, typography } from "@/theme/designSystem";
 
 function blurActiveElement() {
   if (Platform.OS === "web" && typeof document !== "undefined") {
@@ -14,13 +14,51 @@ function blurActiveElement() {
   }
 }
 
+function decodeBase64(str) {
+  try {
+    if (typeof atob === "function") {
+      return atob(str);
+    }
+  } catch {
+    // fallback
+  }
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+  let output = "";
+  let input = String(str).replace(/-/g, "+").replace(/_/g, "/");
+  while (input.length % 4) input += "=";
+  for (let bc = 0, bs = 0, buffer, idx = 0; (buffer = input.charAt(idx++)); ) {
+    const bIndex = chars.indexOf(buffer);
+    if (~bIndex) {
+      bs = bc % 4 ? bs * 64 + bIndex : bIndex;
+      if (bc++ % 4) {
+        output += String.fromCharCode(255 & (bs >> ((-2 * bc) & 6)));
+      }
+    }
+  }
+  return output;
+}
+
 // Decode JWT payload to check if the user is an admin
 function isAdminToken(token) {
   try {
     const parts = token.split(".");
     if (parts.length !== 3) return false;
-    const payload = JSON.parse(atob(parts[1]));
+    const decoded = decodeBase64(parts[1]);
+    const payload = JSON.parse(decoded);
     return payload?.role === "admin";
+  } catch {
+    return false;
+  }
+}
+
+// Decode JWT payload to check if the user is a lawyer (Phase 1)
+function isLawyerToken(token) {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return false;
+    const decoded = decodeBase64(parts[1]);
+    const payload = JSON.parse(decoded);
+    return payload?.role === "lawyer";
   } catch {
     return false;
   }
@@ -38,6 +76,7 @@ const NAV_ITEMS_PUBLIC = [
   { label: "Knowledge Hub (Phase 10)", route: "/knowledge-hub", icon: "library-outline" },
   { label: "Professionals", route: "/professionals", icon: "people-outline" },
   { label: "Cases", route: "/cases", icon: "briefcase-outline" },
+  { label: "Court Diary", route: "/court-diary", icon: "time-outline" },
   { label: "Privacy Policy", route: "/privacy", icon: "shield-checkmark-outline" },
   { label: "Terms of Service", route: "/terms", icon: "document-text-outline" },
 ];
@@ -53,16 +92,51 @@ const NAV_ITEMS_ADMIN = [
   { label: "Admin Reports", route: "/admin/reports", icon: "document-text-outline" },
 ];
 
+function NavItem({ item, isActive, onPress }) {
+  const [hovered, setHovered] = useState(false);
+  const isWeb = Platform.OS === "web";
+
+  return (
+    <TouchableOpacity
+      style={[
+        styles.menuItem,
+        isActive ? styles.menuItemActive : null,
+        hovered && isWeb ? styles.menuItemHovered : null,
+      ]}
+      onPress={onPress}
+      onMouseEnter={isWeb ? () => setHovered(true) : undefined}
+      onMouseLeave={isWeb ? () => setHovered(false) : undefined}
+    >
+      <Ionicons
+        name={item.icon}
+        size={20}
+        color={isActive ? colors.accent.gold : colors.text.muted}
+        style={styles.menuIcon}
+      />
+      <Text style={[styles.menuItemText, isActive ? styles.menuItemTextActive : null]}>
+        {item.label}
+      </Text>
+      {isActive && <View style={styles.activeIndicator} />}
+    </TouchableOpacity>
+  );
+}
+
 export default function Sidebar({ onClose }) {
   const pathname = usePathname();
 
   const [isAdmin, setIsAdmin] = React.useState(false);
+  const [isLawyer, setIsLawyer] = React.useState(false);
+  const [closeHovered, setCloseHovered] = useState(false);
+  const isWeb = Platform.OS === "web";
 
   React.useEffect(() => {
     let mounted = true;
     (async () => {
       const token = await getAuthToken();
-      if (mounted) setIsAdmin(!!token && isAdminToken(token));
+      if (mounted) {
+        setIsAdmin(!!token && isAdminToken(token));
+        setIsLawyer(!!token && isLawyerToken(token));
+      }
     })();
     return () => {
       mounted = false;
@@ -76,11 +150,20 @@ export default function Sidebar({ onClose }) {
     router.push(route);
   };
 
-  // Build nav items: public items always visible, admin items only if admin
+  // Build nav items: public items always visible, admin/lawyer items if the
+  // matching role token is present. Bottom entry becomes Logout for an
+  // authenticated admin/lawyer, otherwise a deep link to the right login.
   const navItems = [
     ...NAV_ITEMS_PUBLIC,
     ...(isAdmin ? NAV_ITEMS_ADMIN : []),
-    { label: isAdmin ? "Logout" : "Admin Login", route: isAdmin ? "" : "/login", icon: isAdmin ? "log-out-outline" : "log-in-outline" },
+    ...(isLawyer
+      ? [{ label: "My CourtDesk", route: "/courtdesk", icon: "briefcase-outline" }]
+      : []),
+    {
+      label: isAdmin ? "Logout" : isLawyer ? "Lawyer Logout" : "Admin Login",
+      route: isAdmin || isLawyer ? "" : "/login",
+      icon: isAdmin || isLawyer ? "log-out-outline" : "log-in-outline",
+    },
   ];
 
   return (
@@ -88,7 +171,12 @@ export default function Sidebar({ onClose }) {
       <View style={styles.brandRow}>
         <Text style={styles.brand}>Lawyer2Lawyer</Text>
         {onClose && (
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={[styles.closeBtn, closeHovered && isWeb && styles.closeBtnHovered]}
+            onMouseEnter={isWeb ? () => setCloseHovered(true) : undefined}
+            onMouseLeave={isWeb ? () => setCloseHovered(false) : undefined}
+          >
             <Ionicons name="close-outline" size={24} color={colors.text.secondary} />
           </TouchableOpacity>
         )}
@@ -96,34 +184,25 @@ export default function Sidebar({ onClose }) {
 
       <ScrollView contentContainerStyle={styles.menu}>
         {navItems.map((item) => {
-
           const isActive = pathname === item.route;
           return (
-            <TouchableOpacity
+            <NavItem
               key={item.label}
-              style={[styles.menuItem, isActive ? styles.menuItemActive : null]}
+              item={item}
+              isActive={isActive}
               onPress={async () => {
-                if (item.label === "Logout") {
+                if (item.label === "Logout" || item.label === "Lawyer Logout") {
                   await logout();
+                  setIsAdmin(false);
+                  setIsLawyer(false);
                   if (onClose) onClose();
                   blurActiveElement();
-                  router.replace("/login");
+                  router.replace(item.label === "Lawyer Logout" ? "/lawyer-login" : "/login");
                   return;
                 }
                 handlePress(item.route);
               }}
-            >
-              <Ionicons
-                name={item.icon}
-                size={20}
-                color={isActive ? colors.accent.gold : colors.text.muted}
-                style={styles.menuIcon}
-              />
-              <Text style={[styles.menuItemText, isActive ? styles.menuItemTextActive : null]}>
-                {item.label}
-              </Text>
-              {isActive && <View style={styles.activeIndicator} />}
-            </TouchableOpacity>
+            />
           );
         })}
       </ScrollView>
@@ -139,7 +218,7 @@ export default function Sidebar({ onClose }) {
 const styles = StyleSheet.create({
   sidebar: {
     flex: 1,
-    backgroundColor: "rgba(20, 20, 22, 0.95)",
+    backgroundColor: "rgba(15, 23, 42, 0.97)",
     borderRightWidth: 1,
     borderRightColor: colors.border.goldLight,
     paddingTop: 44, // Safe area padding
@@ -178,6 +257,9 @@ const styles = StyleSheet.create({
   menuItemActive: {
     backgroundColor: colors.accent.goldSubtle,
   },
+  menuItemHovered: {
+    backgroundColor: colors.border.goldLight,
+  },
 
   menuIcon: {
     marginRight: 12,
@@ -200,6 +282,10 @@ const styles = StyleSheet.create({
     width: 4,
     backgroundColor: colors.accent.gold,
     borderRadius: 2,
+  },
+  closeBtnHovered: {
+    backgroundColor: colors.border.gold,
+    borderRadius: 8,
   },
   footer: {
     marginTop: "auto",

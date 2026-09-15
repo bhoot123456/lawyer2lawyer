@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -57,7 +57,7 @@ const PendingClientCalls: React.FC<PendingClientCallsProps> = ({
         <Text style={styles.sectionHeader}>Pending Client Calls</Text>
         <GlassCard borderColor={colors.border.goldLight} accent={GOLD} elevation={1}>
           <View style={styles.emptyContainer}>
-            <Ionicons name="call-outline" size={32} color={GOLD} />
+            <Ionicons name="call-outline" size={34} color={GOLD} />
             <Text style={styles.emptyText}>No pending client calls</Text>
           </View>
         </GlassCard>
@@ -138,8 +138,8 @@ const styles = StyleSheet.create({
   },
   clientAvatarText: {
     color: GOLD,
-    fontSize: 13,
-    fontWeight: "900",
+    fontSize: 12,
+    fontWeight: "800",
   },
   listMain: {
     flex: 1,

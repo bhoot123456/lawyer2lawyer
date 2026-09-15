@@ -1,5 +1,6 @@
 import React from "react";
 import { Text, StyleSheet } from "react-native";
+import { colors } from "@/theme/designSystem";
 
 import GlassCard from "@/components/ui/GlassCard";
 
@@ -9,7 +10,7 @@ export default function LawyerCard({ lawyer, onPress }) {
   const location = [lawyer?.city, lawyer?.state].filter(Boolean).join(", ");
 
   return (
-    <GlassCard onPress={onPress} accent="#B58D3D" borderColor="rgba(181, 141, 61, 0.35)">
+    <GlassCard onPress={onPress} accent={colors.accent.gold} borderColor={colors.border.gold}>
       <Text style={styles.name}>{name}</Text>
       <Text style={styles.specialty}>{specialty}</Text>
       {location ? <Text style={styles.location}>{location}</Text> : null}

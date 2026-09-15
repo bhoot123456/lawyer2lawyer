@@ -1,5 +1,5 @@
-import React from "react";
-import { Pressable, Text, StyleSheet, View, ViewStyle } from "react-native";
+import React, { useState } from "react";
+import { Pressable, Platform, Text, StyleSheet, View, ViewStyle } from "react-native";
 import { colors, radii, shadows } from "@/theme/designSystem";
 
 type ButtonVariant = "primary" | "secondary" | "tertiary" | "destructive";
@@ -44,21 +44,36 @@ const PremiumButton: React.FC<PremiumButtonProps> = ({
   const paddingVertical = size === "lg" ? 14 : size === "sm" ? 8 : 12;
   const paddingHorizontal = size === "lg" ? 24 : size === "sm" ? 12 : 18;
   const fontSize = size === "lg" ? 16 : size === "sm" ? 13 : 14;
+  const [hovered, setHovered] = useState(false);
+
+  const isWeb = Platform.OS === "web";
+  const hoverBg = isPrimary
+    ? colors.accent.goldDark
+    : isSecondary
+      ? colors.bg.elevated
+      : isDestructive
+        ? "#DC2626"
+        : colors.accent.goldSubtle;
 
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled || loading}
+      accessibilityState={{ disabled: disabled || loading }}
+      // @ts-expect-error — onMouseEnter/onMouseLeave are web-only props (react-native-web)
+      onMouseEnter={isWeb ? () => setHovered(true) : undefined}
+      onMouseLeave={isWeb ? () => setHovered(false) : undefined}
       style={({ pressed }) => [
         styles.button,
         {
-          backgroundColor,
-          borderColor,
+          backgroundColor: hovered && isWeb && !disabled ? hoverBg : backgroundColor,
+          borderColor: hovered && isWeb && isSecondary ? colors.accent.gold : borderColor,
           paddingVertical,
           paddingHorizontal,
           borderRadius: radii.lg,
           opacity: (disabled || loading) ? 0.5 : pressed ? 0.85 : 1,
           transform: pressed && !disabled ? [{ scale: 0.97 }] : [{ scale: 1 }],
+          cursor: isWeb ? "pointer" : undefined,
         },
         style,
       ]}

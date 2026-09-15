@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Linking,
@@ -214,18 +214,18 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#eeecec" },
   body: {
     padding: 16,
-    paddingBottom: 28,
+    paddingBottom: 110,
     gap: 14,
   },
   pageTitle: {
     color: "#0f0f0f",
     fontSize: 24,
-    fontWeight: "900",
+    fontWeight: "800",
     marginTop: 10,
   },
   pageSubtitle: {
     color: "#324ef1",
-    fontSize: 13,
+    fontSize: 12,
     marginTop: 6,
     lineHeight: 18,
   },

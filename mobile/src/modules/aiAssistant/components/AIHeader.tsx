@@ -1,4 +1,5 @@
 import React, { memo } from "react";
+import { colors } from "@/theme/designSystem";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -57,7 +58,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     backgroundColor: AI_BG,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(181, 141, 61, 0.25)",
+    borderBottomColor: colors.border.gold,
   },
   headerRow: {
     flexDirection: "row",
@@ -71,7 +72,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "rgba(18, 18, 20, 0.6)",
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.28)",
+    borderColor: colors.border.gold,
     marginRight: 12,
   },
   titleContainer: {
@@ -80,7 +81,7 @@ const styles = StyleSheet.create({
   title: {
     color: AI_TEXT_PRIMARY,
     fontSize: 18,
-    fontWeight: "900",
+    fontWeight: "800",
   },
   subtitle: {
     color: AI_TEXT_SECONDARY,
@@ -95,7 +96,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "rgba(18, 18, 20, 0.6)",
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.28)",
+    borderColor: colors.border.gold,
     marginLeft: 8,
   },
 });

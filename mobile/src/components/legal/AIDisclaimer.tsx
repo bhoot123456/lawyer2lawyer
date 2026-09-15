@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { colors, radii, spacing, typography } from "@/theme/designSystem";
+import { colors, radii, spacing } from "@/theme/designSystem";
 
 /**
  * AI disclaimer rendered on every AI-assisted screen.
@@ -21,7 +21,7 @@ export default function AIDisclaimer() {
 
 const styles = StyleSheet.create({
   banner: {
-    backgroundColor: "#EFF6FF",
+    backgroundColor: colors.semantic.infoSubtle,
     borderLeftWidth: 3,
     borderLeftColor: colors.accent.gold,
     borderRadius: radii.md,
@@ -29,5 +29,5 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     marginBottom: spacing.md,
   },
-  text: { ...typography.caption, color: colors.text.secondary, lineHeight: 18 },
+  text: { fontSize: 12, fontWeight: "500", letterSpacing: 0.3, color: colors.text.primary, lineHeight: 18 },
 });

@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from "react";
+import { colors, radii, spacing, typography } from "@/theme/designSystem";
 import { View, Text, TextInput, StyleSheet } from "react-native";
+import useDebouncedValue from "@/hooks/useDebouncedValue";
 
 type Props = {
   initialQuery?: Record<string, string>;
@@ -11,21 +13,35 @@ const TextInputField = ({
   value,
   onChangeText,
   placeholder,
+  keyboardType,
+  autoCapitalize,
+  autoCorrect,
 }: {
   label: string;
   value: string;
   placeholder?: string;
   onChangeText: (v: string) => void;
+  keyboardType?: any;
+  autoCapitalize?: any;
+  autoCorrect?: boolean;
 }) => {
   return (
     <View style={styles.field}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.label} accessibilityRole="text">
+        {label}
+      </Text>
       <TextInput
         placeholder={placeholder}
-        placeholderTextColor="rgba(181, 141, 61, 0.35)"
+        placeholderTextColor={colors.text.muted}
         value={value}
         onChangeText={onChangeText}
         style={styles.input}
+        keyboardType={keyboardType}
+        autoCapitalize={autoCapitalize ?? "sentences"}
+        autoCorrect={autoCorrect ?? true}
+        returnKeyType="search"
+        blurOnSubmit={false}
+        accessibilityLabel={label}
       />
     </View>
   );
@@ -78,10 +94,25 @@ export default function CaseSearchFilters({
     nextHearing,
   ]);
 
-  // Notify parent on any change
+  // Notify parent on debounced change — typing no longer fires one API
+  // request per keystroke on slow court-day networks. Local inputs stay
+  // immediate; only the parent fetch is delayed (~450ms).
+  const debouncedQuery = useDebouncedValue(query, 450);
+  const onChangeRef = React.useRef(onChange);
+  // Keep the latest `onChange` in a ref so the debounced effect below never
+  // needs it as a dependency. Synced in an effect (not during render) because
+  // mutating a ref while rendering is unsafe under concurrent rendering.
   React.useEffect(() => {
-    onChange(query);
-  }, [query, onChange]);
+    onChangeRef.current = onChange;
+  }, [onChange]);
+  const lastSentRef = React.useRef("");
+  React.useEffect(() => {
+    const key = JSON.stringify(debouncedQuery);
+    if (key !== lastSentRef.current) {
+      lastSentRef.current = key;
+      onChangeRef.current(debouncedQuery);
+    }
+  }, [debouncedQuery]);
 
   return (
     <View style={styles.container}>
@@ -92,6 +123,8 @@ export default function CaseSearchFilters({
         value={caseNumber}
         onChangeText={setCaseNumber}
         placeholder="e.g., 1042"
+        autoCapitalize="none"
+        autoCorrect={false}
       />
 
       <TextInputField
@@ -99,6 +132,8 @@ export default function CaseSearchFilters({
         value={clientName}
         onChangeText={setClientName}
         placeholder="Client name"
+        autoCapitalize="words"
+        autoCorrect={false}
       />
 
       <TextInputField
@@ -106,6 +141,8 @@ export default function CaseSearchFilters({
         value={court}
         onChangeText={setCourt}
         placeholder="High Court / District"
+        autoCapitalize="words"
+        autoCorrect={false}
       />
 
       <TextInputField
@@ -113,6 +150,8 @@ export default function CaseSearchFilters({
         value={practiceArea}
         onChangeText={setPracticeArea}
         placeholder="e.g., Criminal"
+        autoCapitalize="words"
+        autoCorrect={false}
       />
 
       <TextInputField
@@ -120,6 +159,8 @@ export default function CaseSearchFilters({
         value={status}
         onChangeText={setStatus}
         placeholder="Pending / Filed / ..."
+        autoCapitalize="words"
+        autoCorrect={false}
       />
 
       <TextInputField
@@ -127,6 +168,8 @@ export default function CaseSearchFilters({
         value={priority}
         onChangeText={setPriority}
         placeholder="Low / Medium / High / Urgent"
+        autoCapitalize="words"
+        autoCorrect={false}
       />
 
       <TextInputField
@@ -134,6 +177,8 @@ export default function CaseSearchFilters({
         value={advocate}
         onChangeText={setAdvocate}
         placeholder="Advocate name"
+        autoCapitalize="words"
+        autoCorrect={false}
       />
 
       <TextInputField
@@ -141,6 +186,9 @@ export default function CaseSearchFilters({
         value={nextHearing}
         onChangeText={setNextHearing}
         placeholder="YYYY-MM-DD"
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="numbers-and-punctuation"
       />
     </View>
   );
@@ -148,35 +196,38 @@ export default function CaseSearchFilters({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "rgba(255, 255, 255, 0.06)",
+    backgroundColor: colors.bg.surface,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.25)",
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 12,
+    borderColor: colors.border.gold,
+    borderRadius: radii.xl,
+    padding: spacing.md,
+    marginBottom: spacing.md,
   },
   title: {
-    color: "#F8FAFC",
-    fontWeight: "900",
-    fontSize: 14,
-    marginBottom: 10,
+    color: colors.text.primary,
+    fontWeight: typography.h4.fontWeight,
+    fontSize: typography.h4.fontSize,
+    marginBottom: spacing.sm,
   },
   field: {
-    marginBottom: 10,
+    marginBottom: spacing.sm,
   },
   label: {
-    color: "rgba(181, 141, 61, 0.9)",
-    fontWeight: "800",
-    fontSize: 12,
-    marginBottom: 4,
+    color: colors.accent.gold,
+    fontWeight: typography.label.fontWeight,
+    fontSize: typography.label.fontSize,
+    letterSpacing: typography.label.letterSpacing,
+    marginBottom: spacing.xs,
   },
   input: {
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.25)",
-    backgroundColor: "rgba(18, 18, 20, 0.35)",
-    color: "#F8FAFC",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderColor: colors.border.default,
+    backgroundColor: colors.bg.elevated,
+    color: colors.text.primary,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    minHeight: 48,
+    fontSize: typography.body.fontSize,
   },
 });

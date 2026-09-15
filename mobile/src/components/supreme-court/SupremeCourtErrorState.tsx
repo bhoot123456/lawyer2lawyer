@@ -1,4 +1,5 @@
-import React from "react";
+﻿import React from "react";
+import { colors } from "@/theme/designSystem";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -59,7 +60,7 @@ const styles = StyleSheet.create({
   title: {
     color: "#F8FAFC",
     fontSize: 18,
-    fontWeight: "900",
+    fontWeight: "800",
     textAlign: "center",
   },
   message: {
@@ -73,7 +74,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#B58D3D",
+    backgroundColor: colors.accent.gold,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 14,
@@ -82,7 +83,7 @@ const styles = StyleSheet.create({
   retryText: {
     color: "#FFFFFF",
     fontSize: 14,
-    fontWeight: "900",
+    fontWeight: "800",
   },
 });
 

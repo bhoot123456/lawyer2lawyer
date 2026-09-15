@@ -209,6 +209,10 @@ caseSchema.index({ nextHearingDate: 1 });
 caseSchema.index({ practiceArea: 1 });
 caseSchema.index({ createdAt: -1 });
 
+// Dominant anonymous ownership query: device-scoped list sorted newest first
+// (buildCaseQueryFilters -> { deviceId }, validatePaginationAndSorting -> { createdAt: -1 }).
+caseSchema.index({ deviceId: 1, createdAt: -1 });
+
 module.exports = mongoose.model("Case", caseSchema);
 
 

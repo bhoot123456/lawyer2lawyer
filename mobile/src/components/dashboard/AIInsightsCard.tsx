@@ -68,7 +68,7 @@ const AIInsightsCard: React.FC<AIInsightsCardProps> = ({
         <Text style={styles.sectionHeader}>AI Insights</Text>
         <GlassCard borderColor={colors.border.goldLight} accent={GOLD} elevation={1}>
           <View style={styles.emptyContainer}>
-            <Ionicons name="bulb-outline" size={32} color={GOLD} />
+            <Ionicons name="bulb-outline" size={34} color={GOLD} />
             <Text style={styles.emptyText}>No AI insights available</Text>
           </View>
         </GlassCard>

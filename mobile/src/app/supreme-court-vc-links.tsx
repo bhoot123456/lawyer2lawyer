@@ -1,4 +1,5 @@
-import React from "react";
+﻿import React from "react";
+import { colors, radii, shadows, spacing } from "@/theme/designSystem";
 import {
   ActivityIndicator,
   Linking,
@@ -8,8 +9,7 @@ import {
   Text,
   View,
 } from "react-native";
-
-import { UI } from "../constants/ui";
+// NOTE: UI alias removed — this screen now uses designSystem tokens directly.
 
 const COURT_VC_LINKS: {
   title: string;
@@ -130,7 +130,7 @@ export default function SupremeCourtVcLinksScreen() {
   if (loading) {
     return (
       <View style={styles.loadingWrap}>
-        <ActivityIndicator color={UI.brand.primary} />
+        <ActivityIndicator color={colors.accent.gold} />
         <Text style={styles.loadingText}>Loading…</Text>
       </View>
     );
@@ -208,27 +208,27 @@ export default function SupremeCourtVcLinksScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: UI.colors.surface2,
+    backgroundColor: colors.bg.primary,
   },
   body: {
-    padding: UI.spacing.md,
-    paddingBottom: UI.spacing.xl,
-    gap: UI.spacing.sm,
+    padding: spacing.md,
+    paddingBottom: spacing.xl,
+    gap: spacing.sm,
   },
 
   header: {
     marginTop: 6,
-    marginBottom: UI.spacing.sm,
+    marginBottom: spacing.sm,
   },
   pageTitle: {
-    color: UI.colors.text,
+    color: colors.text.primary,
     fontSize: 22,
-    fontWeight: "900",
+    fontWeight: "800",
     letterSpacing: 0.3,
   },
   pageSubtitle: {
-    color: UI.colors.textSecondary,
-    fontSize: 13,
+    color: colors.text.secondary,
+    fontSize: 12,
     marginTop: 6,
     lineHeight: 18,
     fontWeight: "700",
@@ -241,11 +241,11 @@ const styles = StyleSheet.create({
 
   card: {
     backgroundColor: "#FFFFFF",
-    borderRadius: UI.radius.lg,
+    borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: "#EAE5DB",
     overflow: "hidden",
-    ...UI.shadow.sm,
+    ...shadows.level1,
   },
   cardInner: {
     flexDirection: "row",
@@ -258,13 +258,13 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: UI.brand.primary,
+    backgroundColor: colors.accent.gold,
     alignItems: "center",
     justifyContent: "center",
   },
   badgeText: {
-    color: "#0B0B0B",
-    fontWeight: "900",
+    color: colors.bg.primary,
+    fontWeight: "800",
     fontSize: 12,
     letterSpacing: 0.4,
   },
@@ -275,9 +275,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   cardTitle: {
-    color: UI.brand.primaryDark,
+    color: colors.accent.goldDark,
     fontSize: 16,
-    fontWeight: "900",
+    fontWeight: "800",
   },
 
   metaRow: {
@@ -288,10 +288,10 @@ const styles = StyleSheet.create({
   metaLabel: {
     color: "#64748B",
     fontSize: 12,
-    fontWeight: "900",
+    fontWeight: "800",
   },
   metaValue: {
-    color: UI.colors.link,
+    color: colors.semantic.info,
     fontSize: 12,
     fontWeight: "800",
     flex: 1,
@@ -308,18 +308,18 @@ const styles = StyleSheet.create({
     borderColor: "#E5E7EB",
   },
   chevron: {
-    color: UI.brand.primaryDark,
+    color: colors.accent.goldDark,
     fontSize: 22,
     lineHeight: 22,
-    fontWeight: "900",
+    fontWeight: "800",
     marginTop: -2,
   },
 
   footerHint: {
     marginTop: 10,
-    paddingVertical: UI.spacing.sm,
-    paddingHorizontal: UI.spacing.sm,
-    borderRadius: UI.radius.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radii.md,
     borderWidth: 1,
     borderColor: "#EAE5DB",
     backgroundColor: "rgba(255,255,255,0.55)",
@@ -335,11 +335,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: UI.colors.surface2,
+    backgroundColor: colors.bg.primary,
   },
   loadingText: {
-    color: UI.colors.textSecondary,
-    fontSize: 13,
+    color: colors.text.secondary,
+    fontSize: 12,
     fontWeight: "700",
   },
 });

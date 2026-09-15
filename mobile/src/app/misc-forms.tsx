@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Linking,
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f7f4f4" },
   body: {
     padding: 16,
-    paddingBottom: 28,
+    paddingBottom: 110,
     gap: 14,
   },
   sectionWrap: { marginTop: 6 },
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
   },
   pageSubtitle: {
     color: "#999",
-    fontSize: 13,
+    fontSize: 12,
     marginTop: 6,
     lineHeight: 18,
   },
@@ -169,13 +169,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#2E3135",
   },
-  noteText: { color: "#C9C9C9", fontSize: 13, lineHeight: 18 },
+  noteText: { color: "#C9C9C9", fontSize: 12, lineHeight: 18 },
   list: { gap: 16, marginTop: 6 },
   categoryBlock: { gap: 10 },
   categoryTitle: {
     color: "#D4AF37",
     fontSize: 16,
-    fontWeight: "900",
+    fontWeight: "800",
     marginTop: 6,
   },
   card: {

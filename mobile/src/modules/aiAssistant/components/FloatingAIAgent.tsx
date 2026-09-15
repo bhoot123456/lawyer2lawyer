@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { colors } from "@/theme/designSystem";
 import {
   Alert,
   Animated,
@@ -19,6 +20,7 @@ import { usePathname } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { getAuthToken } from "@/services/api";
 import { getAIConversationById, sendAIChatMessage } from "../services/backendAI";
+import { parseValidDate } from "@/utils/dateUtils";
 import {
   AI_BG,
   AI_CARD_BG,
@@ -56,8 +58,10 @@ const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
 
 const formatTimestamp = (iso: string) => {
-  const date = new Date(iso);
-  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const parsed = parseValidDate(iso);
+  return parsed
+    ? parsed.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : "";
 };
 
 const getScreenContext = (pathname: string) => {
@@ -599,12 +603,12 @@ const styles = StyleSheet.create({
     backgroundColor: AI_GOLD,
     borderWidth: 1,
     borderColor: AI_BG,
-    // Note: boxShadow is a web-only property; use elevation for Android and shadow* for iOS
     shadowColor: "#000",
     shadowOpacity: 0.35,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 10 },
     elevation: 8,
+    boxShadow: "0px 10px 16px rgba(0,0,0,0.35)",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -621,7 +625,7 @@ const styles = StyleSheet.create({
     width: 84,
     height: 84,
     borderRadius: 42,
-    borderColor: "rgba(181, 141, 61, 0.20)",
+    borderColor: colors.border.goldLight,
     borderWidth: 1,
     top: -6,
     left: -6,
@@ -642,6 +646,7 @@ const styles = StyleSheet.create({
     shadowRadius: 28,
     shadowOffset: { width: 0, height: 16 },
     elevation: 8,
+    boxShadow: "0px 16px 28px rgba(0,0,0,0.4)",
   },
   panelHeader: {
     flexDirection: "row",
@@ -665,7 +670,7 @@ const styles = StyleSheet.create({
   panelTitle: {
     color: AI_TEXT_PRIMARY,
     fontSize: 16,
-    fontWeight: "900",
+    fontWeight: "800",
     marginBottom: 2,
   },
   panelSubtitle: {
@@ -677,7 +682,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(181, 141, 61, 0.12)",
+    backgroundColor: colors.border.goldLight,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -685,7 +690,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(181, 141, 61, 0.12)",
+    backgroundColor: colors.border.goldLight,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -724,7 +729,7 @@ const styles = StyleSheet.create({
   },
   messageText: {
     color: AI_TEXT_PRIMARY,
-    fontSize: 13,
+    fontSize: 12,
     lineHeight: 20,
   },
   codeBlockText: {
@@ -749,7 +754,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 999,
-    backgroundColor: "rgba(181, 141, 61, 0.12)",
+    backgroundColor: colors.border.goldLight,
   },
   actionText: {
     color: AI_TEXT_SECONDARY,
@@ -798,7 +803,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 18,
-    backgroundColor: "rgba(181, 141, 61, 0.12)",
+    backgroundColor: colors.border.goldLight,
   },
   secondaryActionText: {
     color: AI_TEXT_PRIMARY,
@@ -807,7 +812,7 @@ const styles = StyleSheet.create({
   },
   copyHint: {
     color: AI_TEXT_MUTED,
-    fontSize: 11,
+    fontSize: 12,
     flex: 1,
     textAlign: "right",
   },

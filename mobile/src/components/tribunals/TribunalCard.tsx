@@ -1,8 +1,9 @@
-import React from "react";
-import { View, Text, StyleSheet, Pressable, Linking, Alert, Share } from "react-native";
+﻿import React from "react";
+import { View, Text, StyleSheet, Pressable, Linking, Share } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import GlassCard from "@/components/ui/GlassCard";
 import StatusBadge from "@/components/ui/StatusBadge";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { colors, radii, spacing, typography } from "@/theme/designSystem";
 
 type Tribunal = {
@@ -64,6 +65,8 @@ const COLORS = {
 
 const TribunalCard = React.memo(function TribunalCard({ tribunal, onPress }: Props) {
   const [expanded, setExpanded] = React.useState(false);
+  // Cross-platform confirm/notice dialogs (Alert.alert is a no-op on web).
+  const { notice: noticeDialog, element: dialogElement } = useConfirmDialog();
 
   const openLink = React.useCallback((url?: string) => {
     if (!url) return;
@@ -72,8 +75,8 @@ const TribunalCard = React.memo(function TribunalCard({ tribunal, onPress }: Pro
 
   const copyToClipboard = React.useCallback((text?: string) => {
     if (!text) return;
-    Alert.alert("Copied", text);
-  }, []);
+    void noticeDialog({ title: "Copied", message: text });
+  }, [noticeDialog]);
 
   const shareTribunal = React.useCallback(() => {
     const name = tribunal?.name || "Tribunal";
@@ -302,16 +305,19 @@ const TribunalCard = React.memo(function TribunalCard({ tribunal, onPress }: Pro
   );
 
   return (
-    <Pressable onPress={() => onPress?.(tribunal)}>
-      <GlassCard
-        borderColor={colors.border.goldLight}
-        accent={colors.accent.gold}
-        style={styles.card}
-        elevation={1}
-      >
-        {cardContent}
-      </GlassCard>
-    </Pressable>
+    <>
+      <Pressable onPress={() => onPress?.(tribunal)}>
+        <GlassCard
+          borderColor={colors.border.goldLight}
+          accent={colors.accent.gold}
+          style={styles.card}
+          elevation={1}
+        >
+          {cardContent}
+        </GlassCard>
+      </Pressable>
+      {dialogElement}
+    </>
   );
 });
 
@@ -367,7 +373,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   categoryBadgeText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "700",
   },
   description: {
@@ -387,7 +393,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   flagText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "700",
   },
   actions: {
@@ -433,7 +439,7 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     color: colors.text.muted,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "600",
     textTransform: "uppercase",
     letterSpacing: 0.5,

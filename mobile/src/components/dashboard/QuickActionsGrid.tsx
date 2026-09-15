@@ -1,9 +1,9 @@
-import React, { useMemo } from "react";
+﻿import React, { useMemo } from "react";
 import { FlatList, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import GlassCard from "@/components/ui/GlassCard";
-import { colors, radii, shadows, spacing, typography } from "@/theme/designSystem";
+import { colors, radii, spacing, typography } from "@/theme/designSystem";
 import type { QuickAction } from "./types";
 
 interface QuickActionsGridProps {
@@ -13,21 +13,24 @@ interface QuickActionsGridProps {
 const GOLD = colors.accent.gold;
 const TEXT_PRIMARY = colors.text.primary;
 
-// Default quick actions for the dashboard
+// Original Ionicon per quick action — used only if the emblem image fails.
+const FALLBACK_ICONS: Record<string, string> = {
+  "add-case": "add-circle-outline",
+  "ai-assistant": "bulb-outline",
+  "court-diary": "calendar-outline",
+  "draft-library": "document-text-outline",
+  "bare-acts": "book-outline",
+  search: "search-outline",
+};
+
+// Default quick actions for the dashboard — focused set of real destinations.
 const DEFAULT_ACTIONS: QuickAction[] = [
-  { id: "add-case", title: "Add Case", icon: "briefcase-outline", screen: "/cases/new" },
-  { id: "court-diary", title: "Court Diary", icon: "calendar-outline", screen: "/court-diary" },
-  { id: "clients", title: "Clients", icon: "people-outline", screen: "/lawyers" },
-  { id: "draft-library", title: "Draft Library", icon: "document-text-outline", screen: "/draft-library" },
-  { id: "bare-acts", title: "Bare Acts", icon: "book-outline", screen: "/bare-acts" },
-  { id: "judgments", title: "Judgments", icon: "scale-outline", screen: "/supreme-court" },
-  { id: "ai-assistant", title: "AI Assistant", icon: "bulb-outline", screen: "/ai-assistant" },
-  { id: "supreme-court", title: "Supreme Court", icon: "globe-outline", screen: "/supreme-court" },
-  { id: "delhi-high-court", title: "Delhi High Court", icon: "business-outline", screen: "/delhi-courts" },
-  { id: "district-courts", title: "District Courts", icon: "library-outline", screen: "/delhi-courts" },
-  { id: "video-conference", title: "Video Conference", icon: "videocam-outline", screen: "/supreme-court" },
-  { id: "calendar", title: "Calendar", icon: "calendar-number-outline", screen: "/court-diary" },
-  { id: "search", title: "Search", icon: "search-outline", screen: "/search" },
+  { id: "add-case", title: "New Case", icon: "new-case", screen: "/cases/new" },
+  { id: "ai-assistant", title: "AI Assistant", icon: "ai-assistant", screen: "/ai-assistant" },
+  { id: "court-diary", title: "Court Diary", icon: "court-diary", screen: "/court-diary" },
+  { id: "draft-library", title: "Draft Library", icon: "draft-library", screen: "/draft-library" },
+  { id: "bare-acts", title: "Bare Acts", icon: "bare-acts", screen: "/bare-acts" },
+  { id: "search", title: "Search", icon: "search", screen: "/search" },
 ];
 
 const QuickActionsGrid: React.FC<QuickActionsGridProps> = ({ actions }) => {
@@ -68,7 +71,11 @@ const QuickActionsGrid: React.FC<QuickActionsGridProps> = ({ actions }) => {
         >
           <View style={styles.actionTileInner}>
             <View style={styles.actionIconWrap}>
-              <Ionicons name={item.icon as any} size={26} color={GOLD} />
+              <Ionicons
+                name={FALLBACK_ICONS[item.id] || "ellipse-outline" as any}
+                size={36}
+                color={GOLD}
+              />
             </View>
             <Text style={styles.actionTileText} numberOfLines={2}>
               {item.title}
@@ -141,7 +148,7 @@ const styles = StyleSheet.create({
   actionTileText: {
     color: TEXT_PRIMARY,
     textAlign: "center",
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "700",
     lineHeight: 15,
   },

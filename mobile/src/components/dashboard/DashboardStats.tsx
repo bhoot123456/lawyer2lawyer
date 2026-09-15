@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import GlassCard from "@/components/ui/GlassCard";
 import type { DashboardStats as DashboardStatsType } from "./types";
-import { colors, radii, shadows, spacing, typography } from "@/theme/designSystem";
+import { colors, radii, spacing, typography } from "@/theme/designSystem";
 
 interface DashboardStatsProps {
   stats: DashboardStatsType;
@@ -17,19 +17,19 @@ const TEXT_SECONDARY = colors.text.secondary;
 const StatItem: React.FC<{
   value: number | string;
   label: string;
-  icon: string;
+  fallbackIcon: string;
   loading?: boolean;
-}> = ({ value, label, icon, loading }) => {
+}> = ({ value, label, fallbackIcon, loading }) => {
   return (
     <GlassCard
       borderColor={colors.border.goldLight}
       accent={GOLD}
       style={styles.statCard}
-      elevation={1}
+      elevation={2}
     >
       <View style={styles.statContent}>
         <View style={styles.statIconWrap}>
-          <Ionicons name={icon as any} size={20} color={GOLD} />
+          <Ionicons name={fallbackIcon as any} size={28} color={GOLD} />
         </View>
         <Text style={styles.statValue}>
           {loading ? "-" : value}
@@ -55,37 +55,37 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({ stats, loading }) => {
       <StatItem
         value={loading ? 0 : stats.todayHearings}
         label="Today's Hearings"
-        icon="time-outline"
+        fallbackIcon="time-outline"
         loading={loading}
       />
       <StatItem
         value={loading ? 0 : stats.activeCases}
         label="Active Cases"
-        icon="briefcase-outline"
+        fallbackIcon="briefcase-outline"
         loading={loading}
       />
       <StatItem
         value={loading ? 0 : stats.pendingCases}
         label="Pending Cases"
-        icon="hourglass-outline"
+        fallbackIcon="hourglass-outline"
         loading={loading}
       />
       <StatItem
         value={loading ? "₹ 0" : formatMoney(stats.revenueToday)}
         label="Revenue Today"
-        icon="cash-outline"
+        fallbackIcon="cash-outline"
         loading={loading}
       />
       <StatItem
         value={loading ? 0 : stats.clientMeetings}
         label="Client Meetings"
-        icon="people-outline"
+        fallbackIcon="people-outline"
         loading={loading}
       />
       <StatItem
         value={loading ? 0 : stats.pendingDrafts}
         label="Pending Drafts"
-        icon="document-text-outline"
+        fallbackIcon="document-text-outline"
         loading={loading}
       />
     </View>
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   statCard: {
-    width: "31%",
+    width: "48.5%",
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.sm,
     alignItems: "center",
@@ -123,9 +123,9 @@ const styles = StyleSheet.create({
   },
   statValue: {
     color: TEXT_PRIMARY,
-    fontSize: typography.h3.fontSize,
-    fontWeight: typography.h3.fontWeight,
-    lineHeight: typography.h3.lineHeight,
+    fontSize: 28,
+    fontWeight: "800",
+    lineHeight: 34,
     textAlign: "center",
   },
   statLabel: {

@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useState } from "react";
+﻿import React, { memo, useCallback, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Alert } from "react-native";
 import { useAIAssistant } from "../hooks/useAIAssistant";
 import { AIHeader, AIInput, AIButton, AIResultCard, LoadingCard, ErrorCard, EmptyState, ActionButtons } from "../components";
@@ -106,11 +106,11 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: AI_BG },
   scroll: { flex: 1 },
   scrollContent: { padding: 16, paddingBottom: 40 },
-  pickerLabel: { color: "#B0B4BA", fontSize: 13, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 },
+  pickerLabel: { color: "#B0B4BA", fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 6 },
   pickerRow: { flexDirection: "row", gap: 16, marginBottom: 10 },
   pickerButton: { flex: 1 ,},
   pickerButtonSmall: { flex: 0, paddingHorizontal: 16 , paddingRight: 55 },
-  noticeBody: { color: "#F8FAFC", fontSize: 13, lineHeight: 19, fontWeight: "400" },
+  noticeBody: { color: "#F8FAFC", fontSize: 12, lineHeight: 19, fontWeight: "400" },
 });
 
 export default memo(DraftLegalNoticeScreen);

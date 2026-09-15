@@ -55,7 +55,7 @@ const RecentNotifications: React.FC<RecentNotificationsProps> = ({
         <Text style={styles.sectionHeader}>Recent Notifications</Text>
         <GlassCard borderColor={colors.border.goldLight} accent={GOLD} elevation={1}>
           <View style={styles.emptyContainer}>
-            <Ionicons name="notifications-outline" size={32} color={GOLD} />
+            <Ionicons name="notifications-outline" size={34} color={GOLD} />
             <Text style={styles.emptyText}>No notifications</Text>
           </View>
         </GlassCard>

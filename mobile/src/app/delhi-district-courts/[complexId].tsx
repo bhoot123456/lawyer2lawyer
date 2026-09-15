@@ -1,4 +1,5 @@
 import React, { memo, useMemo } from "react";
+import { colors } from "@/theme/designSystem";
 import {
   Pressable,
   ScrollView,
@@ -19,7 +20,7 @@ import type { District } from "@/data/delhiDistrictCourts";
 // Constants
 // ─────────────────────────────────────────────────────────
 
-const ACCENT = "#B58D3D";
+const ACCENT = colors.accent.gold;
 const ACCENT_DARK = "#D4AF37";
 const BG_COLOR = "#FAF9F6";
 const SURFACE_COLOR = "#FFFFFF";
@@ -223,9 +224,9 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: "rgba(181, 141, 61, 0.1)",
+    backgroundColor: colors.accent.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.25)",
+    borderColor: colors.border.gold,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -239,14 +240,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: "rgba(181, 141, 61, 0.12)",
+    backgroundColor: colors.border.goldLight,
     alignItems: "center",
     justifyContent: "center",
   },
   headerTitle: {
     color: TEXT_PRIMARY,
     fontSize: 22,
-    fontWeight: "900",
+    fontWeight: "800",
     letterSpacing: 0.3,
   },
   headerSubtitle: {
@@ -268,12 +269,12 @@ const styles = StyleSheet.create({
   introTitle: {
     color: ACCENT_DARK,
     fontSize: 16,
-    fontWeight: "900",
+    fontWeight: "800",
     marginBottom: 8,
   },
   introText: {
     color: TEXT_MUTED,
-    fontSize: 13,
+    fontSize: 12,
     lineHeight: 20,
     fontWeight: "600",
   },
@@ -281,8 +282,8 @@ const styles = StyleSheet.create({
   // Section label
   sectionLabel: {
     color: ACCENT,
-    fontSize: 13,
-    fontWeight: "900",
+    fontSize: 12,
+    fontWeight: "800",
     letterSpacing: 0.5,
     textTransform: "uppercase",
     marginBottom: 12,
@@ -308,12 +309,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 3,
+    boxShadow: "0px 2px 8px rgba(0,0,0,0.06)",
   },
   districtIconWrap: {
     width: 48,
     height: 48,
     borderRadius: 14,
-    backgroundColor: "rgba(181, 141, 61, 0.1)",
+    backgroundColor: colors.accent.goldLight,
     alignItems: "center",
     justifyContent: "center",
   },

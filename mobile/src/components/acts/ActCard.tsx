@@ -2,8 +2,7 @@ import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import GlassCard from "@/components/ui/GlassCard";
-import { colors, radii } from "@/theme/designSystem";
-import { MaxContentWidth } from "@/constants/theme";
+import { colors, layout, radii } from "@/theme/designSystem";
 
 export type ActCardData = {
   id: string;
@@ -39,10 +38,10 @@ export default function ActCard({
     <GlassCard
       style={[
         styles.cardSurface,
-        { backgroundColor: "#FAF9F6", maxWidth: MaxContentWidth, alignSelf: "center" },
+        { backgroundColor: "#FAF9F6", maxWidth: layout.maxContentWidth, alignSelf: "center" },
       ]}
-      borderColor="rgba(181, 141, 61, 0.18)"
-      accent="#B58D3D"
+      borderColor={colors.accent.goldLight}
+      accent={colors.accent.gold}
       elevation={1}
       onPress={() => onPressPrimary(act.id)}
     >
@@ -100,7 +99,7 @@ export default function ActCard({
                   <Ionicons
                     name={isBookmarked ? "bookmark" : "bookmark-outline"}
                     size={20}
-                    color={isBookmarked ? "#B58D3D" : "rgba(120,100,80,0.85)"}
+                    color={isBookmarked ? colors.accent.gold : "rgba(120,100,80,0.85)"}
                   />
                 </Pressable>
               )}
@@ -117,7 +116,7 @@ export default function ActCard({
             <View style={styles.leftFooter}>
               {act.pdfUrl ? (
                 <View style={styles.pdfPill}>
-                  <Ionicons name="document-text-outline" size={12} color="#B58D3D" />
+                  <Ionicons name="document-text-outline" size={12} color={colors.accent.gold} />
                   <Text style={styles.pdfPillText}>PDF Available</Text>
                 </View>
               ) : (
@@ -157,7 +156,7 @@ const styles = StyleSheet.create({
   cardSurface: {
     borderRadius: radii.lg,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.18)",
+    borderColor: colors.accent.goldLight,
     overflow: "hidden",
     marginHorizontal: 16,
   },
@@ -202,12 +201,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
-    backgroundColor: "rgba(212,175,55,0.12)",
+    backgroundColor: colors.accent.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(212,175,55,0.25)",
+    borderColor: colors.border.gold,
   },
   yearPillText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "700",
     color: colors.accent.gold,
     letterSpacing: 0.3,
@@ -221,7 +220,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(148,163,184,0.35)",
   },
   categoryPillText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "600",
     color: "#475569",
   },
@@ -236,17 +235,17 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.22)",
+    borderColor: colors.border.goldLight,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(255,255,255,0.7)",
   },
   iconBtnHover: {
-    backgroundColor: "rgba(212,175,55,0.10)",
-    borderColor: "rgba(212,175,55,0.45)",
+    backgroundColor: colors.accent.goldSubtle,
+    borderColor: colors.border.gold,
   },
   desc: {
-    fontSize: 13,
+    fontSize: 12,
     color: "#475569",
     lineHeight: 19,
   },
@@ -269,14 +268,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
-    backgroundColor: "rgba(212,175,55,0.10)",
+    backgroundColor: colors.accent.goldSubtle,
     borderWidth: 1,
-    borderColor: "rgba(212,175,55,0.25)",
+    borderColor: colors.border.gold,
   },
   pdfPillText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "700",
-    color: "#B58D3D",
+    color: colors.accent.gold,
   },
   pdfPillSoon: {
     paddingHorizontal: 8,
@@ -287,7 +286,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(148,163,184,0.25)",
   },
   pdfPillSoonText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "700",
     color: "#94A3B8",
   },
@@ -295,14 +294,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
-    backgroundColor: "rgba(181,141,61,0.10)",
+    backgroundColor: colors.accent.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.25)",
+    borderColor: colors.border.gold,
   },
   aiPillText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "800",
-    color: "#B58D3D",
+    color: colors.accent.gold,
   },
   ctaBtn: {
     flexDirection: "row",
@@ -312,12 +311,12 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "rgba(212,175,55,0.35)",
-    backgroundColor: "rgba(212,175,55,0.08)",
+    borderColor: colors.border.gold,
+    backgroundColor: colors.accent.goldSubtle,
   },
   ctaText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "700",
-    color: "#D4AF37",
+    color: colors.accent.gold,
   },
 });

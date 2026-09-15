@@ -1,7 +1,8 @@
-import React, { memo, useEffect, useCallback, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from "react-native";
+﻿import React, { memo, useEffect, useCallback, useState } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AIHeader, EmptyState, AIButton } from "../components";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { AI_BG, AI_GOLD, AI_GOLD_LIGHT, AI_CARD_BG, AI_TEXT_PRIMARY, AI_TEXT_SECONDARY, AI_TEXT_MUTED } from "../constants";
 import { loadHistory, deleteHistoryEntry, clearAllHistory, toggleBookmark } from "../utils/storage";
 import type { AIHistoryEntry, AIFeature } from "../types";
@@ -19,6 +20,8 @@ const FEATURE_TITLES: Record<AIFeature, string> = {
 const HistoryScreen: React.FC = () => {
   const [history, setHistory] = useState<AIHistoryEntry[]>([]);
   const [filter, setFilter] = useState<"all" | AIFeature>("all");
+  // Cross-platform confirm dialogs (Alert.alert is a no-op on web).
+  const { confirm: confirmDialog, element: dialogElement } = useConfirmDialog();
 
   const refreshHistory = useCallback(async () => {
     const entries = await loadHistory();
@@ -34,37 +37,33 @@ const HistoryScreen: React.FC = () => {
   const filteredHistory = filter === "all" ? history : history.filter((e) => e.feature === filter);
 
   const handleDelete = useCallback(async (id: string) => {
-    Alert.alert("Delete Entry", "Are you sure you want to delete this history entry?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          await deleteHistoryEntry(id);
-          refreshHistory();
-        },
-      },
-    ]);
-  }, [refreshHistory]);
+    const ok = await confirmDialog({
+      title: "Delete Entry",
+      message: "Are you sure you want to delete this history entry?",
+      confirmLabel: "Delete",
+      danger: true,
+    });
+    if (!ok) return;
+    await deleteHistoryEntry(id);
+    refreshHistory();
+  }, [confirmDialog, refreshHistory]);
 
   const handleToggleBookmark = useCallback(async (id: string) => {
     await toggleBookmark(id);
     refreshHistory();
   }, [refreshHistory]);
 
-  const handleClearAll = useCallback(() => {
-    Alert.alert("Clear History", "Are you sure you want to clear all history?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Clear All",
-        style: "destructive",
-        onPress: async () => {
-          await clearAllHistory();
-          setHistory([]);
-        },
-      },
-    ]);
-  }, []);
+  const handleClearAll = useCallback(async () => {
+    const ok = await confirmDialog({
+      title: "Clear History",
+      message: "Are you sure you want to clear all history?",
+      confirmLabel: "Clear All",
+      danger: true,
+    });
+    if (!ok) return;
+    await clearAllHistory();
+    setHistory([]);
+  }, [confirmDialog]);
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -146,6 +145,7 @@ const HistoryScreen: React.FC = () => {
           ))
         )}
       </ScrollView>
+      {dialogElement}
     </View>
   );
 };
@@ -181,8 +181,8 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 6,
   },
-  historyFeature: { color: AI_GOLD, fontSize: 13, fontWeight: "700", flex: 1 },
-  historyPrompt: { color: AI_TEXT_PRIMARY, fontSize: 13, lineHeight: 18, marginBottom: 6 },
+  historyFeature: { color: AI_GOLD, fontSize: 12, fontWeight: "700", flex: 1 },
+  historyPrompt: { color: AI_TEXT_PRIMARY, fontSize: 12, lineHeight: 18, marginBottom: 6 },
   historyDate: { color: AI_TEXT_MUTED, fontSize: 11 },
   historyActions: { flexDirection: "row", gap: 16, marginTop: 8 },
   historyAction: { flexDirection: "row", alignItems: "center", gap: 4 },

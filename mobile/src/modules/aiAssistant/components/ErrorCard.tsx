@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+﻿import React, { memo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AI_GOLD, AI_GOLD_LIGHT, AI_CARD_BG, AI_ERROR_RED, AI_TEXT_SECONDARY } from "../constants";
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   },
   message: {
     color: AI_TEXT_SECONDARY,
-    fontSize: 13,
+    fontSize: 12,
     lineHeight: 18,
     textAlign: "center",
     marginBottom: 16,

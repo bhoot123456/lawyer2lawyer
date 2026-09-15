@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { colors } from "@/theme/designSystem";
 import {
   View,
   Text,
@@ -7,11 +8,11 @@ import {
   Pressable,
   TextInput,
   ScrollView,
-  Alert,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { KeyboardAwareView } from "@/components/ui/KeyboardAwareView";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 import GlassCard from "@/components/ui/GlassCard";
 import {
@@ -69,6 +70,9 @@ export default function DraftLibrarySectionScreen() {
   const [savedDraftsList, setSavedDraftsList] = useState<SavedDraftDetail[]>(
     [],
   );
+
+  // Cross-platform confirm/notice dialogs (Alert.alert is a no-op on web).
+  const { notice: noticeDialog, element: dialogElement } = useConfirmDialog();
 
   useEffect(() => {
     const load = async () => {
@@ -180,7 +184,7 @@ export default function DraftLibrarySectionScreen() {
         customBody: customBody || selectedTemplate.body,
       };
       await saveDraft(payload);
-      Alert.alert("Saved", "Your draft has been saved successfully.");
+      void noticeDialog({ title: "Saved", message: "Your draft has been saved successfully." });
       // Refresh saved drafts list
       const savedRes = await getSavedDrafts().catch(() => ({ drafts: [] }));
       const filtered = (savedRes?.drafts || []).filter(
@@ -188,7 +192,7 @@ export default function DraftLibrarySectionScreen() {
       );
       setSavedDraftsList(filtered);
     } catch (err) {
-      Alert.alert("Error", "Failed to save draft.");
+      void noticeDialog({ title: "Error", message: "Failed to save draft.", danger: true });
     } finally {
       setSaving(false);
     }
@@ -198,7 +202,7 @@ export default function DraftLibrarySectionScreen() {
   const handleOpenSaved = (saved: any) => {
     const t = templates.find((tmpl) => tmpl.id === saved.templateId);
     if (!t) {
-      Alert.alert("Error", "Template not found for this saved draft.");
+      void noticeDialog({ title: "Error", message: "Template not found for this saved draft.", danger: true });
       return;
     }
     setSelectedTemplate(t);
@@ -215,9 +219,10 @@ export default function DraftLibrarySectionScreen() {
   };
 
   return (
-    <KeyboardAwareView contentContainerStyle={styles.container}>
+    <>
+      <KeyboardAwareView contentContainerStyle={styles.container}>
       {/* Header */}
-      <GlassCard borderColor="rgba(181, 141, 61, 0.35)" accent="#B58D3D">
+      <GlassCard borderColor={colors.border.gold} accent={colors.accent.gold}>
         <View style={styles.headerRow}>
           <View style={styles.badgeIcon}>
             <Ionicons
@@ -243,7 +248,7 @@ export default function DraftLibrarySectionScreen() {
 
       {loading ? (
         <View style={{ marginTop: 16 }}>
-          <ActivityIndicator size="small" color="#B58D3D" />
+          <ActivityIndicator size="small" color={colors.accent.gold} />
         </View>
       ) : null}
 
@@ -317,7 +322,7 @@ export default function DraftLibrarySectionScreen() {
                     <Ionicons
                       name="document-outline"
                       size={16}
-                      color="#B58D3D"
+                      color={colors.accent.gold}
                     />
                   </View>
                   <Text style={styles.templateLabel} numberOfLines={2}>
@@ -326,7 +331,7 @@ export default function DraftLibrarySectionScreen() {
                   <Ionicons
                     name="chevron-forward"
                     size={16}
-                    color="rgba(181,141,61,0.6)"
+                    color={colors.accent.gold}
                   />
                 </Pressable>
               ))}
@@ -339,7 +344,7 @@ export default function DraftLibrarySectionScreen() {
             style={styles.backBtn}
             onPress={() => router.push("/draft-library")}
           >
-            <Ionicons name="arrow-back-outline" size={16} color="#B58D3D" />
+            <Ionicons name="arrow-back-outline" size={16} color={colors.accent.gold} />
             <Text style={styles.backText}>Back to Draft Library</Text>
           </Pressable>
         </>
@@ -354,7 +359,7 @@ export default function DraftLibrarySectionScreen() {
               style={styles.actionBtn}
               onPress={handleBackToTemplates}
             >
-              <Ionicons name="arrow-back-outline" size={16} color="#B58D3D" />
+              <Ionicons name="arrow-back-outline" size={16} color={colors.accent.gold} />
               <Text style={styles.actionBtnText}>Back</Text>
             </Pressable>
 
@@ -365,7 +370,7 @@ export default function DraftLibrarySectionScreen() {
               <Ionicons
                 name={previewMode ? "create-outline" : "eye-outline"}
                 size={16}
-                color="#B58D3D"
+                color={colors.accent.gold}
               />
               <Text style={styles.actionBtnText}>
                 {previewMode ? "Edit" : "Preview"}
@@ -459,7 +464,9 @@ export default function DraftLibrarySectionScreen() {
           <View style={{ height: 16 }} />
         </View>
       )}
+      {dialogElement}
     </KeyboardAwareView>
+  </>
   );
 }
 
@@ -468,7 +475,7 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 14,
     paddingBottom: 110,
-    backgroundColor: "#0B0B0B",
+    backgroundColor: colors.bg.primary,
   },
   headerRow: {
     flexDirection: "row",
@@ -479,16 +486,16 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 18,
-    backgroundColor: "rgba(181,141,61,0.12)",
+    backgroundColor: colors.border.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.25)",
+    borderColor: colors.border.gold,
     alignItems: "center",
     justifyContent: "center",
   },
   title: {
     color: "#F8FAFC",
     fontSize: 18,
-    fontWeight: "900",
+    fontWeight: "800",
   },
   subtitle: {
     color: "rgba(248,250,252,0.75)",
@@ -500,7 +507,7 @@ const styles = StyleSheet.create({
   descBox: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.20)",
+    borderColor: colors.border.goldLight,
     backgroundColor: "rgba(255,255,255,0.03)",
     padding: 14,
   },
@@ -512,7 +519,7 @@ const styles = StyleSheet.create({
   },
   sectionHeader: {
     color: "#D4AF37",
-    fontWeight: "900",
+    fontWeight: "800",
     fontSize: 14,
     marginTop: 4,
   },
@@ -525,8 +532,8 @@ const styles = StyleSheet.create({
     gap: 12,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.18)",
-    backgroundColor: "rgba(181,141,61,0.08)",
+    borderColor: colors.accent.goldLight,
+    backgroundColor: colors.accent.goldSubtle,
     paddingVertical: 12,
     paddingHorizontal: 12,
   },
@@ -534,23 +541,23 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 10,
-    backgroundColor: "rgba(181,141,61,0.12)",
+    backgroundColor: colors.border.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.25)",
+    borderColor: colors.border.gold,
     alignItems: "center",
     justifyContent: "center",
   },
   templateLabel: {
     color: "#F8FAFC",
-    fontWeight: "900",
-    fontSize: 13,
+    fontWeight: "800",
+    fontSize: 12,
     flex: 1,
     lineHeight: 18,
   },
   emptyText: {
     color: "rgba(248,250,252,0.65)",
     fontWeight: "800",
-    fontSize: 13,
+    fontSize: 12,
     textAlign: "center",
     paddingVertical: 20,
   },
@@ -560,18 +567,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 10,
     borderRadius: 14,
-    backgroundColor: "rgba(181,141,61,0.10)",
+    backgroundColor: colors.accent.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.35)",
+    borderColor: colors.border.gold,
     paddingVertical: 12,
   },
   backText: {
-    color: "rgba(181,141,61,0.95)",
-    fontWeight: "900",
+    color: colors.accent.gold,
+    fontWeight: "800",
   },
   errorText: {
     color: "rgba(248,250,252,0.75)",
-    fontWeight: "900",
+    fontWeight: "800",
     marginBottom: 12,
   },
   // Saved draft mini list
@@ -585,13 +592,13 @@ const styles = StyleSheet.create({
     gap: 8,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.15)",
+    borderColor: colors.accent.goldLight,
     backgroundColor: "rgba(255,255,255,0.03)",
     padding: 10,
   },
   savedMiniLabel: {
     color: "#F8FAFC",
-    fontWeight: "900",
+    fontWeight: "800",
     fontSize: 12,
     flex: 1,
   },
@@ -608,21 +615,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     borderRadius: 12,
-    backgroundColor: "rgba(181,141,61,0.10)",
+    backgroundColor: colors.accent.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.35)",
+    borderColor: colors.border.gold,
     paddingVertical: 10,
     paddingHorizontal: 14,
   },
   saveBtn: {
     flex: 1,
     justifyContent: "center",
-    backgroundColor: "rgba(181,141,61,0.20)",
-    borderColor: "rgba(181,141,61,0.55)",
+    backgroundColor: colors.border.goldLight,
+    borderColor: colors.border.gold,
   },
   actionBtnText: {
-    color: "#B58D3D",
-    fontWeight: "900",
+    color: colors.accent.gold,
+    fontWeight: "800",
     fontSize: 12,
   },
   fieldsContainer: {
@@ -633,29 +640,29 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     color: "rgba(248,250,252,0.85)",
-    fontWeight: "900",
+    fontWeight: "800",
     fontSize: 12,
     marginLeft: 2,
   },
   textInput: {
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.25)",
+    borderColor: colors.border.gold,
     backgroundColor: "rgba(255,255,255,0.05)",
     color: "#F8FAFC",
     fontWeight: "800",
-    fontSize: 13,
+    fontSize: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
   textarea: {
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.25)",
+    borderColor: colors.border.gold,
     backgroundColor: "rgba(255,255,255,0.05)",
     color: "#F8FAFC",
     fontWeight: "800",
-    fontSize: 13,
+    fontSize: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
     minHeight: 80,
@@ -664,7 +671,7 @@ const styles = StyleSheet.create({
   bodyEditor: {
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.25)",
+    borderColor: colors.border.gold,
     backgroundColor: "rgba(255,255,255,0.05)",
     color: "#F8FAFC",
     fontWeight: "800",
@@ -679,14 +686,14 @@ const styles = StyleSheet.create({
   previewBox: {
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.20)",
+    borderColor: colors.border.goldLight,
     backgroundColor: "rgba(255,255,255,0.03)",
     padding: 14,
   },
   previewTitle: {
     color: "#D4AF37",
-    fontWeight: "900",
-    fontSize: 13,
+    fontWeight: "800",
+    fontSize: 12,
     marginBottom: 10,
   },
   previewScroll: {
@@ -695,7 +702,7 @@ const styles = StyleSheet.create({
   previewBody: {
     color: "rgba(248,250,252,0.88)",
     fontWeight: "800",
-    fontSize: 11,
+    fontSize: 12,
     lineHeight: 17,
     fontFamily: "monospace",
   },

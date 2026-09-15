@@ -9,6 +9,7 @@ import {
 
 import Navbar from "@/components/Navbar";
 import { coverageStates } from "@/constants/coverage";
+import { colors } from "@/theme/designSystem";
 
 export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState("");
@@ -106,13 +107,13 @@ export default function RegisterScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0B0B0B" },
+  container: { flex: 1, backgroundColor: colors.bg.primary },
   body: {
     flex: 1,
     padding: 16,
     gap: 12,
     justifyContent: "center",
-    backgroundColor: "#0B0B0B",
+    backgroundColor: colors.bg.primary,
   },
   title: { fontSize: 26, fontWeight: "900", color: "#FFFFFF" },
   input: {

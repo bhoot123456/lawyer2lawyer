@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
+import { colors } from "@/theme/designSystem";
 import {
   View,
   Text,
@@ -93,7 +94,7 @@ export default function TaxCorporateTopicScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <GlassCard borderColor="rgba(181, 141, 61, 0.35)" accent="#B58D3D">
+      <GlassCard borderColor={colors.border.gold} accent={colors.accent.gold}>
         <View style={styles.headerRow}>
           <View style={styles.badgeIcon}>
             <Ionicons name="document-text-outline" size={20} color="#D4AF37" />
@@ -109,7 +110,7 @@ export default function TaxCorporateTopicScreen() {
 
       {loading ? (
         <View style={{ marginTop: 16 }}>
-          <ActivityIndicator size="small" color="#B58D3D" />
+          <ActivityIndicator size="small" color={colors.accent.gold} />
         </View>
       ) : null}
 
@@ -160,7 +161,7 @@ export default function TaxCorporateTopicScreen() {
                     <Ionicons
                       name="download-outline"
                       size={16}
-                      color="#B58D3D"
+                      color={colors.accent.gold}
                     />
                     <Text style={styles.downloadLabel} numberOfLines={1}>
                       {d.label}
@@ -189,7 +190,7 @@ export default function TaxCorporateTopicScreen() {
             style={styles.backBtn}
             onPress={() => router.push("/tax-corporate")}
           >
-            <Ionicons name="arrow-back-outline" size={16} color="#B58D3D" />
+            <Ionicons name="arrow-back-outline" size={16} color={colors.accent.gold} />
             <Text style={styles.backText}>Back to topics</Text>
           </Pressable>
 
@@ -205,7 +206,7 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 14,
     paddingBottom: 110,
-    backgroundColor: "#0B0B0B",
+    backgroundColor: colors.bg.primary,
   },
   headerRow: {
     flexDirection: "row",
@@ -216,16 +217,16 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 18,
-    backgroundColor: "rgba(181,141,61,0.12)",
+    backgroundColor: colors.border.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.25)",
+    borderColor: colors.border.gold,
     alignItems: "center",
     justifyContent: "center",
   },
   title: {
     color: "#F8FAFC",
     fontSize: 18,
-    fontWeight: "900",
+    fontWeight: "800",
   },
   subtitle: {
     color: "rgba(248,250,252,0.75)",
@@ -240,13 +241,13 @@ const styles = StyleSheet.create({
   section: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.20)",
+    borderColor: colors.border.goldLight,
     backgroundColor: "rgba(255,255,255,0.03)",
     padding: 14,
   },
   sectionTitle: {
     color: "#D4AF37",
-    fontWeight: "900",
+    fontWeight: "800",
     fontSize: 14,
     marginBottom: 10,
   },
@@ -274,15 +275,15 @@ const styles = StyleSheet.create({
     gap: 10,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.18)",
-    backgroundColor: "rgba(181,141,61,0.08)",
+    borderColor: colors.accent.goldLight,
+    backgroundColor: colors.accent.goldSubtle,
     paddingVertical: 10,
     paddingHorizontal: 12,
   },
   downloadLabel: {
     color: "#F8FAFC",
-    fontWeight: "900",
-    fontSize: 13,
+    fontWeight: "800",
+    fontSize: 12,
     flex: 1,
   },
   faqRow: {
@@ -290,8 +291,8 @@ const styles = StyleSheet.create({
   },
   faqQ: {
     color: "#F8FAFC",
-    fontWeight: "900",
-    fontSize: 13,
+    fontWeight: "800",
+    fontSize: 12,
     lineHeight: 18,
   },
   faqA: {
@@ -306,18 +307,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 10,
     borderRadius: 14,
-    backgroundColor: "rgba(181,141,61,0.10)",
+    backgroundColor: colors.accent.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.35)",
+    borderColor: colors.border.gold,
     paddingVertical: 12,
   },
   backText: {
-    color: "rgba(181,141,61,0.95)",
-    fontWeight: "900",
+    color: colors.accent.gold,
+    fontWeight: "800",
   },
   errorText: {
     color: "rgba(248,250,252,0.75)",
-    fontWeight: "900",
+    fontWeight: "800",
     marginBottom: 12,
   },
 });

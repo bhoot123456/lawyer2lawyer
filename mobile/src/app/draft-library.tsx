@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { colors, radii, spacing, typography } from "@/theme/designSystem";
 import {
   View,
   Text,
@@ -67,10 +68,10 @@ export default function DraftLibraryScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <GlassCard borderColor="rgba(181, 141, 61, 0.35)" accent="#B58D3D">
+      <GlassCard borderColor={colors.border.gold} accent={colors.accent.gold}>
         <View style={styles.headerRow}>
           <View style={styles.badgeIcon}>
-            <Ionicons name="document-text-outline" size={20} color="#D4AF37" />
+            <Ionicons name="document-text-outline" size={20} color={colors.accent.gold} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.title}>Draft Library • </Text>
@@ -87,7 +88,7 @@ export default function DraftLibraryScreen() {
             <Ionicons
               name="information-circle-outline"
               size={16}
-              color="#B58D3D"
+              color={colors.accent.gold}
             />
             <Text style={styles.noteText}>{data.lastUpdatedNote}</Text>
           </View>
@@ -104,7 +105,7 @@ export default function DraftLibraryScreen() {
             <Ionicons
               name={showSaved ? "bookmark" : "bookmark-outline"}
               size={18}
-              color="#D4AF37"
+              color={colors.accent.gold}
             />
             <Text style={styles.toggleText}>
               Saved Drafts ({savedDrafts.length})
@@ -112,7 +113,7 @@ export default function DraftLibraryScreen() {
             <Ionicons
               name={showSaved ? "chevron-up" : "chevron-down"}
               size={16}
-              color="#B58D3D"
+              color={colors.accent.gold}
             />
           </Pressable>
 
@@ -148,7 +149,7 @@ export default function DraftLibraryScreen() {
 
       {loading ? (
         <View style={{ marginTop: 16 }}>
-          <ActivityIndicator size="small" color="#B58D3D" />
+          <ActivityIndicator size="small" color={colors.accent.gold} />
         </View>
       ) : null}
 
@@ -174,7 +175,7 @@ export default function DraftLibraryScreen() {
                   {s.description}
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color="#B58D3D" />
+              <Ionicons name="chevron-forward" size={18} color={colors.accent.gold} />
             </View>
           </Pressable>
         ))}
@@ -187,84 +188,84 @@ export default function DraftLibraryScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-    gap: 14,
+    padding: spacing.md,
+    gap: spacing.md,
     paddingBottom: 110,
-    backgroundColor: "#0B0B0B",
+    backgroundColor: colors.bg.primary,
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: spacing.sm,
   },
   badgeIcon: {
     width: 44,
     height: 44,
-    borderRadius: 18,
-    backgroundColor: "rgba(181,141,61,0.12)",
+    borderRadius: radii.lg,
+    backgroundColor: colors.border.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.25)",
+    borderColor: colors.border.gold,
     alignItems: "center",
     justifyContent: "center",
   },
   title: {
-    color: "#F8FAFC",
-    fontSize: 18,
-    fontWeight: "900",
+    color: colors.text.primary,
+    fontSize: typography.h3.fontSize,
+    fontWeight: typography.h3.fontWeight,
   },
   subtitle: {
-    color: "rgba(248,250,252,0.75)",
-    fontSize: 11,
-    fontWeight: "800",
+    color: colors.text.secondary,
+    fontSize: typography.caption.fontSize,
+    fontWeight: typography.caption.fontWeight,
     marginTop: 6,
-    lineHeight: 15,
+    lineHeight: typography.caption.lineHeight,
   },
   noteBox: {
-    marginTop: 12,
+    marginTop: spacing.sm,
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 8,
+    gap: spacing.sm,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.20)",
-    backgroundColor: "rgba(181,141,61,0.08)",
-    borderRadius: 14,
-    padding: 10,
+    borderColor: colors.border.goldLight,
+    backgroundColor: colors.accent.goldSubtle,
+    borderRadius: radii.lg,
+    padding: spacing.sm,
   },
   noteText: {
-    color: "rgba(248,250,252,0.8)",
-    fontSize: 12,
-    lineHeight: 16,
-    fontWeight: "800",
+    color: colors.text.secondary,
+    fontSize: typography.caption.fontSize,
+    lineHeight: typography.caption.lineHeight,
+    fontWeight: typography.caption.fontWeight,
     flex: 1,
   },
   sectionHeader: {
-    color: "#F8FAFC",
-    fontSize: 16,
-    fontWeight: "900",
+    color: colors.text.primary,
+    fontSize: typography.h4.fontSize,
+    fontWeight: typography.h4.fontWeight,
     marginTop: 2,
   },
   cards: {
-    gap: 12,
+    gap: spacing.sm,
   },
   card: {
-    borderRadius: 16,
+    borderRadius: radii.xl,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.20)",
-    backgroundColor: "rgba(255,255,255,0.03)",
-    padding: 14,
+    borderColor: colors.border.goldLight,
+    backgroundColor: colors.bg.surface,
+    padding: spacing.md,
   },
   cardRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: spacing.sm,
   },
   cardIconWrap: {
     width: 42,
     height: 42,
-    borderRadius: 14,
-    backgroundColor: "rgba(181,141,61,0.12)",
+    borderRadius: radii.lg,
+    backgroundColor: colors.accent.goldSubtle,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.25)",
+    borderColor: colors.border.goldLight,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -272,64 +273,64 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cardTitle: {
-    color: "#D4AF37",
-    fontWeight: "900",
+    color: colors.accent.gold,
+    fontWeight: "800",
     fontSize: 15,
   },
   cardDesc: {
-    color: "rgba(248,250,252,0.65)",
-    fontWeight: "800",
-    fontSize: 11,
+    color: colors.text.secondary,
+    fontWeight: typography.caption.fontWeight,
+    fontSize: typography.caption.fontSize,
     marginTop: 4,
-    lineHeight: 15,
+    lineHeight: typography.caption.lineHeight,
   },
   toggleRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 14,
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radii.lg,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.20)",
-    backgroundColor: "rgba(181,141,61,0.06)",
+    borderColor: colors.border.goldLight,
+    backgroundColor: colors.accent.goldSubtle,
   },
   toggleText: {
-    color: "#D4AF37",
-    fontWeight: "900",
-    fontSize: 14,
+    color: colors.accent.gold,
+    fontWeight: "800",
+    fontSize: typography.body.fontSize,
     flex: 1,
   },
   savedList: {
-    marginTop: 8,
-    gap: 8,
+    marginTop: spacing.xs,
+    gap: spacing.xs,
   },
   savedRow: {
     flexDirection: "row",
     alignItems: "center",
-    borderRadius: 12,
+    borderRadius: radii.md,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.15)",
-    backgroundColor: "rgba(255,255,255,0.03)",
-    padding: 12,
-    gap: 8,
+    borderColor: colors.border.goldLight,
+    backgroundColor: colors.bg.surface,
+    padding: spacing.sm,
+    gap: spacing.sm,
   },
   savedTitle: {
-    color: "#F8FAFC",
-    fontWeight: "900",
-    fontSize: 13,
+    color: colors.text.primary,
+    fontWeight: "800",
+    fontSize: typography.caption.fontSize,
   },
   savedMeta: {
-    color: "rgba(248,250,252,0.55)",
-    fontWeight: "800",
-    fontSize: 11,
+    color: colors.text.muted,
+    fontWeight: typography.caption.fontWeight,
+    fontSize: typography.caption.fontSize,
     marginTop: 2,
   },
   deleteBtn: {
     width: 32,
     height: 32,
-    borderRadius: 10,
-    backgroundColor: "rgba(239,68,68,0.12)",
+    borderRadius: radii.sm,
+    backgroundColor: colors.semantic.dangerSubtle,
     borderWidth: 1,
     borderColor: "rgba(239,68,68,0.25)",
     alignItems: "center",

@@ -1,13 +1,14 @@
-import React from "react";
+﻿import React from "react";
+import { colors } from "@/theme/designSystem";
 import { View, Text, StyleSheet } from "react-native";
 
 const STATUS_COLORS: Record<string, string> = {
-  published: "#10B981",
-  draft: "#F59E0B",
-  archived: "#64748B",
-  Live: "#10B981",
-  Scheduled: "#3B82F6",
-  Offline: "#64748B",
+  published: colors.semantic.success,
+  draft: colors.semantic.warning,
+  archived: colors.text.muted,
+  Live: colors.semantic.success,
+  Scheduled: colors.semantic.info,
+  Offline: colors.text.muted,
 };
 
 export default function AdminStatusBadge({ status }: { status?: string | null }) {
@@ -29,7 +30,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
   },
   text: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "800",
     textTransform: "uppercase",
   },

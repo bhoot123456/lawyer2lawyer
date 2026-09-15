@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { colors } from "@/theme/designSystem";
 import {
   View,
   Text,
@@ -7,7 +8,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Alert,
   TextInput,
 } from "react-native";
 import { useFocusEffect } from "expo-router";
@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import AdminHeader from "@/components/admin/AdminHeader";
 import GlassCard from "@/components/ui/GlassCard";
 import SearchBar from "@/components/admin/SearchBar";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   getAdminJudgeDirectory,
   createAdminJudgeDirectory,
@@ -72,6 +73,8 @@ export default function AdminJudgeDirectoryScreen() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<JudgeItem>>({});
   const [saving, setSaving] = useState(false);
+  // Cross-platform confirm/notice dialogs (Alert.alert is a no-op on web).
+  const { confirm: confirmDialog, notice: noticeDialog, element: dialogElement } = useConfirmDialog();
 
   const STATUSES = useMemo(() => ["", "draft", "published", "archived"], []);
 
@@ -122,7 +125,7 @@ export default function AdminJudgeDirectoryScreen() {
 
   const handleCreate = async () => {
     if (!newCourtId || !newCourtRoom || !newJudgeName || !newVcLink || !newMeetingId) {
-      Alert.alert("Validation", "courtId, courtRoom, judgeName, vcLink and meetingId are required");
+      void noticeDialog({ title: "Missing information", message: "courtId, courtRoom, judgeName, vcLink and meetingId are required", danger: true });
       return;
     }
 
@@ -151,7 +154,7 @@ export default function AdminJudgeDirectoryScreen() {
       setNewDisplayOrder("");
       fetchItems(1);
     } catch (err) {
-      Alert.alert("Error", "Failed to create judge entry");
+      void noticeDialog({ title: "Error", message: "Failed to create judge entry", danger: true });
     }
   };
 
@@ -178,7 +181,7 @@ export default function AdminJudgeDirectoryScreen() {
 
   const handleSave = async (id: string) => {
     if (!editForm.judgeName?.trim() || !editForm.courtRoom?.trim()) {
-      Alert.alert("Validation", "judgeName and courtRoom are required");
+      void noticeDialog({ title: "Missing information", message: "judgeName and courtRoom are required", danger: true });
       return;
     }
     setSaving(true);
@@ -190,13 +193,13 @@ export default function AdminJudgeDirectoryScreen() {
         );
         setEditingId(null);
         setEditForm({});
-        Alert.alert("Success", "Judge entry updated");
+        void noticeDialog({ title: "Saved", message: "Judge entry updated" });
       } else {
-        Alert.alert("Error", "Failed to update judge entry");
+        void noticeDialog({ title: "Error", message: "Failed to update judge entry", danger: true });
       }
     } catch (err) {
       console.error("Update judge error:", err);
-      Alert.alert("Error", "Failed to update judge entry");
+      void noticeDialog({ title: "Error", message: "Failed to update judge entry", danger: true });
     } finally {
       setSaving(false);
     }
@@ -210,11 +213,11 @@ export default function AdminJudgeDirectoryScreen() {
         setItems((prev) =>
           prev.map((x) => (x._id === id ? { ...x, ...res.data } : x)),
         );
-        Alert.alert("Success", "Judge entry published");
+        void noticeDialog({ title: "Published", message: "Judge entry published" });
       }
     } catch (err) {
       console.error("Publish error:", err);
-      Alert.alert("Error", "Failed to publish");
+      void noticeDialog({ title: "Error", message: "Failed to publish", danger: true });
     } finally {
       setSaving(false);
     }
@@ -228,36 +231,33 @@ export default function AdminJudgeDirectoryScreen() {
         setItems((prev) =>
           prev.map((x) => (x._id === id ? { ...x, ...res.data } : x)),
         );
-        Alert.alert("Success", "Judge entry reverted to draft");
+        void noticeDialog({ title: "Reverted", message: "Judge entry reverted to draft" });
       }
     } catch (err) {
       console.error("Unpublish error:", err);
-      Alert.alert("Error", "Failed to unpublish");
+      void noticeDialog({ title: "Error", message: "Failed to unpublish", danger: true });
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = (id: string, judgeName?: string) => {
-    Alert.alert(
-      "Delete Judge",
-      `Delete ${judgeName || "this entry"}? This cannot be undone.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteAdminJudgeDirectory(id);
-              setItems((prev) => prev.filter((x) => x._id !== id));
-            } catch (err) {
-              Alert.alert("Error", "Failed to delete judge entry");
-            }
-          },
-        },
-      ],
-    );
+    void (async () => {
+      // Shared ConfirmDialog renders on web too (RN Alert.alert is a no-op there).
+      const ok = await confirmDialog({
+        title: "Delete Judge",
+        message: `Delete ${judgeName || "this entry"}? This cannot be undone.`,
+        confirmLabel: "Delete",
+        danger: true,
+      });
+      if (!ok) return;
+      try {
+        await deleteAdminJudgeDirectory(id);
+        setItems((prev) => prev.filter((x) => x._id !== id));
+      } catch (err) {
+        void noticeDialog({ title: "Error", message: "Failed to delete judge entry", danger: true });
+      }
+    })();
   };
 
   const renderItem = ({ item }: { item: JudgeItem }) => {
@@ -327,7 +327,7 @@ export default function AdminJudgeDirectoryScreen() {
               disabled={saving}
             >
               {saving ? (
-                <ActivityIndicator size="small" color="#B58D3D" />
+                <ActivityIndicator size="small" color={colors.accent.gold} />
               ) : (
                 <Text style={styles.createBtnText}>Save</Text>
               )}
@@ -378,7 +378,7 @@ export default function AdminJudgeDirectoryScreen() {
             style={styles.editBtn}
             onPress={() => startEditing(item)}
           >
-            <Ionicons name="pencil-outline" size={18} color="#B58D3D" />
+            <Ionicons name="pencil-outline" size={18} color={colors.accent.gold} />
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.deleteBtn, { borderColor: "rgba(239, 68, 68, 0.3)" }]}
@@ -427,6 +427,7 @@ export default function AdminJudgeDirectoryScreen() {
   };
 
   return (
+    <>
     <View style={styles.container}>
       <AdminHeader
         title="Judge Directory"
@@ -554,7 +555,7 @@ export default function AdminJudgeDirectoryScreen() {
             fetchItems(1);
           }}
         >
-          <Ionicons name="search-outline" size={20} color="#B58D3D" />
+          <Ionicons name="search-outline" size={20} color={colors.accent.gold} />
         </TouchableOpacity>
       </View>
 
@@ -601,13 +602,13 @@ export default function AdminJudgeDirectoryScreen() {
               setRefreshing(true);
               fetchItems(1);
             }}
-            tintColor="#B58D3D"
+            tintColor={colors.accent.gold}
           />
         }
         ListEmptyComponent={
           loading ? (
             <View style={styles.center}>
-              <ActivityIndicator size="large" color="#B58D3D" />
+              <ActivityIndicator size="large" color={colors.accent.gold} />
             </View>
           ) : (
             <View style={styles.center}>
@@ -628,12 +629,14 @@ export default function AdminJudgeDirectoryScreen() {
         }}
         onEndReachedThreshold={0.5}
       />
-    </View>
+      {dialogElement}
+      </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0B0B0B" },
+  container: { flex: 1, backgroundColor: colors.bg.primary },
   center: {
     flex: 1,
     alignItems: "center",
@@ -654,9 +657,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(181, 141, 61, 0.1)",
+    backgroundColor: colors.accent.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.2)",
+    borderColor: colors.border.goldLight,
   },
   statusFilterList: { maxHeight: 44, marginBottom: 8 },
   statusFilterContent: { paddingHorizontal: 16, gap: 8, alignItems: "center" },
@@ -666,11 +669,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: "rgba(18, 18, 20, 0.6)",
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.2)",
+    borderColor: colors.border.goldLight,
   },
   statusFilterActive: {
-    backgroundColor: "rgba(181, 141, 61, 0.15)",
-    borderColor: "#B58D3D",
+    backgroundColor: colors.accent.goldLight,
+    borderColor: colors.accent.gold,
   },
   statusFilterText: {
     color: "#94A3B8",
@@ -678,15 +681,15 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textTransform: "capitalize",
   },
-  statusFilterTextActive: { color: "#B58D3D" },
+  statusFilterTextActive: { color: colors.accent.gold },
   list: { padding: 16, gap: 12, paddingBottom: 40 },
 
   // New form styles
   newForm: { margin: 16, gap: 12 },
-  formTitle: { color: "#F8FAFC", fontSize: 16, fontWeight: "900" },
+  formTitle: { color: "#F8FAFC", fontSize: 16, fontWeight: "800" },
   inputLabel: {
     color: "#94A3B8",
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "800",
     textTransform: "uppercase",
     letterSpacing: 0.3,
@@ -694,7 +697,7 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: "rgba(18, 18, 20, 0.7)",
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.2)",
+    borderColor: colors.border.goldLight,
     borderRadius: 12,
     padding: 12,
     color: "#F8FAFC",
@@ -708,19 +711,19 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: "rgba(18, 18, 20, 0.6)",
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.2)",
+    borderColor: colors.border.goldLight,
     marginRight: 6,
   },
   chipActive: {
-    backgroundColor: "rgba(181, 141, 61, 0.15)",
-    borderColor: "#B58D3D",
+    backgroundColor: colors.accent.goldLight,
+    borderColor: colors.accent.gold,
   },
   chipText: {
     color: "#94A3B8",
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "700",
   },
-  chipTextActive: { color: "#B58D3D" },
+  chipTextActive: { color: colors.accent.gold },
   formActions: {
     flexDirection: "row",
     gap: 12,
@@ -731,18 +734,18 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.2)",
+    borderColor: colors.border.goldLight,
   },
   cancelBtnText: { color: "#94A3B8", fontWeight: "700", fontSize: 13 },
   createBtn: {
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 10,
-    backgroundColor: "rgba(181, 141, 61, 0.15)",
+    backgroundColor: colors.accent.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.3)",
+    borderColor: colors.border.gold,
   },
-  createBtnText: { color: "#B58D3D", fontWeight: "800", fontSize: 13 },
+  createBtnText: { color: colors.accent.gold, fontWeight: "800", fontSize: 13 },
 
   // Card styles
   cardRow: { flexDirection: "row", gap: 12, alignItems: "center" },
@@ -750,11 +753,11 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "rgba(181, 141, 61, 0.15)",
+    backgroundColor: colors.accent.goldLight,
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarText: { color: "#B58D3D", fontSize: 18, fontWeight: "900" },
+  avatarText: { color: colors.accent.gold, fontSize: 18, fontWeight: "800" },
   cardContent: { flex: 1 },
   itemTitle: { color: "#F8FAFC", fontSize: 15, fontWeight: "800" },
   itemMeta: {
@@ -765,7 +768,7 @@ const styles = StyleSheet.create({
   },
   statusBadge: {
     marginTop: 8,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "800",
     textTransform: "capitalize",
     color: "#F59E0B",
@@ -778,9 +781,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(181, 141, 61, 0.08)",
+    backgroundColor: colors.accent.goldSubtle,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.3)",
+    borderColor: colors.border.gold,
   },
   deleteBtn: {
     width: 44,

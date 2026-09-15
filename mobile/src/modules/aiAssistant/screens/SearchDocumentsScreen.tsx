@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useState } from "react";
+﻿import React, { memo, useCallback, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAIAssistant } from "../hooks/useAIAssistant";
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: AI_BG },
   scroll: { flex: 1 },
   scrollContent: { padding: 16, paddingBottom: 40 },
-  resultCount: { color: AI_TEXT_SECONDARY, fontSize: 13, fontWeight: "600", marginBottom: 12 },
+  resultCount: { color: AI_TEXT_SECONDARY, fontSize: 12, fontWeight: "600", marginBottom: 12 },
   documentCard: {
     backgroundColor: AI_CARD_BG,
     borderWidth: 1,
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   },
   relevanceText: {
     color: "#22C55E",
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "700",
   },
   docMatch: {
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   },
   openButtonText: {
     color: AI_GOLD,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "700",
   },
 });

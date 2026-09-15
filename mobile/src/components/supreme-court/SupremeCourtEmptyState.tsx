@@ -1,4 +1,5 @@
 import React from "react";
+import { colors } from "@/theme/designSystem";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -19,7 +20,7 @@ const SupremeCourtEmptyState: React.FC<SupremeCourtEmptyStateProps> = ({
   return (
     <View style={styles.container}>
       <View style={styles.iconContainer}>
-        <Ionicons name="search-outline" size={40} color="rgba(181, 141, 61, 0.4)" />
+        <Ionicons name="search-outline" size={40} color={colors.border.gold} />
       </View>
       <Text style={styles.title}>
         {hasFilters ? "No Matching Courts" : "No Court Rooms Available"}
@@ -45,9 +46,9 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "rgba(181, 141, 61, 0.08)",
+    backgroundColor: colors.accent.goldSubtle,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.15)",
+    borderColor: colors.accent.goldLight,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 8,
@@ -55,7 +56,7 @@ const styles = StyleSheet.create({
   title: {
     color: "#F8FAFC",
     fontSize: 18,
-    fontWeight: "900",
+    fontWeight: "800",
     textAlign: "center",
   },
   subtitle: {

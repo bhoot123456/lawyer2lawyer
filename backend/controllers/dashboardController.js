@@ -135,15 +135,29 @@ exports.getDashboardStats = async (req, res) => {
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
 
+      // Personal-data endpoint: scope case counts to the requesting user.
+      // admin -> all cases (authorized admin path); lawyer -> assigned cases;
+      // client and any other role -> own created cases. (Previously EVERY
+      // authenticated user received GLOBAL counts — with a stale token the
+      // public dashboard displayed another user's case statistics.)
+      const scope = {};
+      if (req.user?.role === "lawyer") {
+        scope.assignedTo = req.user._id;
+      } else if (req.user?.role !== "admin") {
+        scope.createdBy = req.user._id;
+      }
+
       const [todayHearingsCount, activeCasesCount, pendingCasesCount, pendingDraftsCount] =
         await Promise.all([
           Case.countDocuments({
+            ...scope,
             nextHearingDate: { $gte: today, $lt: tomorrow },
           }),
           Case.countDocuments({
+            ...scope,
             status: { $nin: ["Disposed", "Closed"] },
           }),
-          Case.countDocuments({ status: "Pending" }),
+          Case.countDocuments({ ...scope, status: "Pending" }),
           DraftTemplate.countDocuments({ isSaved: true }),
         ]);
 

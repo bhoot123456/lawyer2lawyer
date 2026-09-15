@@ -55,7 +55,7 @@ const CourtHolidayCard: React.FC<CourtHolidayCardProps> = ({
         <Text style={styles.sectionHeader}>Court Holidays</Text>
         <GlassCard borderColor={colors.border.goldLight} accent={GOLD} elevation={1}>
           <View style={styles.emptyContainer}>
-            <Ionicons name="calendar-outline" size={32} color={GOLD} />
+            <Ionicons name="calendar-outline" size={34} color={GOLD} />
             <Text style={styles.emptyText}>No upcoming holidays</Text>
           </View>
         </GlassCard>

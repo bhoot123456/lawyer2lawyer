@@ -1,6 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { colors } from "@/theme/designSystem";
 import {
   ActivityIndicator,
+  BackHandler,
   Dimensions,
   Keyboard,
   Pressable,
@@ -15,6 +17,8 @@ import * as Clipboard from "expo-clipboard";
 import { Ionicons } from "@expo/vector-icons";
 import { usePathname } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { normalizeApiError } from "@/services/api";
+import { SHELL_TAB_BAR_MIN_HEIGHT } from "@/components/BottomTabs";
 
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -55,6 +59,8 @@ const STORAGE_KEY_AI_PANEL_OPEN = "@lawyer2lawyer/ai_agent_panel_open";
 const STORAGE_KEY_AI_CONVERSATION_ID = "@lawyer2lawyer/ai_conversation_id";
 
 const DEFAULT_POSITION = { x: 16, y: 160 };
+// Keep the draggable copilot clear of the bottom tab bar + central action.
+const BOTTOM_TAB_CLEARANCE = SHELL_TAB_BAR_MIN_HEIGHT + 88;
 const HIDDEN_ROUTES = ["/login", "/register"];
 const DRAG_THRESHOLD = 5;
 
@@ -157,7 +163,7 @@ export default function FloatingAIAgent() {
   const pathname = usePathname();
   const safeArea = useSafeInsets();
   const windowDims = useMemo(() => Dimensions.get("window"), []);
-  const buttonSize: number = 72;
+    const buttonSize: number = 60;
 
   const [position, setPosition] = useState(DEFAULT_POSITION);
   const [isOpen, setIsOpen] = useState(false);
@@ -198,7 +204,11 @@ export default function FloatingAIAgent() {
   );
   const minY = useMemo(() => Math.max(80, safeArea.top + 16), [safeArea.top]);
   const maxY = useMemo(
-    () => Math.max(80, windowDims.height - buttonSize - 120 - safeArea.bottom),
+    () =>
+      Math.max(
+        80,
+        windowDims.height - buttonSize - BOTTOM_TAB_CLEARANCE - safeArea.bottom
+      ),
     [windowDims.height, buttonSize, safeArea.bottom]
   );
 
@@ -210,13 +220,19 @@ export default function FloatingAIAgent() {
         const storedConversationId = await AsyncStorage.getItem(STORAGE_KEY_AI_CONVERSATION_ID);
 
         if (storedPosition) {
-          const parsed = JSON.parse(storedPosition);
-          const clampedX = clamp(parsed.x, minX, maxX);
-          const clampedY = clamp(parsed.y, minY, maxY);
-          const next = { x: clampedX, y: clampedY };
-          setPosition(next);
-          translateX.value = clampedX;
-          translateY.value = clampedY;
+          // Malformed stored position must not abort the rest of agent
+          // initialization (panel state / conversation restore below).
+          try {
+            const parsed = JSON.parse(storedPosition);
+            const clampedX = clamp(parsed?.x, minX, maxX);
+            const clampedY = clamp(parsed?.y, minY, maxY);
+            const next = { x: clampedX, y: clampedY };
+            setPosition(next);
+            translateX.value = clampedX;
+            translateY.value = clampedY;
+          } catch {
+            await AsyncStorage.removeItem(STORAGE_KEY_AI_POSITION);
+          }
         }
 
         if (storedPanelOpen === "true") setIsOpen(true);
@@ -246,7 +262,8 @@ export default function FloatingAIAgent() {
     };
 
     initializeAgent();
-  }, [pathname, windowDims.height, windowDims.width, minX, maxX, minY, maxY, translateX, translateY]);
+    // Intentionally omit pathname so the floating agent maintains conversation and position state across screen navigation
+  }, [windowDims.height, windowDims.width, minX, maxX, minY, maxY, translateX, translateY]);
 
   const savePosition = useCallback(async (next: { x: number; y: number }) => {
     try {
@@ -349,6 +366,16 @@ export default function FloatingAIAgent() {
     setIsOpen(false);
     savePanelState(false);
   }, [savePanelState]);
+
+  // Android back button: close AI panel if open
+  useEffect(() => {
+    if (!isOpen) return;
+    const backSub = BackHandler.addEventListener("hardwareBackPress", () => {
+      handleClose();
+      return true;
+    });
+    return () => backSub.remove();
+  }, [isOpen, handleClose]);
 
   const handleTogglePanel = useCallback(() => {
     if (isDragging.current || hasDragged.current) {
@@ -454,7 +481,7 @@ export default function FloatingAIAgent() {
         }
       }
 
-      const errorMessage = err instanceof Error ? err.message : "Unable to reach the AI service. Please try again.";
+      const errorMessage = normalizeApiError(err);
       appendMessage({
         id: `assistant-error-${Date.now()}`,
         role: "assistant",
@@ -564,15 +591,24 @@ export default function FloatingAIAgent() {
   if (isHiddenRoute) return null;
 
   return (
-      <View style={styles.overlay} pointerEvents="box-none">
-      {isOpen && <View style={styles.panelBackdrop} pointerEvents="none" />}
+      // pointerEvents must live in a StyleSheet.create style: react-native-web only
+      // compiles the `box-none` polyfill (element pe:none + children pe:auto) for
+      // registered styles. An inline `{ pointerEvents: "box-none" }` object is emitted
+      // as raw CSS `pointer-events: box-none`, which browsers drop as invalid — the
+      // overlay then has pe:auto and swallows every click on the page.
+      <View style={styles.overlay}>
+      {isOpen && <View style={styles.panelBackdrop} />}
 
       <GestureDetector gesture={panGesture}>
         <Animated.View style={[styles.floatingButtonContainer, animatedStyle]}>
-          <Pressable
+                    <Pressable
             onPress={handleTogglePanel}
             style={styles.floatingButton}
             disabled={isDragging.current}
+            accessibilityLabel={isOpen ? "Close AI legal assistant" : "Open AI legal assistant"}
+            accessibilityRole="button"
+            accessibilityHint="Opens the AI legal copilot chat"
+            hitSlop={8}
           >
             <View style={styles.robotInner}>
               <Ionicons name="sparkles-outline" size={28} color={AI_BG} />
@@ -602,6 +638,7 @@ export default function FloatingAIAgent() {
               style={styles.messageList}
               contentContainerStyle={styles.messageListContent}
               showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
             >
               {messages.map((message) => (
                 <View
@@ -618,7 +655,14 @@ export default function FloatingAIAgent() {
 
                   {message.role === "assistant" && (
                     <View style={styles.actionRow}>
-                      <Pressable onPress={() => handleCopyMessage(message.text)} style={styles.actionPill}>
+                      <Pressable
+                        onPress={() => handleCopyMessage(message.text)}
+                        style={styles.actionPill}
+                        hitSlop={8}
+                        accessibilityRole="button"
+                        accessibilityLabel="Copy AI response"
+                        accessibilityHint="Copies this response to the clipboard"
+                      >
                         <Ionicons name="copy-outline" size={14} color={AI_GOLD} />
                         <Text style={styles.actionText}>Copy</Text>
                       </Pressable>
@@ -648,13 +692,21 @@ export default function FloatingAIAgent() {
                 returnKeyType="send"
                 onSubmitEditing={handleSend}
                 multiline
+                blurOnSubmit={false}
+                autoCorrect
+                accessibilityLabel="Ask the AI legal copilot"
+                accessibilityHint="Type your legal question, then press send on the keyboard"
               />
 
               <Pressable
                 style={[styles.sendButton, (sending || autoRecoveryAttempting) && styles.sendButtonDisabled]}
                 onPress={handleSend}
                 disabled={sending || autoRecoveryAttempting}
-                accessibilityLabel="Send message"
+                accessibilityRole="button"
+                accessibilityLabel={sending ? "Sending message" : "Send message"}
+                accessibilityHint="Sends your question to the AI legal copilot"
+                accessibilityState={{ disabled: sending || autoRecoveryAttempting, busy: sending }}
+                hitSlop={8}
               >
                 <Ionicons
                   name={sending || autoRecoveryAttempting ? "hourglass-outline" : "send"}
@@ -665,7 +717,14 @@ export default function FloatingAIAgent() {
             </View>
 
             <View style={styles.bottomActions}>
-              <Pressable style={styles.secondaryAction} onPress={handleNewConversation}>
+              <Pressable
+                style={styles.secondaryAction}
+                onPress={handleNewConversation}
+                accessibilityRole="button"
+                accessibilityLabel="Start new conversation"
+                accessibilityHint="Clears the current chat and starts fresh"
+                hitSlop={8}
+              >
                 <Ionicons name="refresh-outline" size={16} color={AI_GOLD} />
                 <Text style={styles.secondaryActionText}>New conversation</Text>
               </Pressable>
@@ -685,6 +744,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    // Must be declared in StyleSheet.create (see render comment above):
+    // inline `box-none` is invalid CSS on web and blocks the whole app.
+    pointerEvents: "box-none",
     zIndex: 999,
     elevation: 999,
   },
@@ -695,16 +757,17 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     backgroundColor: "rgba(0,0,0,0.35)",
+    pointerEvents: "none",
   },
-  floatingButtonContainer: {
+    floatingButtonContainer: {
     position: "absolute",
-    width: 72,
-    height: 72,
+    width: 60,
+    height: 60,
   },
   floatingButton: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: AI_GOLD,
     borderWidth: 1,
     borderColor: AI_BG,
@@ -712,31 +775,34 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 10 },
+    boxShadow: "0px 10px 16px rgba(0,0,0,0.35)",
     alignItems: "center",
     justifyContent: "center",
+    zIndex: 10,
   },
   robotInner: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: AI_BG,
     alignItems: "center",
     justifyContent: "center",
   },
   pulseRing: {
     position: "absolute",
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    borderColor: "rgba(181, 141, 61, 0.20)",
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    borderColor: colors.border.goldLight,
     borderWidth: 1,
-    top: -6,
-    left: -6,
+    top: -4,
+    left: -4,
+    opacity: 0.6,
   },
 
   panelWrapper: {
     position: "absolute",
-    bottom: 24,
+    bottom: SHELL_TAB_BAR_MIN_HEIGHT + 88,
     right: 16,
     left: 16,
     maxHeight: "84%",
@@ -749,6 +815,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 28,
     shadowOffset: { width: 0, height: 16 },
+    boxShadow: "0px 16px 28px rgba(0,0,0,0.4)",
   },
   panelHeader: {
     flexDirection: "row",
@@ -767,7 +834,7 @@ const styles = StyleSheet.create({
   panelTitle: {
     color: AI_TEXT_PRIMARY,
     fontSize: 16,
-    fontWeight: "900",
+    fontWeight: "800",
     marginBottom: 2,
   },
   panelSubtitle: {
@@ -779,7 +846,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(181, 141, 61, 0.12)",
+    backgroundColor: colors.border.goldLight,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -821,7 +888,7 @@ const styles = StyleSheet.create({
   },
   messageText: {
     color: AI_TEXT_PRIMARY,
-    fontSize: 13,
+    fontSize: 12,
     lineHeight: 20,
   },
   codeBlockText: {
@@ -845,10 +912,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
+    paddingVertical: 10,
+    minHeight: 44,
+    paddingHorizontal: 12,
     borderRadius: 999,
-    backgroundColor: "rgba(181, 141, 61, 0.12)",
+    backgroundColor: colors.border.goldLight,
   },
   actionText: {
     color: AI_TEXT_SECONDARY,
@@ -863,14 +931,14 @@ const styles = StyleSheet.create({
   },
   chatInput: {
     flex: 1,
-    minHeight: 46,
+    minHeight: 48,
     maxHeight: 120,
     borderRadius: 16,
     backgroundColor: AI_CARD_BG,
     color: AI_TEXT_PRIMARY,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    fontSize: 14,
+    fontSize: 16,
     borderWidth: 1,
     borderColor: AI_GOLD_LIGHT,
   },
@@ -896,10 +964,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    paddingVertical: 10,
+    paddingVertical: 12,
+    minHeight: 44,
     paddingHorizontal: 12,
     borderRadius: 18,
-    backgroundColor: "rgba(181, 141, 61, 0.12)",
+    backgroundColor: colors.border.goldLight,
   },
   secondaryActionText: {
     color: AI_TEXT_PRIMARY,
@@ -908,7 +977,7 @@ const styles = StyleSheet.create({
   },
   copyHint: {
     color: AI_TEXT_MUTED,
-    fontSize: 11,
+    fontSize: 12,
     flex: 1,
     textAlign: "right",
     fontWeight: "600",

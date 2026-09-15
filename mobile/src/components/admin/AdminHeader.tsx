@@ -1,4 +1,5 @@
 import React from "react";
+import { colors } from "@/theme/designSystem";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -21,7 +22,7 @@ export default function AdminHeader({ title, subtitle, showBack, onBack, rightAc
       <View style={styles.row}>
         {showBack && (
           <TouchableOpacity onPress={() => (onBack ? onBack() : router.back())} style={styles.backBtn}>
-            <Ionicons name="arrow-back-outline" size={22} color="#B58D3D" />
+            <Ionicons name="arrow-back-outline" size={22} color={colors.accent.gold} />
           </TouchableOpacity>
         )}
         <View style={styles.titleWrap}>
@@ -30,7 +31,7 @@ export default function AdminHeader({ title, subtitle, showBack, onBack, rightAc
         </View>
         {rightAction && (
           <TouchableOpacity onPress={rightAction.onPress} style={styles.actionBtn}>
-            <Ionicons name={rightAction.icon} size={22} color="#B58D3D" />
+            <Ionicons name={rightAction.icon} size={22} color={colors.accent.gold} />
           </TouchableOpacity>
         )}
       </View>
@@ -44,7 +45,7 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(181, 141, 61, 0.15)",
+    borderBottomColor: colors.accent.goldLight,
   },
   row: {
     flexDirection: "row",
@@ -58,7 +59,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "rgba(18, 18, 20, 0.6)",
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.2)",
+    borderColor: colors.border.goldLight,
     marginRight: 12,
   },
   titleWrap: {
@@ -67,11 +68,11 @@ const styles = StyleSheet.create({
   title: {
     color: "#F8FAFC",
     fontSize: 20,
-    fontWeight: "900",
+    fontWeight: "800",
   },
   subtitle: {
     color: "#94A3B8",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "600",
     marginTop: 2,
   },
@@ -81,8 +82,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(181, 141, 61, 0.1)",
+    backgroundColor: colors.accent.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.2)",
+    borderColor: colors.border.goldLight,
   },
 });

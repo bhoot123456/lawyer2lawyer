@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { colors } from "@/theme/designSystem";
 import {
   View,
   Text,
@@ -7,7 +8,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Alert,
   TextInput,
 } from "react-native";
 import { useFocusEffect } from "expo-router";
@@ -16,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import AdminHeader from "@/components/admin/AdminHeader";
 import GlassCard from "@/components/ui/GlassCard";
 import SearchBar from "@/components/admin/SearchBar";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 import {
   getAdminReports,
@@ -55,6 +56,8 @@ export default function AdminReportsScreen() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Item>>({});
   const [saving, setSaving] = useState(false);
+  // Cross-platform confirm/notice dialogs (Alert.alert is a no-op on web).
+  const { confirm: confirmDialog, notice: noticeDialog, element: dialogElement } = useConfirmDialog();
 
   const STATUSES = useMemo(() => ["", "draft", "published", "archived"], []);
 
@@ -90,25 +93,22 @@ export default function AdminReportsScreen() {
   );
 
   const handleDelete = (id: string, title?: string) => {
-    Alert.alert(
-      "Delete Report",
-      `Delete ${title || "this report"}? This cannot be undone.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteAdminReport(id);
-              setItems((prev) => prev.filter((x) => x._id !== id));
-            } catch (err) {
-              Alert.alert("Error", "Failed to delete report");
-            }
-          },
-        },
-      ],
-    );
+    void (async () => {
+      // Shared ConfirmDialog renders on web too (RN Alert.alert is a no-op there).
+      const ok = await confirmDialog({
+        title: "Delete Report",
+        message: `Delete ${title || "this report"}? This cannot be undone.`,
+        confirmLabel: "Delete",
+        danger: true,
+      });
+      if (!ok) return;
+      try {
+        await deleteAdminReport(id);
+        setItems((prev) => prev.filter((x) => x._id !== id));
+      } catch (err) {
+        void noticeDialog({ title: "Error", message: "Failed to delete report", danger: true });
+      }
+    })();
   };
 
 const startEditing = (item: Item) => {
@@ -128,7 +128,7 @@ const startEditing = (item: Item) => {
 
   const handleSave = async (id: string) => {
     if (!editForm.title?.trim() || !editForm.key?.trim()) {
-      Alert.alert("Validation", "Title and Key are required");
+      void noticeDialog({ title: "Missing information", message: "Title and Key are required", danger: true });
       return;
     }
     setSaving(true);
@@ -140,13 +140,13 @@ const startEditing = (item: Item) => {
         );
         setEditingId(null);
         setEditForm({});
-        Alert.alert("Success", "Report updated");
+        void noticeDialog({ title: "Saved", message: "Report updated" });
       } else {
-        Alert.alert("Error", "Failed to update report");
+        void noticeDialog({ title: "Error", message: "Failed to update report", danger: true });
       }
     } catch (err) {
       console.error("Update report error:", err);
-      Alert.alert("Error", "Failed to update report");
+      void noticeDialog({ title: "Error", message: "Failed to update report", danger: true });
     } finally {
       setSaving(false);
     }
@@ -160,11 +160,11 @@ const startEditing = (item: Item) => {
         setItems((prev) =>
           prev.map((x) => (x._id === id ? { ...x, ...res.data } : x)),
         );
-        Alert.alert("Success", "Report published");
+        void noticeDialog({ title: "Published", message: "Report published" });
       }
     } catch (err) {
       console.error("Publish error:", err);
-      Alert.alert("Error", "Failed to publish");
+      void noticeDialog({ title: "Error", message: "Failed to publish", danger: true });
     } finally {
       setSaving(false);
     }
@@ -178,11 +178,11 @@ const startEditing = (item: Item) => {
         setItems((prev) =>
           prev.map((x) => (x._id === id ? { ...x, ...res.data } : x)),
         );
-        Alert.alert("Success", "Report reverted to draft");
+        void noticeDialog({ title: "Reverted", message: "Report reverted to draft" });
       }
     } catch (err) {
       console.error("Unpublish error:", err);
-      Alert.alert("Error", "Failed to unpublish");
+      void noticeDialog({ title: "Error", message: "Failed to unpublish", danger: true });
     } finally {
       setSaving(false);
     }
@@ -190,7 +190,7 @@ const startEditing = (item: Item) => {
 
   const handleCreate = async () => {
     if (!newTitle || !newKey) {
-      Alert.alert("Validation", "Title and Key are required");
+      void noticeDialog({ title: "Missing information", message: "Title and Key are required", danger: true });
       return;
     }
 
@@ -211,7 +211,7 @@ const startEditing = (item: Item) => {
 
       fetchItems(1);
     } catch (err) {
-      Alert.alert("Error", "Failed to create report");
+      void noticeDialog({ title: "Error", message: "Failed to create report", danger: true });
     }
   };
 
@@ -253,7 +253,7 @@ const startEditing = (item: Item) => {
               disabled={saving}
             >
               {saving ? (
-                <ActivityIndicator size="small" color="#B58D3D" />
+                <ActivityIndicator size="small" color={colors.accent.gold} />
               ) : (
                 <Text style={styles.createBtnText}>Save</Text>
               )}
@@ -298,7 +298,7 @@ const startEditing = (item: Item) => {
             </View>
           </View>
           <TouchableOpacity style={styles.iconBtn} onPress={() => startEditing(item)}>
-            <Ionicons name="pencil-outline" size={18} color="#B58D3D" />
+            <Ionicons name="pencil-outline" size={18} color={colors.accent.gold} />
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.iconBtn, { borderColor: "rgba(239, 68, 68, 0.3)" }]}
@@ -408,7 +408,7 @@ const startEditing = (item: Item) => {
             fetchItems(1);
           }}
         >
-          <Ionicons name="search-outline" size={20} color="#B58D3D" />
+          <Ionicons name="search-outline" size={20} color={colors.accent.gold} />
         </TouchableOpacity>
       </View>
 
@@ -449,13 +449,13 @@ const startEditing = (item: Item) => {
               setRefreshing(true);
               fetchItems(1);
             }}
-            tintColor="#B58D3D"
+            tintColor={colors.accent.gold}
           />
         }
         ListEmptyComponent={
           loading ? (
             <View style={styles.center}>
-              <ActivityIndicator size="large" color="#B58D3D" />
+              <ActivityIndicator size="large" color={colors.accent.gold} />
             </View>
           ) : (
             <View style={styles.center}>
@@ -473,12 +473,13 @@ const startEditing = (item: Item) => {
         }}
         onEndReachedThreshold={0.5}
       />
+      {dialogElement}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0B0B0B" },
+  container: { flex: 1, backgroundColor: colors.bg.primary },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 40 },
 
   filterRow: { flexDirection: "row", paddingHorizontal: 16, paddingVertical: 8, gap: 8, alignItems: "center" },
@@ -489,9 +490,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(181, 141, 61, 0.1)",
+    backgroundColor: colors.accent.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.2)",
+    borderColor: colors.border.goldLight,
   },
 
   statusFilterList: { maxHeight: 44, marginBottom: 8 },
@@ -502,21 +503,21 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: "rgba(18, 18, 20, 0.6)",
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.2)",
+    borderColor: colors.border.goldLight,
   },
-  statusFilterActive: { backgroundColor: "rgba(181, 141, 61, 0.15)", borderColor: "#B58D3D" },
+  statusFilterActive: { backgroundColor: colors.accent.goldLight, borderColor: colors.accent.gold },
   statusFilterText: { color: "#94A3B8", fontSize: 12, fontWeight: "700", textTransform: "capitalize" },
-  statusFilterTextActive: { color: "#B58D3D" },
+  statusFilterTextActive: { color: colors.accent.gold },
 
   list: { padding: 16, gap: 12, paddingBottom: 40 },
 
   newForm: { margin: 16, gap: 12 },
-  formTitle: { color: "#F8FAFC", fontSize: 16, fontWeight: "900" },
+  formTitle: { color: "#F8FAFC", fontSize: 16, fontWeight: "800" },
 
   input: {
     backgroundColor: "rgba(18, 18, 20, 0.7)",
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.2)",
+    borderColor: colors.border.goldLight,
     borderRadius: 12,
     padding: 12,
     color: "#F8FAFC",
@@ -526,10 +527,10 @@ const styles = StyleSheet.create({
   textArea: { minHeight: 110, textAlignVertical: "top" },
 
   formActions: { flexDirection: "row", gap: 12, justifyContent: "flex-end" },
-  cancelBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: "rgba(181, 141, 61, 0.2)" },
+  cancelBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderColor: colors.border.goldLight },
   cancelBtnText: { color: "#94A3B8", fontWeight: "700", fontSize: 13 },
-  createBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10, backgroundColor: "rgba(181, 141, 61, 0.15)", borderWidth: 1, borderColor: "rgba(181, 141, 61, 0.3)" },
-  createBtnText: { color: "#B58D3D", fontWeight: "800", fontSize: 13 },
+  createBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10, backgroundColor: colors.accent.goldLight, borderWidth: 1, borderColor: colors.border.gold },
+  createBtnText: { color: colors.accent.gold, fontWeight: "800", fontSize: 13 },
 
 cardHeader: { flexDirection: "row", gap: 12 },
   cardContent: { flex: 1 },
@@ -538,11 +539,11 @@ cardHeader: { flexDirection: "row", gap: 12 },
 
   statusRow: { flexDirection: "row", gap: 10, marginTop: 10 },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, borderWidth: 1 },
-  statusText: { fontSize: 11, fontWeight: "800", textTransform: "capitalize" },
+  statusText: { fontSize: 12, fontWeight: "800", textTransform: "capitalize" },
   statusPill: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, borderWidth: 1 },
-  statusPillText: { fontSize: 11, fontWeight: "800", textTransform: "capitalize" },
+  statusPillText: { fontSize: 12, fontWeight: "800", textTransform: "capitalize" },
   cardActionsRow: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
-  iconBtn: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(181, 141, 61, 0.08)", borderWidth: 1, borderColor: "rgba(181, 141, 61, 0.3)" },
+  iconBtn: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: colors.accent.goldSubtle, borderWidth: 1, borderColor: colors.border.gold },
 
   cardActions: { flexDirection: "row", gap: 8, marginTop: 12, flexWrap: "wrap" },
   actionBtn: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, borderWidth: 1 },

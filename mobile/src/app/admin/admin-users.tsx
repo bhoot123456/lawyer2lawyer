@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { colors } from "@/theme/designSystem";
 import {
   View,
   Text,
@@ -144,7 +145,7 @@ export default function AdminUsersScreen() {
       {error !== "" && <Text style={styles.error}>{error}</Text>}
 
       {loading ? (
-        <ActivityIndicator style={{ marginTop: 40 }} size="large" color="#B58D3D" />
+        <ActivityIndicator style={{ marginTop: 40 }} size="large" color={colors.accent.gold} />
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40, gap: 10 }}>
           {admins.map((admin) => (
@@ -157,7 +158,7 @@ export default function AdminUsersScreen() {
                     <Text style={styles.adminMeta}>
                       {admin.adminType || "legacy admin"}
                       {admin.lastLoginAt
-                        ? ` â€¢ last login ${new Date(admin.lastLoginAt).toLocaleDateString()}`
+                        ? ` • last login ${new Date(admin.lastLoginAt).toLocaleDateString()}`
                         : ""}
                     </Text>
                   </View>
@@ -173,8 +174,8 @@ export default function AdminUsersScreen() {
                   style={[styles.chip, { alignSelf: "flex-start", marginTop: 10 }]}
                   onPress={() => setSuspendTarget(admin)}
                 >
-                  <Ionicons name="ban-outline" size={14} color={admin.isSuspended ? "#10B981" : "#EF4444"} />
-                  <Text style={[styles.chipText, { color: admin.isSuspended ? "#10B981" : "#EF4444" }]}>
+                  <Ionicons name="ban-outline" size={14} color={admin.isSuspended ? colors.semantic.success : colors.semantic.danger} />
+                  <Text style={[styles.chipText, { color: admin.isSuspended ? colors.semantic.success : colors.semantic.danger }]}>
                     {admin.isSuspended ? "Unsuspend" : "Suspend"}
                   </Text>
                 </TouchableOpacity>
@@ -257,7 +258,7 @@ function AdminPermissionEditor(props: any) {
                   <Switch
                     value={checked}
                     onValueChange={() => togglePerm(perm)}
-                    trackColor={{ false: "#334155", true: "#B58D3D" }}
+                    trackColor={{ false: "#334155", true: colors.accent.gold }}
                     thumbColor="#F8FAFC"
                     style={{ transform: [{ scale: 0.8 }] }}
                   />
@@ -274,7 +275,7 @@ function AdminPermissionEditor(props: any) {
           <Text style={styles.cancelBtnText}>Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.btn, styles.saveBtn]} onPress={onSave} disabled={saving}>
-          {saving ? <ActivityIndicator size="small" color="#0B0B0B" /> : <Text style={styles.saveBtnText}>Save</Text>}
+          {saving ? <ActivityIndicator size="small" color={colors.bg.primary} /> : <Text style={styles.saveBtnText}>Save</Text>}
         </TouchableOpacity>
       </View>
     </AdminModal>
@@ -291,7 +292,7 @@ function AdminModal({ visible, children, onClose }: any) {
   );
 }
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0B0B0B" },
+  container: { flex: 1, backgroundColor: colors.bg.primary },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24, gap: 10 },
   noAccess: { color: "#94A3B8", fontWeight: "700", textAlign: "center" },
   filterRow: { flexDirection: "row", gap: 8, marginTop: 10 },
@@ -299,17 +300,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999,
     borderWidth: 1, borderColor: "rgba(148,163,184,0.3)",
   },
-  filterChipActive: { borderColor: "#B58D3D", backgroundColor: "rgba(181,141,61,0.15)" },
+  filterChipActive: { borderColor: colors.accent.gold, backgroundColor: colors.accent.goldLight },
   filterChipText: { color: "#94A3B8", fontSize: 12, fontWeight: "700" },
-  filterChipTextActive: { color: "#B58D3D" },
+  filterChipTextActive: { color: colors.accent.gold },
   card: {
     backgroundColor: "rgba(18,18,20,0.6)", borderRadius: 14, borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.15)", padding: 14,
+    borderColor: colors.accent.goldLight, padding: 14,
   },
   rowBetween: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
   adminName: { color: "#F8FAFC", fontSize: 15, fontWeight: "800" },
-  adminEmail: { color: "#94A3B8", fontSize: 13, fontWeight: "600", marginTop: 2 },
-  adminMeta: { color: "#64748B", fontSize: 11, fontWeight: "600", marginTop: 4 },
+  adminEmail: { color: "#94A3B8", fontSize: 12, fontWeight: "600", marginTop: 2 },
+  adminMeta: { color: "#64748B", fontSize: 12, fontWeight: "600", marginTop: 4 },
   chip: {
     flexDirection: "row", alignItems: "center", gap: 5,
     paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8,
@@ -318,7 +319,7 @@ const styles = StyleSheet.create({
   chipText: { fontSize: 12, fontWeight: "800" },
   error: { color: "#EF4444", fontWeight: "700", paddingHorizontal: 16, marginTop: 8 },
   empty: { color: "#64748B", fontWeight: "700", textAlign: "center", marginTop: 20 },
-  groupTitle: { color: "#B58D3D", fontSize: 12, fontWeight: "900", textTransform: "uppercase", marginBottom: 4 },
+  groupTitle: { color: colors.accent.gold, fontSize: 12, fontWeight: "800", textTransform: "uppercase", marginBottom: 4 },
   permRow: { flexDirection: "row", alignItems: "center", gap: 4 },
   permLabel: { color: "#CBD5E1", fontSize: 12, fontWeight: "600", flex: 1 },
   modalOverlay: {
@@ -326,15 +327,15 @@ const styles = StyleSheet.create({
   },
   modalCard: {
     backgroundColor: "#121214", borderTopLeftRadius: 20, borderTopRightRadius: 20,
-    borderWidth: 1, borderColor: "rgba(181,141,61,0.25)", padding: 18, maxHeight: "90%",
+    borderWidth: 1, borderColor: colors.border.gold, padding: 18, maxHeight: "90%",
   },
   sectionTitle: {
-    color: "#B58D3D", fontSize: 12, fontWeight: "900", textTransform: "uppercase",
+    color: colors.accent.gold, fontSize: 12, fontWeight: "800", textTransform: "uppercase",
     letterSpacing: 0.5, marginBottom: 6, marginTop: 4,
   },
   btn: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 14, borderRadius: 12 },
   cancelBtn: { backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: "rgba(148,163,184,0.25)" },
   cancelBtnText: { color: "#94A3B8", fontWeight: "800" },
-  saveBtn: { backgroundColor: "#B58D3D" },
-  saveBtnText: { color: "#0B0B0B", fontWeight: "900" },
+  saveBtn: { backgroundColor: colors.accent.gold },
+  saveBtnText: { color: colors.bg.primary, fontWeight: "800" },
 });

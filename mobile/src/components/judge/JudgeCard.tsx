@@ -1,4 +1,5 @@
 import React, { memo, useCallback } from "react";
+import { colors } from "@/theme/designSystem";
 import {
   View,
   Text,
@@ -15,7 +16,7 @@ import type { DistrictCourtJudge } from "@/types/judgeDirectory";
 // Constants (matching the Delhi district court design language)
 // ─────────────────────────────────────────────────────────
 
-const ACCENT = "#B58D3D";
+const ACCENT = colors.accent.gold;
 const ACCENT_DARK = "#D4AF37";
 const BG_COLOR = "#FAF9F6";
 const SURFACE_COLOR = "#FFFFFF";
@@ -216,6 +217,9 @@ const styles = StyleSheet.create({
       android: {
         elevation: 4,
       },
+      web: {
+        boxShadow: "0px 4px 12px rgba(0,0,0,0.1)",
+      },
     }),
   },
   accentLine: {
@@ -246,7 +250,7 @@ const styles = StyleSheet.create({
   avatarText: {
     color: ACCENT_DARK,
     fontSize: 22,
-    fontWeight: "900",
+    fontWeight: "800",
   },
   headerTextWrap: {
     flex: 1,
@@ -255,12 +259,12 @@ const styles = StyleSheet.create({
   judgeName: {
     color: TEXT_PRIMARY,
     fontSize: 17,
-    fontWeight: "900",
+    fontWeight: "800",
     letterSpacing: 0.2,
   },
   designation: {
     color: ACCENT,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "700",
     letterSpacing: 0.2,
   },
@@ -276,7 +280,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     gap: 6,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.4)",
+    borderColor: colors.border.gold,
     borderRadius: 8,
     paddingVertical: 4,
     paddingHorizontal: 10,
@@ -309,13 +313,13 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     color: TEXT_MUTED,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "800",
     minWidth: 68,
   },
   detailValue: {
     color: TEXT_PRIMARY,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "600",
     flex: 1,
   },
@@ -332,7 +336,7 @@ const styles = StyleSheet.create({
   },
   meetingIdLabel: {
     color: TEXT_MUTED,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "800",
     minWidth: 68,
   },
@@ -346,7 +350,7 @@ const styles = StyleSheet.create({
   },
   meetingIdBadgeText: {
     color: ACCENT_DARK,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "800",
     letterSpacing: 0.5,
   },
@@ -363,7 +367,7 @@ const styles = StyleSheet.create({
   },
   emailValue: {
     color: "#2563EB",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "600",
     flex: 1,
     textDecorationLine: "underline",
@@ -385,13 +389,13 @@ const styles = StyleSheet.create({
     backgroundColor: ACCENT,
   },
   shareBtn: {
-    backgroundColor: "rgba(181, 141, 61, 0.1)",
+    backgroundColor: colors.accent.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.25)",
+    borderColor: colors.border.gold,
   },
   actionBtnText: {
-    fontSize: 13,
-    fontWeight: "900",
+    fontSize: 12,
+    fontWeight: "800",
     letterSpacing: 0.3,
   },
   joinBtnText: {

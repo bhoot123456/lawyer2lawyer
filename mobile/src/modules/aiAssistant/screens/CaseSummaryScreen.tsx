@@ -1,5 +1,6 @@
 import React, { memo, useCallback, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Alert } from "react-native";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useAIAssistant } from "../hooks/useAIAssistant";
 import { AIHeader, AIInput, AIButton, AIResultCard, ResultSection, ResultBulletList, LoadingCard, ErrorCard, EmptyState, ActionButtons } from "../components";
 import { AI_BG } from "../constants";

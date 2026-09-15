@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, Pressable, TextInput } from "react-native";
+import { colors } from "@/theme/designSystem";
 
 import Navbar from "@/components/Navbar";
 
@@ -72,13 +73,13 @@ export default function LoginScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0B0B0B" },
+  container: { flex: 1, backgroundColor: colors.bg.primary },
   body: {
     flex: 1,
     padding: 16,
     gap: 12,
     justifyContent: "center",
-    backgroundColor: "#0B0B0B",
+    backgroundColor: colors.bg.primary,
   },
   title: { fontSize: 26, fontWeight: "900", color: "#FFFFFF", marginBottom: 6 },
   input: {

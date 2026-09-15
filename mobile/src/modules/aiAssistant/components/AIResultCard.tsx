@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+﻿import React, { memo } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { AI_GOLD, AI_GOLD_LIGHT, AI_CARD_BG, AI_TEXT_PRIMARY, AI_TEXT_SECONDARY } from "../constants";
 
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     color: AI_GOLD,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "700",
     textTransform: "uppercase",
     letterSpacing: 0.5,

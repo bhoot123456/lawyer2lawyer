@@ -1,5 +1,6 @@
-import React, { memo, useEffect, useMemo } from "react";
-import { View, Text, StyleSheet, Animated, TouchableOpacity } from "react-native";
+﻿import React, { memo, useEffect, useMemo, useState } from "react";
+import { colors } from "@/theme/designSystem";
+import { View, Text, StyleSheet, Animated, TouchableOpacity, AccessibilityInfo } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AI_GOLD, AI_GOLD_LIGHT, AI_BG, AI_CARD_BG, AI_TEXT_PRIMARY, AI_TEXT_SECONDARY } from "../constants";
 
@@ -9,22 +10,36 @@ interface FeatureCardProps {
   icon: string;
   onPress: () => void;
   index?: number;
+  disabled?: boolean;
 }
 
-const FeatureCard: React.FC<FeatureCardProps> = ({ title, subtitle, icon, onPress, index = 0 }) => {
+const FeatureCard: React.FC<FeatureCardProps> = ({ title, subtitle, icon, onPress, index = 0, disabled = false }) => {
   const scaleAnim = useMemo(() => new Animated.Value(1), []);
   const fadeAnim = useMemo(() => new Animated.Value(0), []);
 
-  React.useEffect(() => {
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+    const sub = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotion);
+    return () => sub.remove();
+  }, []);
+
+  useEffect(() => {
+    if (reduceMotion) {
+      fadeAnim.setValue(1);
+      return;
+    }
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 400,
       delay: index * 100,
       useNativeDriver: true,
     }).start();
-  }, [index, fadeAnim]);
+  }, [index, fadeAnim, reduceMotion]);
 
   const handlePressIn = () => {
+    if (reduceMotion) return;
     Animated.spring(scaleAnim, {
       toValue: 0.95,
       useNativeDriver: true,
@@ -33,6 +48,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, subtitle, icon, onPres
   };
 
   const handlePressOut = () => {
+    if (reduceMotion) return;
     Animated.spring(scaleAnim, {
       toValue: 1,
       useNativeDriver: true,
@@ -54,11 +70,14 @@ const FeatureCard: React.FC<FeatureCardProps> = ({ title, subtitle, icon, onPres
       ]}
     >
       <TouchableOpacity
-        onPress={onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        activeOpacity={0.9}
+        onPress={disabled ? undefined : onPress}
+        disabled={disabled}
+        onPressIn={disabled ? undefined : handlePressIn}
+        onPressOut={disabled ? undefined : handlePressOut}
+        activeOpacity={disabled ? 1 : 0.9}
         style={styles.card}
+        accessibilityRole={disabled ? "text" : "button"}
+        accessibilityState={{ disabled }}
       >
         <View style={styles.iconContainer}>
           <Ionicons name={icon as any} size={28} color={AI_GOLD} />
@@ -95,7 +114,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 14,
-    backgroundColor: "rgba(181, 141, 61, 0.12)",
+    backgroundColor: colors.border.goldLight,
     alignItems: "center",
     justifyContent: "center",
     marginRight: 14,

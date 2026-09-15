@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from "react";
+import { colors } from "@/theme/designSystem";
 import {
   View,
   Text,
@@ -8,13 +9,13 @@ import {
   ActivityIndicator,
   RefreshControl,
   TextInput,
-  Alert,
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import AdminHeader from "@/components/admin/AdminHeader";
 import GlassCard from "@/components/ui/GlassCard";
 import SearchBar from "@/components/admin/SearchBar";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { getAdminLawyers, verifyLawyer, deleteAdminLawyer } from "@/services/adminApi";
 
 export default function AdminLawyersScreen() {
@@ -25,6 +26,8 @@ export default function AdminLawyersScreen() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [filterStatus, setFilterStatus] = useState("");
+  // Cross-platform confirm/notice dialogs (Alert.alert is a no-op on web).
+  const { confirm: confirmDialog, notice: noticeDialog, element: dialogElement } = useConfirmDialog();
 
   const fetchLawyers = useCallback(async (pg = 1, srch = search, status = filterStatus) => {
     try {
@@ -61,44 +64,41 @@ export default function AdminLawyersScreen() {
   };
 
   const handleVerify = (id: string, status: string) => {
-    Alert.alert(
-      status === "verified" ? "Verify Lawyer" : "Reject Lawyer",
-      status === "verified"
-        ? "Are you sure you want to verify this lawyer?"
-        : "Are you sure you want to reject this lawyer?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Confirm",
-          onPress: async () => {
-            try {
-              await verifyLawyer(id, status);
-              fetchLawyers(1);
-            } catch (err) {
-              Alert.alert("Error", "Failed to verify lawyer");
-            }
-          },
-        },
-      ],
-    );
+    void (async () => {
+      // Shared ConfirmDialog renders on web too (RN Alert.alert is a no-op there).
+      const ok = await confirmDialog({
+        title: status === "verified" ? "Verify Lawyer" : "Reject Lawyer",
+        message: status === "verified"
+          ? "Are you sure you want to verify this lawyer?"
+          : "Are you sure you want to reject this lawyer?",
+        confirmLabel: "Confirm",
+      });
+      if (!ok) return;
+      try {
+        await verifyLawyer(id, status);
+        fetchLawyers(1);
+      } catch (err) {
+        void noticeDialog({ title: "Error", message: "Failed to verify lawyer", danger: true });
+      }
+    })();
   };
 
   const handleDelete = (id: string, name: string) => {
-    Alert.alert("Delete Lawyer", `Are you sure you want to delete ${name}? This action cannot be undone.`, [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await deleteAdminLawyer(id);
-            setLawyers((prev) => prev.filter((l) => l._id !== id));
-          } catch (err) {
-            Alert.alert("Error", "Failed to delete lawyer");
-          }
-        },
-      },
-    ]);
+    void (async () => {
+      const ok = await confirmDialog({
+        title: "Delete Lawyer",
+        message: `Are you sure you want to delete ${name}? This action cannot be undone.`,
+        confirmLabel: "Delete",
+        danger: true,
+      });
+      if (!ok) return;
+      try {
+        await deleteAdminLawyer(id);
+        setLawyers((prev) => prev.filter((l) => l._id !== id));
+      } catch (err) {
+        void noticeDialog({ title: "Error", message: "Failed to delete lawyer", danger: true });
+      }
+    })();
   };
 
   const renderLawyer = ({ item, index }: { item: any; index: number }) => (
@@ -210,7 +210,7 @@ export default function AdminLawyersScreen() {
           <SearchBar value={search} onChangeText={setSearch} placeholder="Search lawyers..." />
         </View>
         <TouchableOpacity style={styles.filterBtn} onPress={handleSearch}>
-          <Ionicons name="search-outline" size={20} color="#B58D3D" />
+          <Ionicons name="search-outline" size={20} color={colors.accent.gold} />
         </TouchableOpacity>
       </View>
 
@@ -245,11 +245,11 @@ export default function AdminLawyersScreen() {
         renderItem={renderLawyer}
         keyExtractor={(item) => item._id}
         contentContainerStyle={styles.list}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchLawyers(1); }} tintColor="#B58D3D" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchLawyers(1); }} tintColor={colors.accent.gold} />}
         ListEmptyComponent={
           loading ? (
             <View style={styles.center}>
-              <ActivityIndicator size="large" color="#B58D3D" />
+              <ActivityIndicator size="large" color={colors.accent.gold} />
             </View>
           ) : (
             <View style={styles.center}>
@@ -267,36 +267,37 @@ export default function AdminLawyersScreen() {
         }}
         onEndReachedThreshold={0.5}
       />
+      {dialogElement}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0B0B0B" },
+  container: { flex: 1, backgroundColor: colors.bg.primary },
   center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 40 },
   filterRow: { flexDirection: "row", paddingHorizontal: 16, paddingVertical: 8, gap: 8, alignItems: "center" },
   searchWrap: { flex: 1 },
-  filterBtn: { width: 46, height: 46, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(181, 141, 61, 0.1)", borderWidth: 1, borderColor: "rgba(181, 141, 61, 0.2)" },
+  filterBtn: { width: 46, height: 46, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: colors.accent.goldLight, borderWidth: 1, borderColor: colors.border.goldLight },
   statusFilters: { flexDirection: "row", paddingHorizontal: 16, gap: 8, marginBottom: 8 },
-  statusFilterBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: "rgba(18, 18, 20, 0.6)", borderWidth: 1, borderColor: "rgba(181, 141, 61, 0.2)" },
-  statusFilterActive: { backgroundColor: "rgba(181, 141, 61, 0.15)", borderColor: "#B58D3D" },
+  statusFilterBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: "rgba(18, 18, 20, 0.6)", borderWidth: 1, borderColor: colors.border.goldLight },
+  statusFilterActive: { backgroundColor: colors.accent.goldLight, borderColor: colors.accent.gold },
   statusFilterText: { color: "#94A3B8", fontSize: 12, fontWeight: "700", textTransform: "capitalize" },
-  statusFilterTextActive: { color: "#B58D3D" },
+  statusFilterTextActive: { color: colors.accent.gold },
   list: { padding: 16, gap: 12, paddingBottom: 40 },
   card: { marginBottom: 0 },
   cardRow: { flexDirection: "row", gap: 12, alignItems: "center" },
-  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: "rgba(181, 141, 61, 0.15)", alignItems: "center", justifyContent: "center" },
-  avatarText: { color: "#B58D3D", fontSize: 18, fontWeight: "900" },
+  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.accent.goldLight, alignItems: "center", justifyContent: "center" },
+  avatarText: { color: colors.accent.gold, fontSize: 18, fontWeight: "800" },
   cardContent: { flex: 1 },
   cardName: { color: "#F8FAFC", fontSize: 15, fontWeight: "800" },
   cardEmail: { color: "#64748B", fontSize: 12, fontWeight: "500" },
-  cardMeta: { color: "#94A3B8", fontSize: 11, fontWeight: "600", marginTop: 2 },
+  cardMeta: { color: "#94A3B8", fontSize: 12, fontWeight: "600", marginTop: 2 },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, borderWidth: 1 },
-  statusText: { fontSize: 11, fontWeight: "800", textTransform: "capitalize" },
+  statusText: { fontSize: 12, fontWeight: "800", textTransform: "capitalize" },
   cardActions: { flexDirection: "row", gap: 8, marginTop: 12, flexWrap: "wrap" },
   actionBtn: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, borderWidth: 1 },
   actionText: { fontSize: 12, fontWeight: "700" },
   detailsRow: { flexDirection: "row", gap: 12, marginTop: 8, flexWrap: "wrap" },
-  detailText: { color: "#94A3B8", fontSize: 11, fontWeight: "600" },
+  detailText: { color: "#94A3B8", fontSize: 12, fontWeight: "600" },
   emptyText: { color: "#64748B", fontSize: 14, fontWeight: "600", marginTop: 12 },
 });

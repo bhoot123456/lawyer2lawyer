@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import GlassCard from "@/components/ui/GlassCard";
@@ -78,13 +78,16 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ profile }) => {
           </View>
 
           <View style={styles.profileText}>
+            <Text style={styles.eyebrowText}>ADVOCATE</Text>
             <Text style={styles.greetingText}>
               {getGreeting()} {displayName.split(" ")[0]}
             </Text>
             <Text style={styles.enrollmentText}>
-              Enrollment: {profile?.enrollmentNumber || "EN-XXXX"}
+              Enrollment: {profile?.enrollmentNumber || "N/A"}
             </Text>
-            <Text style={styles.courtText}>{profile?.courtName || "Delhi High Court"}</Text>
+            {profile?.courtName ? (
+              <Text style={styles.courtText}>{profile.courtName}</Text>
+            ) : null}
           </View>
         </View>
 
@@ -130,7 +133,7 @@ const styles = StyleSheet.create({
   avatarText: {
     color: colors.text.inverse,
     fontSize: 22,
-    fontWeight: "900",
+    fontWeight: "800",
     letterSpacing: 1,
   },
   onlineIndicator: {
@@ -146,6 +149,15 @@ const styles = StyleSheet.create({
   },
   profileText: {
     flex: 1,
+  },
+  eyebrowText: {
+    color: GOLD,
+    fontSize: typography.overline.fontSize,
+    fontWeight: typography.overline.fontWeight,
+    lineHeight: typography.overline.lineHeight,
+    letterSpacing: typography.overline.letterSpacing,
+    textTransform: "uppercase",
+    marginBottom: 4,
   },
   greetingText: {
     color: TEXT_PRIMARY,

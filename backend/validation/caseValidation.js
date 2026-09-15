@@ -28,16 +28,30 @@ const VALID_STAGE = new Set([
   "Closed",
 ]);
 
-const isNonEmptyString = (v) => typeof v === "string" && v.trim().length > 0;
-
 const toDateOrUndefined = (value) => {
   if (value === undefined || value === null || value === "") return undefined;
   const d = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(d.getTime())) return null;
+
+  // Guard against engines that "roll over" impossible calendar dates
+  // (e.g. new Date("2024-02-30") silently becomes 2024-03-01 in V8).
+  // A plain YYYY-MM-DD input must round-trip to the exact same Y/M/D in UTC,
+  // otherwise the user's intended calendar date would be silently shifted.
+  // (Mirrors the guard in mobile/src/utils/dateUtils.ts.)
+  if (typeof value === "string") {
+    const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+    if (dateOnly) {
+      const [, y, m, day] = dateOnly;
+      const matchesCalendar =
+        d.getUTCFullYear() === Number(y) &&
+        d.getUTCMonth() === Number(m) - 1 &&
+        d.getUTCDate() === Number(day);
+      if (!matchesCalendar) return null;
+    }
+  }
+
   return d;
 };
-
-const normalizeString = (v) => (typeof v === "string" ? v.trim() : v);
 
 function buildValidationError(message, details) {
   return {
@@ -50,10 +64,22 @@ function buildValidationError(message, details) {
 function validateCaseCreatePayload(payload) {
   const errors = [];
 
-  const caseNumber = normalizeString(payload?.caseNumber);
-  // caseNumber may be omitted: caseService auto-generates one (ANON-<ts>-<rand>)
-  // when it is missing or blank, so treat it as optional at the transport layer.
-  if (caseNumber !== undefined && !isNonEmptyString(caseNumber)) {
+  // caseNumber contract (intentionally aligned with caseService.createCase):
+  //   - omitted (undefined/null), empty string, or whitespace-only
+  //       -> allowed; the service auto-generates `ANON-<ts>-<rand>`
+  //   - non-string value (number, object, ...)
+  //       -> rejected
+  //   - any non-empty string
+  //       -> accepted as the unique case number (duplicates -> 409 in controller)
+  // The frontend CaseForm historically sent `caseNumber: ""` when the field
+  // was left blank, which caused every such POST /api/cases to fail with 400
+  // even though the service supports auto-generation. Blank is "not provided".
+  if (
+    payload?.caseNumber !== undefined &&
+    payload?.caseNumber !== null &&
+    payload?.caseNumber !== "" &&
+    typeof payload.caseNumber !== "string"
+  ) {
     errors.push("caseNumber must be a non-empty string");
   }
 

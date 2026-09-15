@@ -1,4 +1,5 @@
 import React, { memo } from "react";
+import { colors } from "@/theme/designSystem";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AI_GOLD, AI_CARD_BG, AI_TEXT_SECONDARY } from "../constants";
@@ -29,7 +30,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: AI_CARD_BG,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.35)",
+    borderColor: colors.border.gold,
     borderRadius: 16,
     padding: 32,
     alignItems: "center",
@@ -40,7 +41,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: "rgba(181, 141, 61, 0.1)",
+    backgroundColor: colors.accent.goldLight,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
@@ -54,7 +55,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     color: AI_TEXT_SECONDARY,
-    fontSize: 13,
+    fontSize: 12,
     textAlign: "center",
     lineHeight: 18,
     opacity: 0.7,

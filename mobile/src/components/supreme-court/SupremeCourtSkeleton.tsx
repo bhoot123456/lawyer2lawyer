@@ -1,5 +1,9 @@
-import React, { useEffect, useMemo } from "react";
+﻿import React, { useEffect, useMemo } from "react";
 import { View, StyleSheet, Animated } from "react-native";
+import { colors, radii, shadows, spacing } from "@/theme/designSystem";
+
+const shimmerColor = "rgba(255,255,255,0.04)";
+const baseColor = "rgba(255,255,255,0.08)";
 
 /**
  * Skeleton row for a single court room card.
@@ -82,12 +86,13 @@ const styles = StyleSheet.create({
     paddingTop: 4,
   },
   card: {
-    backgroundColor: "rgba(255, 255, 255, 0.04)",
-    borderRadius: 20,
+    backgroundColor: colors.bg.elevated,
+    borderRadius: radii.lg,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.1)",
-    padding: 16,
+    borderColor: colors.accent.goldLight,
+    padding: spacing.md,
     gap: 14,
+    ...shadows.level1,
   },
   headerRow: {
     flexDirection: "row",
@@ -97,26 +102,26 @@ const styles = StyleSheet.create({
   iconPlaceholder: {
     width: 44,
     height: 44,
-    borderRadius: 14,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderRadius: radii.md,
+    backgroundColor: baseColor,
   },
   titlePlaceholder: {
     width: "60%",
     height: 16,
     borderRadius: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    backgroundColor: baseColor,
   },
   badgePlaceholder: {
     width: "30%",
     height: 22,
     borderRadius: 11,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    backgroundColor: baseColor,
   },
   favPlaceholder: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    backgroundColor: baseColor,
   },
   detailsContainer: {
     gap: 8,
@@ -127,20 +132,20 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    borderRadius: radii.md,
+    backgroundColor: shimmerColor,
   },
   detailIconPlaceholder: {
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    backgroundColor: baseColor,
   },
   detailTextPlaceholder: {
     flex: 1,
     height: 12,
     borderRadius: 6,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    backgroundColor: baseColor,
   },
   footerRow: {
     flexDirection: "row",
@@ -149,8 +154,8 @@ const styles = StyleSheet.create({
   buttonPlaceholder: {
     flex: 1,
     height: 44,
-    borderRadius: 14,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderRadius: radii.md,
+    backgroundColor: baseColor,
   },
 });
 

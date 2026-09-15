@@ -1,4 +1,5 @@
-import React from "react";
+﻿import React from "react";
+import { colors } from "@/theme/designSystem";
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { CourtRoomStatus, SupremeCourtFiltersProps } from "@/types/supremeCourt";
@@ -48,7 +49,7 @@ const SupremeCourtFilters: React.FC<SupremeCourtFiltersProps> = ({
             <Ionicons
               name={option.icon}
               size={14}
-              color={isActive ? "#0B0B0B" : "#94A3B8"}
+              color={isActive ? colors.bg.primary : "#94A3B8"}
             />
             <Text
               style={[
@@ -89,7 +90,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     backgroundColor: "rgba(255, 255, 255, 0.05)",
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.15)",
+    borderColor: colors.accent.goldLight,
   },
   chipActive: {
     backgroundColor: "#D4AF37",
@@ -97,11 +98,11 @@ const styles = StyleSheet.create({
   },
   chipLabel: {
     color: "#94A3B8",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "800",
   },
   chipLabelActive: {
-    color: "#0B0B0B",
+    color: colors.bg.primary,
   },
   countBadge: {
     backgroundColor: "rgba(148, 163, 184, 0.15)",
@@ -116,11 +117,11 @@ const styles = StyleSheet.create({
   },
   countText: {
     color: "#94A3B8",
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "800",
   },
   countTextActive: {
-    color: "#0B0B0B",
+    color: colors.bg.primary,
   },
 });
 

@@ -75,9 +75,14 @@ async function authRequest(method, url, body) {
   await mongoose.connect(process.env.MONGO_URI);
   const User = require("../models/User");
   const Case = require("../models/Case");
+  const Notification = require("../models/Notification");
+  const AIConversation = require("../models/AIConversation");
+  const AuditLog = require("../models/AuditLog");
 
   let caseId = null;
   let clientCaseId = null;
+  // Case ids created by this test (for audit-log cleanup in the finally block).
+  const auditCleanupIds = [];
 
   try {
     // Idempotency: remove residue from a previously interrupted run.
@@ -140,6 +145,7 @@ async function authRequest(method, url, body) {
     check("POST /api/cases (lawyer A, assignedTo=self) -> 201", created.status === 201, `status=${created.status} body=${JSON.stringify(created.data).slice(0, 200)}`);
     caseId = created.data?.case?._id;
     check("create returns case _id", !!caseId);
+    auditCleanupIds.push(String(caseId));
     check("caseNumber server-generated", typeof created.data?.case?.caseNumber === "string" && created.data.case.caseNumber.length > 0);
     check("ownership bound to server-side JWT identity (createdBy=lawyer A)", String(created.data?.case?.createdBy || "") === String(lawyerAId));
     check("assignedTo honored (assignedTo=lawyer A)", String(created.data?.case?.assignedTo || "") === String(lawyerAId));
@@ -181,6 +187,7 @@ async function authRequest(method, url, body) {
     });
     check("POST /api/cases (client, assignedTo=lawyer) -> 201", clientCase.status === 201, `status=${clientCase.status}`);
     clientCaseId = clientCase.data?.case?._id;
+    auditCleanupIds.push(String(clientCaseId));
     check("client case createdBy = client identity", String(clientCase.data?.case?.createdBy || "") === regUserId(regC.data?.user));
     const listC2 = await apiC.get("/", { params: { limit: 100 } });
     check("client list now shows ONLY the client's own case", listC2.status === 200 && (listC2.data?.cases || []).some((c) => c._id === clientCaseId) && !(listC2.data?.cases || []).some((c) => c._id === caseId));
@@ -221,22 +228,63 @@ async function authRequest(method, url, body) {
     const stillThere = await Case.countDocuments({ _id: caseId });
     check("case still intact after unauthorized edit/delete attempts (count=1)", stillThere === 1, `count=${stillThere}`);
 
-    // ── TEST 7: DELETE by owner + not-found re-check ──
+    // ── TEST 7: DELETE by owner + cascade + audit + not-found re-check ──
+    const invalidDel = await apiA.delete("/not-an-object-id");
+    check("DELETE with invalid ObjectId -> 400", invalidDel.status === 400, `status=${invalidDel.status}`);
+
+    // Wire up orphan-prone dependents that MUST be cascade-removed on delete.
+    await Notification.create({
+      user: lawyerAId,
+      category: "system",
+      title: "Cascade cleanup check",
+      body: "Temporary notification for authenticated smoke cleanup verification.",
+      meta: { caseId },
+    });
+    await AIConversation.create({ title: "Cascade cleanup check", metadata: { caseId } });
+    // Control row referencing a DIFFERENT case id — must survive the delete.
+    await Notification.create({
+      user: lawyerAId,
+      category: "system",
+      title: "Control notification",
+      body: "Must survive cascade cleanup.",
+      meta: { caseId: new mongoose.Types.ObjectId() },
+    });
+
     const deleted = await apiA.delete(`/${caseId}`);
-    check("DELETE /api/cases/:id (lawyer A) -> 200", deleted.status === 200, `status=${deleted.status}`);
+    check("DELETE /api/cases/:id (lawyer A) -> 200 with id echo",
+      deleted.status === 200 && String(deleted.data?.id) === String(caseId), `status=${deleted.status} body=${JSON.stringify(deleted.data).slice(0, 120)}`);
+    const orphanNotif = await Notification.countDocuments({ title: "Cascade cleanup check", "meta.caseId": String(caseId) });
+    check("cascade: notification referencing the case was removed", orphanNotif === 0, `count=${orphanNotif}`);
+    const orphanAi = await AIConversation.countDocuments({ "metadata.caseId": String(caseId) });
+    check("cascade: AI conversation referencing the case was removed", orphanAi === 0, `count=${orphanAi}`);
+    const controlCount = await Notification.countDocuments({ title: "Control notification" });
+    check("cascade: control notification (other caseId) survives", controlCount === 1, `count=${controlCount}`);
+    const auditCount = await AuditLog.countDocuments({ action: "case.delete", module: "cases", recordId: String(caseId) });
+    check("audit: case.delete entry written for deleted case", auditCount >= 1, `count=${auditCount}`);
     const afterDelete = await apiA.get(`/${caseId}`);
     check("GET after delete -> 404", afterDelete.status === 404, `status=${afterDelete.status}`);
+    const secondDelete = await apiA.delete(`/${caseId}`);
+    check("second DELETE (already deleted) -> 404", secondDelete.status === 404, `status=${secondDelete.status}`);
     const dbCount = await Case.countDocuments({ _id: caseId });
     check("case removed from database", dbCount === 0, `count=${dbCount}`);
     caseId = null; // already cleaned
 
-    await apiC.delete(`/${clientCaseId}`);
+    // Creator (client) may delete the case they created via createdBy match.
+    const clientDeleted = await apiC.delete(`/${clientCaseId}`);
+    check("DELETE own created case (client, createdBy match) -> 200", clientDeleted.status === 200, `status=${clientDeleted.status}`);
     clientCaseId = null;
   } finally {
     // ── TEST 8: CLEANUP (always runs, even on assertion failure) ──
     // Only documents created by this test: unique caseTitle marker + test emails.
     const cases = await Case.deleteMany({ caseTitle: MARKER });
     const users = await User.deleteMany({ email: { $in: TEST_EMAILS } });
+    await Notification.deleteMany({
+      title: { $in: ["Cascade cleanup check", "Control notification"] },
+    });
+    await AIConversation.deleteMany({ title: "Cascade cleanup check" });
+    if (auditCleanupIds.length > 0) {
+      await AuditLog.deleteMany({ action: "case.delete", recordId: { $in: auditCleanupIds } });
+    }
     console.log(`\nCleanup: removed ${cases.deletedCount} test case record(s) and ${users.deletedCount} test user account(s)`);
     await mongoose.disconnect();
   }

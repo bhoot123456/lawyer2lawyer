@@ -1,6 +1,7 @@
 import React, { memo, useCallback } from "react";
-import { View, StyleSheet, Alert, Share, Platform } from "react-native";
+import { View, StyleSheet, Share, Platform } from "react-native";
 import * as Clipboard from "expo-clipboard";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { AI_GOLD_LIGHT } from "../constants";
 import AIButton from "./AIButton";
 
@@ -14,14 +15,17 @@ interface ActionButtonsProps {
 }
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({ text, onSave, showSave = true }) => {
+  // Cross-platform confirm/notice dialogs (Alert.alert is a no-op on web).
+  const { notice: noticeDialog, element: dialogElement } = useConfirmDialog();
+
   const handleCopy = useCallback(async () => {
     try {
       await Clipboard.setStringAsync(text);
-      Alert.alert("Copied", "Content copied to clipboard");
+      void noticeDialog({ title: "Copied", message: "Content copied to clipboard" });
     } catch {
-      Alert.alert("Error", "Failed to copy to clipboard");
+      void noticeDialog({ title: "Error", message: "Failed to copy to clipboard", danger: true });
     }
-  }, [text]);
+  }, [text, noticeDialog]);
 
   const handleShare = useCallback(async () => {
     try {
@@ -39,28 +43,31 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ text, onSave, showSave = 
   }, [onSave]);
 
   return (
-    <View style={styles.container}>
-      <AIButton
-        title="Copy"
-        onPress={handleCopy}
-        variant="secondary"
-        style={styles.button}
-      />
-      <AIButton
-        title="Share"
-        onPress={handleShare}
-        variant="secondary"
-        style={styles.button}
-      />
-      {showSave && (
+    <>
+      <View style={styles.container}>
         <AIButton
-          title="Save"
-          onPress={handleSave}
+          title="Copy"
+          onPress={handleCopy}
           variant="secondary"
           style={styles.button}
         />
-      )}
-    </View>
+        <AIButton
+          title="Share"
+          onPress={handleShare}
+          variant="secondary"
+          style={styles.button}
+        />
+        {showSave && (
+          <AIButton
+            title="Save"
+            onPress={handleSave}
+            variant="secondary"
+            style={styles.button}
+          />
+        )}
+      </View>
+      {dialogElement}
+    </>
   );
 };
 

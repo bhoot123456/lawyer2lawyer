@@ -1,8 +1,9 @@
-import React from "react";
+﻿import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import GlassCard from "@/components/ui/GlassCard";
 import type { HearingItem, DraftItem, ClientCallItem, AIInsight } from "./types";
+import { colors, radii, spacing, typography } from "@/theme/designSystem";
 
 interface DailyBriefCardProps {
   todayHearings: HearingItem[];
@@ -13,9 +14,9 @@ interface DailyBriefCardProps {
   loading?: boolean;
 }
 
-const GOLD = "#B58D3D";
-const TEXT_PRIMARY = "#F8FAFC";
-const TEXT_SECONDARY = "#B0B4BA";
+const GOLD = colors.accent.gold;
+const TEXT_PRIMARY = colors.text.primary;
+const TEXT_SECONDARY = colors.text.secondary;
 
 const BriefItem: React.FC<{
   icon: string;
@@ -25,7 +26,12 @@ const BriefItem: React.FC<{
 }> = ({ icon, label, value, color = GOLD }) => {
   return (
     <View style={styles.briefItem}>
-      <View style={[styles.briefIcon, { backgroundColor: `rgba(181, 141, 61, 0.12)` }]}>
+      <View
+        style={[
+          styles.briefIcon,
+          { backgroundColor: colors.accent.goldSubtle },
+        ]}
+      >
         <Ionicons name={icon as any} size={18} color={color} />
       </View>
       <View style={styles.briefContent}>
@@ -55,7 +61,7 @@ const DailyBriefCard: React.FC<DailyBriefCardProps> = ({
 
   if (loading) {
     return (
-      <GlassCard borderColor="rgba(181, 141, 61, 0.25)" accent={GOLD}>
+      <GlassCard borderColor={colors.border.gold} accent={GOLD}>
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Loading daily brief...</Text>
         </View>
@@ -64,7 +70,7 @@ const DailyBriefCard: React.FC<DailyBriefCardProps> = ({
   }
 
   return (
-    <GlassCard borderColor="rgba(181, 141, 61, 0.25)" accent={GOLD}>
+    <GlassCard borderColor={colors.border.gold} accent={GOLD}>
       <View style={styles.container}>
         <View style={styles.headerRow}>
           <Ionicons name="document-text-outline" size={20} color={GOLD} />
@@ -114,34 +120,34 @@ const DailyBriefCard: React.FC<DailyBriefCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    gap: 16,
+    gap: spacing.md,
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: spacing.sm,
   },
   headerText: {
     color: TEXT_PRIMARY,
-    fontSize: 16,
-    fontWeight: "900",
+    fontSize: typography.h4.fontSize,
+    fontWeight: "800",
   },
   briefGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 12,
+    gap: spacing.sm,
     justifyContent: "space-between",
   },
   briefItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: spacing.sm,
     width: "48%",
   },
   briefIcon: {
     width: 36,
     height: 36,
-    borderRadius: 12,
+    borderRadius: radii.md,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -150,44 +156,44 @@ const styles = StyleSheet.create({
   },
   briefValue: {
     color: TEXT_PRIMARY,
-    fontSize: 14,
-    fontWeight: "900",
+    fontSize: typography.body.fontSize,
+    fontWeight: "800",
   },
   briefLabel: {
     color: TEXT_SECONDARY,
-    fontSize: 11,
-    fontWeight: "700",
+    fontSize: typography.caption.fontSize,
+    fontWeight: typography.caption.fontWeight,
   },
   aiSection: {
-    paddingTop: 12,
+    paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: "rgba(181, 141, 61, 0.2)",
-    gap: 8,
+    borderTopColor: colors.border.goldLight,
+    gap: spacing.sm,
   },
   aiSectionTitle: {
     color: GOLD,
-    fontSize: 13,
-    fontWeight: "800",
+    fontSize: typography.caption.fontSize,
+    fontWeight: typography.overline.fontWeight,
   },
   aiInsightItem: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 6,
+    gap: spacing.xs,
   },
   aiInsightText: {
     color: TEXT_SECONDARY,
-    fontSize: 12,
-    fontWeight: "700",
+    fontSize: typography.caption.fontSize,
+    fontWeight: typography.caption.fontWeight,
     flex: 1,
   },
   loadingContainer: {
-    paddingVertical: 24,
+    paddingVertical: spacing.lg,
     alignItems: "center",
   },
   loadingText: {
     color: TEXT_SECONDARY,
-    fontSize: 14,
-    fontWeight: "700",
+    fontSize: typography.body.fontSize,
+    fontWeight: typography.body.fontWeight,
   },
 });
 

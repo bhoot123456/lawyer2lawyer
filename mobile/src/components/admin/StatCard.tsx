@@ -1,4 +1,5 @@
-import React from "react";
+﻿import React from "react";
+import { colors } from "@/theme/designSystem";
 import { View, Text, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import GlassCard from "@/components/ui/GlassCard";
@@ -12,7 +13,7 @@ interface StatCardProps {
   onPress?: () => void;
 }
 
-export default function StatCard({ title, value, icon, color = "#B58D3D", subtitle, onPress }: StatCardProps) {
+export default function StatCard({ title, value, icon, color = colors.accent.gold, subtitle, onPress }: StatCardProps) {
   return (
     <GlassCard onPress={onPress} style={styles.card}>
       <View style={styles.row}>
@@ -53,7 +54,7 @@ const styles = StyleSheet.create({
   value: {
     color: "#F8FAFC",
     fontSize: 22,
-    fontWeight: "900",
+    fontWeight: "800",
   },
   title: {
     color: "#94A3B8",
@@ -64,7 +65,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     color: "#64748B",
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "500",
     marginTop: 2,
   },

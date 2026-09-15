@@ -1,4 +1,5 @@
-import React, { memo, useCallback, useState } from "react";
+﻿import React, { memo, useCallback, useState } from "react";
+import { colors } from "@/theme/designSystem";
 import { View, Text, StyleSheet, ScrollView, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAIAssistant } from "../hooks/useAIAssistant";
@@ -246,7 +247,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "rgba(181, 141, 61, 0.12)",
+    backgroundColor: colors.border.goldLight,
     borderRadius: 999,
     paddingHorizontal: 8,
     paddingVertical: 4,

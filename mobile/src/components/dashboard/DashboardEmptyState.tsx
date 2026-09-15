@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import GlassCard from "@/components/ui/GlassCard";
+import { Ionicons } from "@expo/vector-icons";
 import PremiumButton from "@/components/ui/PremiumButton";
 import { colors, spacing, typography } from "@/theme/designSystem";
 

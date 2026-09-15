@@ -1,4 +1,5 @@
-import React from "react";
+﻿import React from "react";
+import { colors } from "@/theme/designSystem";
 import { Modal, View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
 interface Props {
@@ -21,7 +22,7 @@ export default function AdminConfirmDialog({
   onConfirm,
   onCancel,
 }: Props) {
-  const accent = danger ? "#EF4444" : "#B58D3D";
+  const accent = danger ? "#EF4444" : colors.accent.gold;
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.overlay}>
@@ -59,13 +60,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#121214",
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.25)",
+    borderColor: colors.border.gold,
     padding: 20,
   },
   title: {
     color: "#F8FAFC",
     fontSize: 17,
-    fontWeight: "900",
+    fontWeight: "800",
     marginBottom: 8,
   },
   message: {
@@ -95,6 +96,6 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
   confirmText: {
-    fontWeight: "900",
+    fontWeight: "800",
   },
 });

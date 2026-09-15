@@ -1,4 +1,5 @@
 import { create } from "axios";
+import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 function generateUUID() {
@@ -31,12 +32,10 @@ const BASE_URL_RAW =
   process.env.EXPO_PUBLIC_API_URL || process.env.EXPO_PUBLIC_BACKEND_URL;
 
 // Development-only fallbacks (stripped from production bundle by Metro)
-const DEV_FALLBACK_NATIVE = "http://10.0.2.2:5000";
-const DEV_FALLBACK_WEB = "http://127.0.0.1:5000";
+const DEV_FALLBACK_ANDROID = "http://10.0.2.2:5000";
+const DEV_FALLBACK_DEFAULT = "http://127.0.0.1:5000";
 
-const isWeb =
-  process.env.EXPO_WEB === "true" ||
-  (typeof navigator !== "undefined" && navigator.product === "Gecko");
+const isWeb = Platform.OS === "web";
 
 function isDevUrl(url) {
   if (!url) return false;
@@ -49,16 +48,20 @@ function isDevUrl(url) {
 }
 
 function normalizeBaseUrl(u) {
-  return String(u || "").replace(/\/+$/, "");
+  let url = String(u || "").replace(/\/+$/, "");
+  // On Android emulator during development, translate localhost/127.0.0.1 to 10.0.2.2
+  if (__DEV__ && Platform.OS === "android") {
+    url = url.replace("127.0.0.1", "10.0.2.2").replace("localhost", "10.0.2.2");
+  }
+  return url;
 }
 
 let BASE_URL;
 
 if (__DEV__) {
-  // Development: allow localhost fallbacks for local dev convenience.
-  BASE_URL = normalizeBaseUrl(
-    BASE_URL_RAW || (isWeb ? DEV_FALLBACK_WEB : DEV_FALLBACK_NATIVE),
-  );
+  // Development: allow localhost / emulator fallbacks for local dev convenience.
+  const fallback = Platform.OS === "android" ? DEV_FALLBACK_ANDROID : DEV_FALLBACK_DEFAULT;
+  BASE_URL = normalizeBaseUrl(BASE_URL_RAW || fallback);
 } else {
   // Production: require an explicit, non-localhost API URL.
   if (!BASE_URL_RAW) {
@@ -87,6 +90,7 @@ const clientBaseUrl = BASE_URL.endsWith("/api")
 
 const api = create({
   baseURL: clientBaseUrl,
+  timeout: 15000, // 15 seconds request timeout to prevent hanging on dropped mobile networks
 });
 
 // Helpful during debugging (stripped from production bundle)
@@ -105,6 +109,12 @@ if (__DEV__) {
 // ─────────────────────────────────────────────────────────
 const ACCESS_TOKEN_KEY = "authToken";
 const REFRESH_TOKEN_KEY = "refreshToken";
+
+let onSessionClearedCallback = null;
+
+export function registerSessionClearedHandler(fn) {
+  onSessionClearedCallback = fn;
+}
 
 export async function getAuthToken() {
   return AsyncStorage.getItem(ACCESS_TOKEN_KEY);
@@ -133,11 +143,18 @@ export async function clearSession() {
   // Fallback to sequential removals.
   if (typeof AsyncStorage?.multiRemove === "function") {
     await AsyncStorage.multiRemove([ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY]);
-    return;
+  } else {
+    await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
+    await AsyncStorage.removeItem(REFRESH_TOKEN_KEY);
   }
 
-  await AsyncStorage.removeItem(ACCESS_TOKEN_KEY);
-  await AsyncStorage.removeItem(REFRESH_TOKEN_KEY);
+  if (typeof onSessionClearedCallback === "function") {
+    try {
+      onSessionClearedCallback();
+    } catch {
+      // ignore
+    }
+  }
 }
 
 // Attach Authorization header for protected routes
@@ -228,21 +245,28 @@ async function ensureRefreshed() {
   return refreshPromise;
 }
 
-// Public endpoint prefixes that must never trigger the JWT refresh flow.
-// These endpoints are accessible without authentication.
-// NOTE: /cases is personal/user-specific data and remains auth-protected on the
-// backend. It is listed here ONLY so the interceptor does not attempt a JWT
-// refresh on 401 — the no-login app has no refresh token, and the calling
-// functions already return graceful empty states. The auth middleware on
-// the back still blocks unauthenticated access to /api/cases.
+// Endpoints that are accessible without mandatory authentication
+// (optionalAuth or fully public). These document the no-login app's
+// public surface; the response interceptor no longer suppresses refresh
+// based on this list. Instead it checks whether a refresh token exists
+// before attempting refresh, which transparently handles auth-protected
+// endpoints such as /dashboard/stats and /draft-library/saved (POST/DELETE)
+// while keeping genuinely anonymous users unaffected.
 const PUBLIC_ENDPOINTS = [
   "/judge-directory",
+  "/district-court-judges",
+  "/police-stations",
+  "/delhi-district-courts",
   "/bare-acts",
   "/supreme-court",
   "/tribunals",
   "/dashboard",
   "/knowledge-hub",
   "/draft-library",
+  "/revenue-court",
+  "/tax-corporate",
+  "/criminal-law-acts",
+  "/misc-forms",
   "/ai",  // AI chat endpoints are publicly accessible (Floating AI agent)
   "/court-holidays",
   "/daily-cause-list",
@@ -280,15 +304,10 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // Public endpoints must never trigger token refresh — let the screen handle the response.
-    if (PUBLIC_ENDPOINTS.some((prefix) => {
-      if (url === prefix) return true;
-      if (prefix === "/bare-acts" && url.startsWith("/bare-acts/")) {
-        const subpath = url.slice("/bare-acts/".length).split("/")[0];
-        return !["favourites", "recent"].includes(subpath);
-      }
-      return url.startsWith(prefix);
-    })) {
+    // Only attempt refresh when a refresh token exists.
+    // Anonymous users (no refresh token) get a normal controlled failure here
+    // instead of an impossible refresh attempt.
+    if (!(await getRefreshToken())) {
       return Promise.reject(error);
     }
 
@@ -391,3 +410,52 @@ export async function logoutAll() {
     await clearSession();
   }
 }
+
+/**
+ * Normalizes Axios/network errors into human-friendly messages across status codes.
+ * Ensures that 400, 401, 403, 404, 409, 429, 500, network loss, and timeouts
+ * have consistent, clear user-facing feedback without crashing or showing raw stack traces.
+ */
+export function normalizeApiError(error) {
+  if (!error) return "An unexpected error occurred.";
+  if (typeof error === "string") return error;
+
+  if (error.response) {
+    const { status, data } = error.response;
+    const msg = data?.message || data?.error;
+    if (msg && typeof msg === "string") return msg;
+
+    switch (status) {
+      case 400:
+        return "Invalid request. Please verify the provided details.";
+      case 401:
+        return "Session expired or authentication required. Please sign in.";
+      case 403:
+        return "You do not have permission to perform this action.";
+      case 404:
+        return "The requested record was not found.";
+      case 409:
+        return "A conflict occurred (record already exists).";
+      case 429:
+        return "Too many requests. Please wait a moment and try again.";
+      case 500:
+      case 502:
+      case 503:
+      case 504:
+        return "Service temporarily unavailable. Please try again shortly.";
+      default:
+        return `Server returned error (${status}). Please try again.`;
+    }
+  }
+
+  if (error.code === "ECONNABORTED" || (error.message && error.message.includes("timeout"))) {
+    return "Request timed out. Please check your network connection and retry.";
+  }
+
+  if (error.message === "Network Error" || !error.response) {
+    return "Unable to connect to the server. Please check your internet connection.";
+  }
+
+  return error.message || "An unexpected error occurred.";
+}
+

@@ -67,6 +67,25 @@ function safeUserForClient(user) {
   };
 }
 
+/**
+ * PURE role resolver for public self-service registration.
+ *
+ * SECURITY (Phase 1 rule #1): the client may NEVER be trusted to mint a
+ * privileged account. Only roles in a server-defined allowlist may be
+ * self-assigned through the public /auth/register endpoint; anything else
+ * (including "admin") is forcibly downgraded to the default "client".
+ *
+ * This is the SINGLE source of truth for that rule — both the route layer
+ * (routes/auth.js) and the service layer (authService.register) must use
+ * it, so the rule cannot silently drift between the two. Exported so the
+ * escalation-defense can be unit-tested without a database.
+ */
+function resolveSelfServiceRole(role) {
+  const PUBLIC_SELF_SERVICE_ROLES = ["client", "lawyer"];
+  const r = String(role || "").toLowerCase().trim();
+  return PUBLIC_SELF_SERVICE_ROLES.includes(r) ? r : "client";
+}
+
 function getJwtAccessTtl() {
   return process.env.JWT_ACCESS_TTL || '15m';
 }
@@ -185,11 +204,9 @@ async function register({
 }) {
   // SECURITY (defense-in-depth): Never assign a privileged role (e.g., admin)
   // through registration. The route layer also enforces this; this guard
-  // protects any other caller of this service.
-  const PUBLIC_SELF_SERVICE_ROLES = ["client", "lawyer"];
-  if (!role || !PUBLIC_SELF_SERVICE_ROLES.includes(String(role).toLowerCase())) {
-    role = "client";
-  }
+  // protects any other caller of this service. resolveSelfServiceRole is the
+  // single, unit-tested source of truth for the allowlist.
+  role = resolveSelfServiceRole(role);
 
   if (!email || !password || !role || !state || !city) {
     const err = new Error('Missing required registration fields');
@@ -381,5 +398,6 @@ module.exports = {
   logoutCurrent,
   logoutAll,
   safeUserForClient,
+  resolveSelfServiceRole,
 };
 

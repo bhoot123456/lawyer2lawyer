@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Pressable, Text, StyleSheet, View } from "react-native";
 import { colors, radii, spacing, typography } from "@/theme/designSystem";
 
@@ -28,6 +28,7 @@ const CategoryChip: React.FC<CategoryChipProps> = ({
     <Pressable
       onPress={onPress}
       disabled={disabled}
+      accessibilityState={{ disabled }}
       style={({ pressed }) => [
         styles.chip,
         isFilter && styles.chipFilter,
@@ -106,7 +107,7 @@ const styles = StyleSheet.create({
     letterSpacing: typography.caption.letterSpacing,
   },
   textAdvanced: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "600",
     letterSpacing: 0.2,
   },

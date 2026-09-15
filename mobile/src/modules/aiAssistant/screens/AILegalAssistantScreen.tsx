@@ -1,13 +1,11 @@
-import React, { memo, useCallback } from "react";
+﻿import React, { memo } from "react";
+import { colors } from "@/theme/designSystem";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  TextInput,
-  Animated,
-  Keyboard,
-  Alert,
+  Pressable,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -18,22 +16,16 @@ import {
   AI_CARD_BG,
   AI_TEXT_PRIMARY,
   AI_TEXT_SECONDARY,
-  AI_TEXT_MUTED,
   AI_FEATURES,
 } from "../constants";
 import { FeatureCard } from "../components";
 import AIDisclaimer from "@/components/legal/AIDisclaimer";
+import StatusBadge from "@/components/ui/StatusBadge";
 
 const AILegalAssistantScreen: React.FC = () => {
-  const handleFeaturePress = useCallback((title: string) => {
-    // The specialized AI tools are not yet connected to real AI and are
-    // therefore disabled for production (no fabricated legal output).
-    Keyboard.dismiss();
-    Alert.alert(
-      "Coming Soon",
-      `"${title}" is not available yet. Use the AI Assistant chat (sparkle bubble) for real-time legal research and drafting help.`
-    );
-  }, []);
+  const openHistory = () => {
+    router.push("/ai-history" as any);
+  };
 
   return (
     <View style={styles.container}>
@@ -54,26 +46,6 @@ const AILegalAssistantScreen: React.FC = () => {
           <Text style={styles.subtitle}>Your Personal Legal Intelligence</Text>
         </View>
 
-        {/* Premium Search Box */}
-        <View style={styles.searchContainer}>
-          <Ionicons
-            name="search-outline"
-            size={18}
-            color={AI_GOLD}
-            style={styles.searchIcon}
-          />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Coming soon..."
-            placeholderTextColor={AI_TEXT_MUTED}
-            editable={false}
-          />
-          <View style={styles.searchBadge}>
-            <Ionicons name="sparkles" size={14} color={AI_BG} />
-            <Text style={styles.searchBadgeText}>AI</Text>
-          </View>
-        </View>
-
         {/* Divider */}
         <View style={styles.divider}>
           <View style={styles.dividerLine} />
@@ -86,32 +58,46 @@ const AILegalAssistantScreen: React.FC = () => {
           AI Assistant chat (sparkle bubble) for legal research and drafting.
         </Text>
 
-        {/* Feature Cards */}
-        <View style={styles.featuresList}>
-          {AI_FEATURES.map((feature, index) => (
-            <FeatureCard
+        {/* Feature Cards (visually deactivated until backend wiring lands) */}
+        <View style={styles.featuresList} accessibilityLabel="AI tools coming soon">
+          {AI_FEATURES.map((feature) => (
+            <View
               key={feature.key}
-              title={feature.title}
-              subtitle={feature.subtitle}
-              icon={feature.icon}
-              onPress={() => handleFeaturePress(feature.title)}
-              index={index}
-            />
+              style={styles.soonCardWrap}
+              accessibilityRole="text"
+              accessibilityLabel={`${feature.title}, coming soon`}
+              accessibilityState={{ disabled: true }}
+            >
+              <View style={styles.soonCardInner} pointerEvents="none">
+                <FeatureCard
+                  title={feature.title}
+                  subtitle={feature.subtitle}
+                  icon={feature.icon}
+                  index={0}
+                  onPress={() => undefined}
+                  disabled
+                />
+              </View>
+              <View style={styles.soonBadgeRow} pointerEvents="none">
+                <StatusBadge label="Soon" variant="default" />
+              </View>
+            </View>
           ))}
         </View>
 
-        {/* History Button */}
+        {/* History Button (whole row is pressable) */}
         <View style={styles.historyContainer}>
-          <Animated.View style={styles.historyCard}>
+          <Pressable
+            style={({ pressed }) => [styles.historyCard, pressed && styles.historyCardPressed]}
+            onPress={openHistory}
+            accessibilityRole="button"
+            accessibilityLabel="View History and Saved Results"
+            accessibilityHint="Opens AI history and saved results"
+          >
             <Ionicons name="time-outline" size={22} color={AI_GOLD} />
             <Text style={styles.historyText}>View History & Saved Results</Text>
-            <Ionicons
-              name="chevron-forward"
-              size={18}
-              color={AI_GOLD_LIGHT}
-              onPress={() => router.push("/ai-history" as any)}
-            />
-          </Animated.View>
+            <Ionicons name="chevron-forward" size={18} color={AI_GOLD_LIGHT} />
+          </Pressable>
         </View>
 
         {/* AI Disclaimer */}
@@ -144,7 +130,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "rgba(181, 141, 61, 0.12)",
+    backgroundColor: colors.border.goldLight,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
@@ -153,7 +139,7 @@ const styles = StyleSheet.create({
   title: {
     color: AI_TEXT_PRIMARY,
     fontSize: 26,
-    fontWeight: "900",
+    fontWeight: "800",
     letterSpacing: 0.5,
     marginBottom: 4,
   },
@@ -194,7 +180,7 @@ const styles = StyleSheet.create({
   },
   searchBadgeText: {
     color: AI_BG,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "800",
   },
   divider: {
@@ -209,7 +195,7 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     color: AI_GOLD,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "800",
     letterSpacing: 1.5,
     marginHorizontal: 12,
@@ -225,6 +211,19 @@ const styles = StyleSheet.create({
   featuresList: {
     marginBottom: 16,
   },
+  soonCardWrap: {
+    position: "relative",
+    opacity: 0.5,
+    marginBottom: 10,
+  },
+  soonCardInner: {
+    width: "100%",
+  },
+  soonBadgeRow: {
+    position: "absolute",
+    top: 10,
+    right: 12,
+  },
   historyContainer: {
     marginTop: 8,
   },
@@ -237,6 +236,10 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
     gap: 10,
+    minHeight: 52,
+  },
+  historyCardPressed: {
+    opacity: 0.85,
   },
   historyText: {
     flex: 1,

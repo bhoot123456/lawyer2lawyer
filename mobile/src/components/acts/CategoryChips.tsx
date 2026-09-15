@@ -1,4 +1,5 @@
-import React from "react";
+﻿import React from "react";
+import { colors } from "@/theme/designSystem";
 import { ScrollView, StyleSheet, Text, TouchableOpacity } from "react-native";
 
 export type CategoryChip = {
@@ -23,7 +24,7 @@ export default function CategoryChips({
           <TouchableOpacity
             key={c.key}
             onPress={() => onSelect(c.key)}
-            style={[styles.chip, active ? styles.chipActive : null, active ? { borderColor: active ? "#B58D3D" : undefined } : null]}
+            style={[styles.chip, active ? styles.chipActive : null, active ? { borderColor: active ? colors.accent.gold : undefined } : null]}
           >
             <Text style={[styles.chipText, active ? styles.chipTextActive : null]}>
               {c.label}
@@ -42,15 +43,15 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.25)",
+    borderColor: colors.border.gold,
     backgroundColor: "rgba(255,255,255,0.7)",
     marginRight: 8,
   },
   chipActive: {
-    borderColor: "#B58D3D",
-    backgroundColor: "rgba(181,141,61,0.12)",
+    borderColor: colors.accent.gold,
+    backgroundColor: colors.border.goldLight,
   },
   chipText: { fontSize: 12, fontWeight: "800", color: "#6B7280" },
-  chipTextActive: { color: "#B58D3D" },
+  chipTextActive: { color: colors.accent.gold },
 });
 

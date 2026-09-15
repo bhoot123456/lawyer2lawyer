@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react";
+﻿import React, { useCallback, useEffect, useState } from "react";
+import { colors } from "@/theme/designSystem";
 import {
   View,
   Text,
@@ -148,8 +149,8 @@ export default function CmsModuleScreen() {
           {canEdit && (
             <TouchableOpacity style={styles.chip}
               onPress={() => router.push(`/admin/cms/${moduleKey}/${item._id}` as any)}>
-              <Ionicons name="create-outline" size={14} color="#B58D3D" />
-              <Text style={[styles.chipText, { color: "#B58D3D" }]}>Edit</Text>
+              <Ionicons name="create-outline" size={14} color={colors.accent.gold} />
+              <Text style={[styles.chipText, { color: colors.accent.gold }]}>Edit</Text>
             </TouchableOpacity>
           )}
           {canDelete && (
@@ -196,7 +197,7 @@ export default function CmsModuleScreen() {
       {error ? (
         <Text style={styles.error}>{error}</Text>
       ) : loading && !items.length ? (
-        <ActivityIndicator style={{ marginTop: 40 }} size="large" color="#B58D3D" />
+        <ActivityIndicator style={{ marginTop: 40 }} size="large" color={colors.accent.gold} />
       ) : items.length === 0 ? (
         <View style={styles.empty}>
           <Ionicons name="folder-open-outline" size={44} color="#475569" />
@@ -209,14 +210,14 @@ export default function CmsModuleScreen() {
           renderItem={renderItem}
           contentContainerStyle={{ padding: 16, gap: 10 }}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(pagination.page); }} tintColor="#B58D3D" />
+            <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(pagination.page); }} tintColor={colors.accent.gold} />
           }
           ListFooterComponent={
             <View style={styles.pager}>
               <TouchableOpacity disabled={pagination.page <= 1}
                 style={[styles.pageBtn, pagination.page <= 1 && { opacity: 0.3 }]}
                 onPress={() => fetchData(pagination.page - 1)}>
-                <Ionicons name="chevron-back" size={18} color="#B58D3D" />
+                <Ionicons name="chevron-back" size={18} color={colors.accent.gold} />
                 <Text style={styles.pageText}>Prev</Text>
               </TouchableOpacity>
               <Text style={styles.pageInfo}>Page {pagination.page} / {pagination.totalPages}</Text>
@@ -224,7 +225,7 @@ export default function CmsModuleScreen() {
                 style={[styles.pageBtn, pagination.page >= pagination.totalPages && { opacity: 0.3 }]}
                 onPress={() => fetchData(pagination.page + 1)}>
                 <Text style={styles.pageText}>Next</Text>
-                <Ionicons name="chevron-forward" size={18} color="#B58D3D" />
+                <Ionicons name="chevron-forward" size={18} color={colors.accent.gold} />
               </TouchableOpacity>
             </View>
           }
@@ -248,24 +249,24 @@ export default function CmsModuleScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0B0B0B" },
+  container: { flex: 1, backgroundColor: colors.bg.primary },
   filterRow: { flexDirection: "row", gap: 8, marginTop: 10 },
   filterChip: {
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999,
     borderWidth: 1, borderColor: "rgba(148,163,184,0.3)",
   },
-  filterChipActive: { borderColor: "#B58D3D", backgroundColor: "rgba(181,141,61,0.15)" },
+  filterChipActive: { borderColor: colors.accent.gold, backgroundColor: colors.accent.goldLight },
   filterChipText: { color: "#94A3B8", fontSize: 12, fontWeight: "700" },
-  filterChipTextActive: { color: "#B58D3D" },
+  filterChipTextActive: { color: colors.accent.gold },
   card: {
     backgroundColor: "rgba(18,18,20,0.6)", borderRadius: 14, borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.15)", padding: 14,
+    borderColor: colors.accent.goldLight, padding: 14,
   },
   cardMain: {},
   cardTopRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
   cardTitle: { color: "#F8FAFC", fontSize: 15, fontWeight: "800", flex: 1 },
-  cardSub: { color: "#94A3B8", fontSize: 13, fontWeight: "600", marginTop: 2 },
-  cardMeta: { color: "#64748B", fontSize: 11, fontWeight: "600", marginTop: 6 },
+  cardSub: { color: "#94A3B8", fontSize: 12, fontWeight: "600", marginTop: 2 },
+  cardMeta: { color: "#64748B", fontSize: 12, fontWeight: "600", marginTop: 6 },
   actionRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 },
   chip: {
     flexDirection: "row", alignItems: "center", gap: 5,
@@ -281,6 +282,6 @@ const styles = StyleSheet.create({
     paddingTop: 8, paddingBottom: 30,
   },
   pageBtn: { flexDirection: "row", alignItems: "center", gap: 2, paddingHorizontal: 10, paddingVertical: 8 },
-  pageText: { color: "#B58D3D", fontWeight: "800" },
+  pageText: { color: colors.accent.gold, fontWeight: "800" },
   pageInfo: { color: "#64748B", fontWeight: "700", fontSize: 12 },
 });

@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
+import { colors } from "@/theme/designSystem";
 import { View, Text, StyleSheet, ActivityIndicator, Pressable } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import CaseForm from "@/components/cases/CaseForm";
@@ -28,7 +29,7 @@ export default function EditCaseScreen() {
   return (
     <KeyboardAwareView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Edit Case</Text>
-      {loading && <ActivityIndicator size="small" color="#B58D3D" />}
+      {loading && <ActivityIndicator size="small" color={colors.accent.gold} />}
 
       {!loading && caseDoc && (
         <CaseForm
@@ -58,19 +59,19 @@ const styles = StyleSheet.create({
   title: {
     color: "#F8FAFC",
     fontSize: 22,
-    fontWeight: "900",
+    fontWeight: "800",
   },
   backBtn: {
-    backgroundColor: "rgba(181, 141, 61, 0.10)",
+    backgroundColor: colors.accent.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.35)",
+    borderColor: colors.border.gold,
     borderRadius: 14,
     paddingVertical: 12,
     alignItems: "center",
   },
   backText: {
-    color: "rgba(181, 141, 61, 0.95)",
-    fontWeight: "900",
+    color: colors.accent.gold,
+    fontWeight: "800",
   },
 });
 

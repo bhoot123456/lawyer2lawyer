@@ -1,6 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Alert,
   FlatList,
   Linking,
   Pressable,
@@ -11,8 +10,10 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import Clipboard from "expo-clipboard";
 import Navbar from "@/components/Navbar";
 import { api } from "@/services/api";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   StatisticsHeader,
   TribunalsSearchBar,
@@ -515,15 +516,37 @@ const TribunalDetailModal = React.memo(function TribunalDetailModal({
   tribunal,
   onClose,
 }: TribunalDetailModalProps) {
-  const openLink = useCallback((url?: string) => {
-    if (!url) return;
-    Linking.openURL(url).catch(() => {});
-  }, []);
+  // Cross-platform confirm/notice dialogs (Alert.alert is a no-op on web).
+  const { notice: noticeDialog, element: dialogElement } = useConfirmDialog();
 
-  const copyToClipboard = useCallback((text?: string) => {
-    if (!text) return;
-    Alert.alert("Copied", text);
-  }, []);
+  const openLink = useCallback(
+    (url?: string) => {
+      if (!url) return;
+      Linking.openURL(url).catch(() => {
+        void noticeDialog({
+          title: "Unable to open link",
+          message: "This link could not be opened",
+        });
+      });
+    },
+    [noticeDialog],
+  );
+
+  const copyToClipboard = useCallback(
+    async (text?: string) => {
+      if (!text) return;
+      try {
+        await Clipboard.setStringAsync(text);
+        void noticeDialog({ title: "Copied", message: text });
+      } catch {
+        void noticeDialog({
+          title: "Unable to copy",
+          message: "Text could not be copied to clipboard",
+        });
+      }
+    },
+    [noticeDialog],
+  );
 
   const shareTribunal = useCallback(() => {
     const name = tribunal?.name || "Tribunal";
@@ -556,7 +579,8 @@ const TribunalDetailModal = React.memo(function TribunalDetailModal({
   }, [tribunal]);
 
   return (
-    <View style={styles.modalOverlay}>
+    <>
+      <View style={styles.modalOverlay}>
       <Pressable
         onPress={onClose}
         style={StyleSheet.absoluteFill}
@@ -642,7 +666,16 @@ const TribunalDetailModal = React.memo(function TribunalDetailModal({
           />
           <ActionButton
             label="Maps"
-            onPress={() => openLink(tribunal?.googleMapsLink || addressLine)}
+            onPress={() => {
+              const mapsUrl =
+                tribunal?.googleMapsLink ||
+                (addressLine !== "—"
+                  ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                      addressLine,
+                    )}`
+                  : undefined);
+              openLink(mapsUrl);
+            }}
           />
           <ActionButton
             label="Copy"
@@ -665,6 +698,8 @@ const TribunalDetailModal = React.memo(function TribunalDetailModal({
         ) : null}
       </Pressable>
     </View>
+    {dialogElement}
+    </>
   );
 });
 
@@ -929,9 +964,9 @@ export default function TribunalsScreen() {
           />
           {expandedCategories[item] ? (
             <View style={styles.categoryBody}>
-              {tribunals.map((tribunal) => (
+              {tribunals.map((tribunal, index) => (
                 <TribunalCard
-                  key={tribunal?._id || tribunal?.name}
+                  key={tribunal?._id || tribunal?.name || `tribunal-${index}`}
                   tribunal={tribunal}
                   onPress={setSelectedTribunal}
                 />
@@ -1059,7 +1094,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg.primary },
   listContent: {
     paddingHorizontal: spacing.md,
-    paddingBottom: spacing.xl,
+    paddingBottom: 110,
     gap: spacing.sm,
     marginTop: spacing.xs,
   },
@@ -1116,7 +1151,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   chipTextAdvanced: {
-    fontSize: 11,
+    fontSize: 12,
   },
   chipTextActive: {
     color: colors.accent.gold,
@@ -1163,7 +1198,7 @@ const styles = StyleSheet.create({
   },
   activeFilterText: {
     color: colors.accent.gold,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "700",
   },
   clearAllFiltersButton: {
@@ -1176,7 +1211,7 @@ const styles = StyleSheet.create({
   },
   clearAllFiltersText: {
     color: colors.semantic.danger,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "700",
   },
 
@@ -1230,8 +1265,8 @@ const styles = StyleSheet.create({
   modalHeaderText: {
     flex: 1,
   },
-  modalTitle: { color: colors.text.primary, fontSize: 20, fontWeight: "900" },
-  modalSub: { color: colors.text.secondary, fontSize: 13, marginTop: 2 },
+  modalTitle: { color: colors.text.primary, fontSize: 20, fontWeight: "800" },
+  modalSub: { color: colors.text.secondary, fontSize: 12, marginTop: 2 },
   modalClose: {
     paddingHorizontal: 10,
     paddingVertical: 8,
@@ -1240,14 +1275,14 @@ const styles = StyleSheet.create({
     borderColor: colors.border.default,
     backgroundColor: colors.bg.surface,
   },
-  modalCloseText: { color: colors.text.primary, fontWeight: "900" },
+  modalCloseText: { color: colors.text.primary, fontWeight: "800" },
   modalMetaRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 10,
   },
-  modalMeta: { color: colors.text.secondary, fontSize: 13, fontWeight: "600" },
-  modalBody: { color: colors.text.secondary, fontSize: 13, lineHeight: 18 },
+  modalMeta: { color: colors.text.secondary, fontSize: 12, fontWeight: "600" },
+  modalBody: { color: colors.text.secondary, fontSize: 12, lineHeight: 18 },
 
   cardFlags: {
     flexDirection: "row",
@@ -1266,7 +1301,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(56,180,140,0.10)",
     borderColor: "rgba(56,180,140,0.35)",
   },
-  flagText: { color: colors.accent.gold, fontSize: 11, fontWeight: "700" },
+  flagText: { color: colors.accent.gold, fontSize: 12, fontWeight: "700" },
 
   rowActions: {
     flexDirection: "row",
@@ -1293,7 +1328,7 @@ const styles = StyleSheet.create({
   secondaryBtnText: { color: colors.text.secondary, fontWeight: "800", fontSize: 13 },
 
   resources: { gap: 8 },
-  resourcesTitle: { color: colors.accent.gold, fontSize: 13, fontWeight: "800" },
+  resourcesTitle: { color: colors.accent.gold, fontSize: 12, fontWeight: "800" },
   resourceRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -1303,5 +1338,5 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border.subtle,
   },
   resourceLabel: { color: colors.text.secondary, fontSize: 13 },
-  resourceUrl: { color: colors.accent.gold, fontSize: 13, fontWeight: "800" },
+  resourceUrl: { color: colors.accent.gold, fontSize: 12, fontWeight: "800" },
 });

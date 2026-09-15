@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
+import { colors } from "@/theme/designSystem";
 import {
   View,
   Text,
@@ -40,7 +41,7 @@ export default function TaxCorporateScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <GlassCard borderColor="rgba(181, 141, 61, 0.35)" accent="#B58D3D">
+      <GlassCard borderColor={colors.border.gold} accent={colors.accent.gold}>
         <View style={styles.headerRow}>
           <View style={styles.badgeIcon}>
             <Ionicons name="briefcase-outline" size={20} color="#D4AF37" />
@@ -59,7 +60,7 @@ export default function TaxCorporateScreen() {
             <Ionicons
               name="information-circle-outline"
               size={16}
-              color="#B58D3D"
+              color={colors.accent.gold}
             />
             <Text style={styles.noteText}>{data.lastUpdatedNote}</Text>
           </View>
@@ -70,7 +71,7 @@ export default function TaxCorporateScreen() {
 
       {loading ? (
         <View style={{ marginTop: 16 }}>
-          <ActivityIndicator size="small" color="#B58D3D" />
+          <ActivityIndicator size="small" color={colors.accent.gold} />
         </View>
       ) : null}
 
@@ -84,7 +85,7 @@ export default function TaxCorporateScreen() {
             <Text style={styles.cardTitle}>{t.title}</Text>
             <View style={styles.cardFooter}>
               <Text style={styles.cardHint}>Open procedure & docs</Text>
-              <Ionicons name="chevron-forward" size={18} color="#B58D3D" />
+              <Ionicons name="chevron-forward" size={18} color={colors.accent.gold} />
             </View>
           </Pressable>
         ))}
@@ -100,7 +101,7 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 14,
     paddingBottom: 110,
-    backgroundColor: "#0B0B0B",
+    backgroundColor: colors.bg.primary,
   },
   headerRow: {
     flexDirection: "row",
@@ -111,16 +112,16 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 18,
-    backgroundColor: "rgba(181,141,61,0.12)",
+    backgroundColor: colors.border.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.25)",
+    borderColor: colors.border.gold,
     alignItems: "center",
     justifyContent: "center",
   },
   title: {
     color: "#F8FAFC",
     fontSize: 18,
-    fontWeight: "900",
+    fontWeight: "800",
   },
   subtitle: {
     color: "rgba(248,250,252,0.75)",
@@ -135,8 +136,8 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     gap: 8,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.20)",
-    backgroundColor: "rgba(181,141,61,0.08)",
+    borderColor: colors.border.goldLight,
+    backgroundColor: colors.accent.goldSubtle,
     borderRadius: 14,
     padding: 10,
   },
@@ -150,7 +151,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     color: "#F8FAFC",
     fontSize: 16,
-    fontWeight: "900",
+    fontWeight: "800",
     marginTop: 2,
   },
   cards: {
@@ -159,13 +160,13 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.20)",
+    borderColor: colors.border.goldLight,
     backgroundColor: "rgba(255,255,255,0.03)",
     padding: 14,
   },
   cardTitle: {
     color: "#D4AF37",
-    fontWeight: "900",
+    fontWeight: "800",
     fontSize: 15,
   },
   cardFooter: {

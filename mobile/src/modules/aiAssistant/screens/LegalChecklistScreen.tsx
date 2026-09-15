@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useState } from "react";
+﻿import React, { memo, useCallback, useState } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { useAIAssistant } from "../hooks/useAIAssistant";
 import { AIHeader, AIButton, AIResultCard, ResultSection, ResultBulletList, LoadingCard, ErrorCard, EmptyState, ActionButtons } from "../components";
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: AI_BG },
   scroll: { flex: 1 },
   scrollContent: { padding: 16, paddingBottom: 40 },
-  label: { color: "#B0B4BA", fontSize: 13, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 8 },
+  label: { color: "#B0B4BA", fontSize: 12, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.3, marginBottom: 8 },
   pickerGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 },
   pickerButton: { width: "31%" },
 });

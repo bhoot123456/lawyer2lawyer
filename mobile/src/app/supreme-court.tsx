@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { colors } from "@/theme/designSystem";
 import {
   View,
   Text,
@@ -368,7 +369,7 @@ export default function SupremeCourtScreen() {
     if (!loadingMore) return null;
     return (
       <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color="#B58D3D" />
+        <ActivityIndicator size="small" color={colors.accent.gold} />
         <Text style={styles.footerLoaderText}>Loading more...</Text>
       </View>
     );
@@ -466,8 +467,8 @@ export default function SupremeCourtScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor="#B58D3D"
-            colors={["#B58D3D"]}
+            tintColor={colors.accent.gold}
+            colors={[colors.accent.gold]}
             progressBackgroundColor="#1a1a1a"
           />
         }
@@ -493,7 +494,7 @@ export default function SupremeCourtScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0B0B0B",
+    backgroundColor: colors.bg.primary,
   },
   listContent: {
     padding: 16,
@@ -511,9 +512,9 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: "rgba(181, 141, 61, 0.1)",
+    backgroundColor: colors.accent.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.25)",
+    borderColor: colors.border.gold,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -526,7 +527,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: "rgba(181, 141, 61, 0.12)",
+    backgroundColor: colors.border.goldLight,
     textAlign: "center",
     textAlignVertical: "center",
     overflow: "hidden",
@@ -535,7 +536,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: "#F8FAFC",
     fontSize: 22,
-    fontWeight: "900",
+    fontWeight: "800",
     letterSpacing: 0.3,
   },
   headerSubtitle: {
@@ -549,7 +550,7 @@ const styles = StyleSheet.create({
   },
   resultsCountText: {
     color: "rgba(248, 250, 252, 0.5)",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "700",
   },
   footerLoader: {
@@ -561,7 +562,7 @@ const styles = StyleSheet.create({
   },
   footerLoaderText: {
     color: "rgba(248, 250, 252, 0.5)",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "700",
   },
   toast: {
@@ -587,6 +588,9 @@ const styles = StyleSheet.create({
       },
       android: {
         elevation: 8,
+      },
+      web: {
+        boxShadow: "0px 4px 12px rgba(0,0,0,0.3)",
       },
     }),
   },

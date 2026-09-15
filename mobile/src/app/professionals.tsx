@@ -1,7 +1,9 @@
 import React from "react";
+import { colors, radii, spacing, typography } from "@/theme/designSystem";
 import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import GlassCard from "@/components/ui/GlassCard";
+import StatusBadge from "@/components/ui/StatusBadge";
 
 const PROFESSIONALS = [
   {
@@ -33,10 +35,10 @@ const PROFESSIONALS = [
 export default function ProfessionalsScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <GlassCard borderColor="rgba(181, 141, 61, 0.35)" accent="#B58D3D">
+      <GlassCard borderColor={colors.border.gold} accent={colors.accent.gold}>
         <View style={styles.headerRow}>
           <View style={styles.badgeIcon}>
-            <Ionicons name="people-outline" size={20} color="#D4AF37" />
+            <Ionicons name="people-outline" size={20} color={colors.accent.gold} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.title}>Professionals</Text>
@@ -53,23 +55,20 @@ export default function ProfessionalsScreen() {
         {PROFESSIONALS.map((p) => (
           <Pressable
             key={p.key}
-            style={({ pressed }) => [styles.card, pressed ? { opacity: 0.92 } : null]}
+            style={({ pressed }) => [styles.card, pressed ? styles.cardPressed : null]}
             onPress={() => {
               // Phase 9 landing only. Detail flow can be added later.
             }}
           >
             <View style={styles.cardTop}>
-              <Ionicons
-                name={p.icon}
-                size={20}
-                color="#D4AF37"
-                style={styles.cardIcon}
-              />
+              <View style={styles.cardIconWrap}>
+                <Ionicons name={p.icon} size={20} color={colors.accent.gold} />
+              </View>
               <Text style={styles.cardTitle}>{p.title}</Text>
             </View>
             <Text style={styles.cardDesc}>{p.description}</Text>
             <View style={styles.cardFooter}>
-              <Text style={styles.cardHint}>Coming soon</Text>
+              <StatusBadge label="Coming Soon" variant="default" size="sm" />
             </View>
           </Pressable>
         ))}
@@ -82,83 +81,86 @@ export default function ProfessionalsScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-    gap: 14,
+    padding: spacing.md,
+    gap: spacing.md,
     paddingBottom: 110,
-    backgroundColor: "#0B0B0B",
+    backgroundColor: colors.bg.primary,
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: spacing.md,
   },
   badgeIcon: {
     width: 44,
     height: 44,
-    borderRadius: 18,
-    backgroundColor: "rgba(181,141,61,0.12)",
+    borderRadius: radii.lg,
+    backgroundColor: colors.border.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.25)",
+    borderColor: colors.border.gold,
     alignItems: "center",
     justifyContent: "center",
   },
   title: {
-    color: "#F8FAFC",
-    fontSize: 18,
-    fontWeight: "900",
+    color: colors.text.primary,
+    fontSize: typography.h3.fontSize,
+    fontWeight: typography.h3.fontWeight,
   },
   subtitle: {
-    color: "rgba(248,250,252,0.75)",
-    fontSize: 12,
-    fontWeight: "800",
-    marginTop: 6,
-    lineHeight: 16,
+    color: colors.text.secondary,
+    fontSize: typography.caption.fontSize,
+    fontWeight: typography.caption.fontWeight,
+    marginTop: 4,
+    lineHeight: typography.caption.lineHeight,
   },
   sectionHeader: {
-    color: "#F8FAFC",
-    fontSize: 16,
-    fontWeight: "900",
-    marginTop: 2,
+    color: colors.text.primary,
+    fontSize: typography.h4.fontSize,
+    fontWeight: typography.h4.fontWeight,
   },
   cards: {
-    gap: 12,
+    gap: spacing.md,
   },
   card: {
-    borderRadius: 16,
+    borderRadius: radii.xl,
     borderWidth: 1,
-    borderColor: "rgba(181,141,61,0.20)",
-    backgroundColor: "rgba(255,255,255,0.03)",
-    padding: 14,
+    borderColor: colors.border.goldLight,
+    backgroundColor: colors.bg.surface,
+    padding: spacing.md,
+  },
+  cardPressed: {
+    opacity: 0.92,
+    transform: [{ scale: 0.98 }],
   },
   cardTop: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: spacing.sm,
   },
-  cardIcon: {
-    marginTop: 1,
+  cardIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: radii.md,
+    backgroundColor: colors.accent.goldSubtle,
+    borderWidth: 1,
+    borderColor: colors.border.goldLight,
+    alignItems: "center",
+    justifyContent: "center",
   },
   cardTitle: {
-    color: "#D4AF37",
-    fontWeight: "900",
-    fontSize: 15,
+    color: colors.accent.gold,
+    fontWeight: typography.h4.fontWeight,
+    fontSize: typography.h4.fontSize,
   },
   cardDesc: {
-    marginTop: 10,
-    color: "rgba(248,250,252,0.80)",
-    fontWeight: "800",
-    fontSize: 12,
-    lineHeight: 18,
+    marginTop: spacing.sm,
+    color: colors.text.secondary,
+    fontSize: typography.caption.fontSize,
+    lineHeight: typography.caption.lineHeight,
   },
   cardFooter: {
-    marginTop: 10,
+    marginTop: spacing.sm,
     flexDirection: "row",
     justifyContent: "flex-end",
   },
-  cardHint: {
-    color: "rgba(248,250,252,0.65)",
-    fontWeight: "900",
-    fontSize: 12,
-  },
 });
-

@@ -1,6 +1,7 @@
 import React from "react";
 import { View, TextInput, StyleSheet, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { colors } from "@/theme/designSystem";
 
 interface SearchBarProps {
   value: string;
@@ -36,7 +37,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(18, 18, 20, 0.7)",
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "rgba(181, 141, 61, 0.2)",
+    borderColor: colors.border.goldLight,
     paddingHorizontal: 12,
     height: 46,
   },

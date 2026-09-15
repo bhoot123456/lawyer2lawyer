@@ -1,4 +1,5 @@
-import React from "react";
+﻿import React from "react";
+import { colors } from "@/theme/designSystem";
 import { Pressable, StyleSheet, Text } from "react-native";
 
 import GlassCard from "@/components/ui/GlassCard";
@@ -8,7 +9,7 @@ export default function SectionCard({
   description,
   ctaText,
   onPress,
-  accent = "#B58D3D",
+  accent = colors.accent.gold,
 }: {
   title: string;
   description?: string;
@@ -17,7 +18,7 @@ export default function SectionCard({
   accent?: string;
 }) {
   return (
-    <GlassCard borderColor={`rgba(181, 141, 61, 0.35)`} accent={accent} onPress={onPress}>
+    <GlassCard borderColor={colors.border.gold} accent={accent} onPress={onPress}>
       <Text style={[styles.sectionTitle, { color: accent }]}>{title}</Text>
 
       {description ? <Text style={styles.sectionDesc}>{description}</Text> : null}
@@ -37,12 +38,12 @@ export default function SectionCard({
 const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "900",
+    fontWeight: "800",
     marginBottom: 6,
   },
   sectionDesc: {
     color: "#B0B4BA",
-    fontSize: 13,
+    fontSize: 12,
     lineHeight: 18,
     marginBottom: 12,
   },
@@ -53,7 +54,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   sectionButtonText: {
-    fontWeight: "900",
+    fontWeight: "800",
     fontSize: 14,
   },
 });

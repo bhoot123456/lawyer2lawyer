@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -31,9 +30,10 @@ import {
 import type { AdvocateProfile, DashboardData } from "@/components/dashboard/types";
 import { getDashboardData } from "@/services/dashboardApi";
 
-import { colors, spacing } from "@/theme/designSystem";
+import { useFocusEffect } from "expo-router";
+import { normalizeApiError } from "@/services/api";
 
-const GOLD = colors.accent.gold;
+import { spacing } from "@/theme/designSystem";
 
 export default function DashboardRoute() {
   const [loading, setLoading] = useState(true);
@@ -48,20 +48,18 @@ export default function DashboardRoute() {
       const res = await getDashboardData();
       setData(res);
     } catch (e: any) {
-      setError(e?.message || "Failed to load dashboard");
+      setError(normalizeApiError(e));
       setData(null);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    const loadDashboard = async () => {
-      await fetchDashboard();
-    };
-
-    void loadDashboard();
-  }, [fetchDashboard]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchDashboard();
+    }, [fetchDashboard])
+  );
 
 
 
@@ -114,6 +112,19 @@ export default function DashboardRoute() {
           <DashboardHeader profile={profile as AdvocateProfile} />
         </View>
 
+        {/* Priority order: Next Hearing → Today's Hearings → Stats — the first
+            thing a lawyer sees each morning should feel considered. */}
+        <View style={styles.section}>
+          <NextHearingCard
+            hearings={[...(data.todayHearings || []), ...(data.upcomingHearings || [])]}
+            loading={loading}
+          />
+        </View>
+
+        <View style={styles.section}>
+          <TodayHearings hearings={data.todayHearings} loading={loading} />
+        </View>
+
         <View style={styles.section}>
           <DashboardStats
             stats={{
@@ -130,18 +141,6 @@ export default function DashboardRoute() {
 
         <View style={styles.section}>
           <QuickActionsGrid />
-        </View>
-
-
-        <View style={styles.section}>
-          <NextHearingCard
-            hearings={[...(data.todayHearings || []), ...(data.upcomingHearings || [])]}
-            loading={loading}
-          />
-        </View>
-
-        <View style={styles.section}>
-          <TodayHearings hearings={data.todayHearings} loading={loading} />
         </View>
 
         <View style={styles.section}>
@@ -205,25 +204,10 @@ export default function DashboardRoute() {
     refreshing,
   ]);
 
-  if (loading && !data) {
-    return (
-      <View style={styles.loadingWrap}>
-        <ActivityIndicator size="large" color={GOLD} />
-      </View>
-    );
-  }
-
   return content;
 }
 
 const styles = StyleSheet.create({
-  loadingWrap: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: colors.bg.primary,
-
-  },
   scrollContent: {
     gap: spacing.md,
     paddingBottom: 120,

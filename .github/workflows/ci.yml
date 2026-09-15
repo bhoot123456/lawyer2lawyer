@@ -46,21 +46,21 @@ jobs:
           node-version: 20
           cache: npm
           cache-dependency-path: |
-            backend/package-lock.json
-            mobile/package-lock.json
+            app/backend/package-lock.json
+            app/mobile/package-lock.json
 
       - name: Install backend dependencies
-        working-directory: backend
+        working-directory: app/backend
         run: npm ci
 
       # ── Step 1: unit/authorization test suite ──
       - name: Backend unit tests (npm test)
-        working-directory: backend
+        working-directory: app/backend
         run: npm test
 
       # ── Boot backend against the MongoDB service container ──
       - name: Start backend server
-        working-directory: backend
+        working-directory: app/backend
         run: |
           node index.js > server.log 2>&1 &
           echo $! > server.pid
@@ -76,38 +76,38 @@ jobs:
 
       # The CMS smoke test requires a super admin; seed a disposable one.
       - name: Seed CI super admin
-        working-directory: backend
+        working-directory: app/backend
         run: node scripts/create-super-admin.js ci-admin@l2l-test.local --password=CiOnly!SmokePass2026
 
       # ── Step 2: CMS smoke test ──
       - name: CMS smoke test (test:smoke)
-        working-directory: backend
+        working-directory: app/backend
         run: npm run test:smoke
 
       # ── Step 3: anonymous Cases contract ──
       - name: Anonymous cases smoke test (test:cases)
-        working-directory: backend
+        working-directory: app/backend
         run: npm run test:cases
 
       # ── Step 4: authenticated Cases contract ──
       - name: Authenticated cases smoke test (test:cases:auth)
-        working-directory: backend
+        working-directory: app/backend
         run: npm run test:cases:auth
 
       # ── Step 5: mobile type-check + lint (warnings allowed, errors fail) ──
       - name: Install mobile dependencies
-        working-directory: mobile
+        working-directory: app/mobile
         run: npm ci
 
       - name: Mobile TypeScript check (tsc --noEmit)
-        working-directory: mobile
+        working-directory: app/mobile
         run: npx tsc --noEmit
 
       - name: Mobile ESLint (errors fail, warnings allowed)
-        working-directory: mobile
+        working-directory: app/mobile
         run: npx eslint src
 
       - name: Print backend server log (always, for diagnostics)
         if: always()
-        working-directory: backend
+        working-directory: app/backend
         run: tail -n 100 server.log || true

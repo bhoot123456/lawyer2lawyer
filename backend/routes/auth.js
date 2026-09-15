@@ -21,14 +21,10 @@ router.post("/register", async (req, res) => {
       mobileNumber,
     } = payload;
 
-    // SECURITY: Public registration must never mint a privileged account.
-    // Only self-service roles may be self-assigned; anything else (including
-    // "admin") is forcibly downgraded to the default "client" role.
-    const ALLOWED_SELF_SERVICE_ROLES = ["client", "lawyer"];
-    let safeRole = (role || "client").toLowerCase().trim();
-    if (!ALLOWED_SELF_SERVICE_ROLES.includes(safeRole)) {
-      safeRole = "client";
-    }
+    // SECURITY (single source of truth): Public registration must never
+    // mint a privileged account. authService.resolveSelfServiceRole
+    // downgrades anything outside the allowlist (incl. "admin") to "client".
+    const safeRole = authService.resolveSelfServiceRole(role);
 
     // Preserve existing required fields contract.
     if (!name && !fullName) {

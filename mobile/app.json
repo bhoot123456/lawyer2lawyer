@@ -11,7 +11,7 @@
     "scheme": "lawyer2lawyer",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
+      "icon": "./assets/images/icon.png",
       "bundleIdentifier": "com.lawyer2lawyer.mobile"
     },
     "android": {

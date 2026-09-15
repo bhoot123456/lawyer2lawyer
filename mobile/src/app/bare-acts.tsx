@@ -1,7 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Linking,
   Pressable,
@@ -14,6 +13,9 @@ import {
 } from "react-native";
 import SectionCard from "@/components/SectionCard";
 import { Ionicons } from "@expo/vector-icons";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useThemeColors } from "@/theme/ThemeProvider";
+import { colors as designColors, radii, shadows, spacing, typography } from "@/theme/designSystem";
 
 import ActCard from "@/components/acts/ActCard";
 
@@ -70,6 +72,9 @@ export default function BareActsScreen() {
 
 
   const [loadingRecent, setLoadingRecent] = useState(false);
+
+  // Cross-platform confirm/notice dialogs (Alert.alert is a no-op on web).
+  const { notice: noticeDialog, element: dialogElement } = useConfirmDialog();
 
   const [search, setSearch] = useState("");
 
@@ -152,7 +157,7 @@ export default function BareActsScreen() {
           return rollback;
         });
 
-        Alert.alert("Favourite update failed");
+        void noticeDialog({ title: "Favourite update failed", message: "Could not update your favourite. Please try again.", danger: true });
       }
     },
     [favoriteIds],
@@ -338,7 +343,7 @@ export default function BareActsScreen() {
   const openPdf = useCallback(
     (pdfUrl?: string, bareActId?: string, act?: BareAct | BareActListItem) => {
       if (!pdfUrl || !isValidHttpUrl(pdfUrl)) {
-        Alert.alert("Invalid PDF URL", "This act PDF URL is not valid.");
+        void noticeDialog({ title: "Invalid PDF URL", message: "This act PDF URL is not valid.", danger: true });
         return;
       }
 
@@ -354,7 +359,7 @@ export default function BareActsScreen() {
       }
 
       Linking.openURL(pdfUrl).catch(() => {
-        Alert.alert("Unable to open PDF", "Please try again.");
+        void noticeDialog({ title: "Unable to open PDF", message: "Please try again.", danger: true });
       });
     },
     [fetchRecent],
@@ -550,170 +555,172 @@ export default function BareActsScreen() {
           )
         }
       />
+      {dialogElement}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f0f0" } as ViewStyle,
+  container: { flex: 1, backgroundColor: designColors.bg.primary } as ViewStyle,
   recentWrap: {
-    backgroundColor: "#ffffff",
+    backgroundColor: designColors.bg.surface,
     borderWidth: 1,
-    borderColor: "rgba(212,175,55,0.25)",
-    borderRadius: 14,
-    padding: 10,
-    gap: 8,
+    borderColor: designColors.border.gold,
+    borderRadius: radii.md,
+    padding: spacing.sm,
+    gap: spacing.sm,
   } as ViewStyle,
   recentTitle: {
-    color: "#D4AF37",
-    fontWeight: "900",
+    color: designColors.accent.gold,
+    fontWeight: "800",
     fontSize: 14,
   } as TextStyle,
   recentList: {
     flexDirection: "column",
-    gap: 8,
+    gap: spacing.sm,
   } as ViewStyle,
   recentCard: {
-    backgroundColor: "rgba(255, 242, 200, 0.08)",
-    borderRadius: 12,
+    backgroundColor: designColors.accent.goldSubtle,
+    borderRadius: radii.md,
     borderWidth: 1,
-    borderColor: "rgba(212,175,55,0.25)",
-    padding: 10,
+    borderColor: designColors.border.gold,
+    padding: spacing.sm,
     gap: 3,
   } as ViewStyle,
   recentCardTitle: {
-    color: "#D4AF37",
+    color: designColors.accent.gold,
     fontWeight: "800",
-    fontSize: 13,
+    fontSize: 12,
   } as TextStyle,
   recentCardLink: {
-    color: "#6991e9",
+    color: designColors.semantic.info,
     fontSize: 12,
     fontWeight: "800",
   } as TextStyle,
 
   body: {
-    padding: 16,
-    paddingBottom: 28,
-    gap: 14,
+    padding: spacing.md,
+    paddingBottom: 110,
+    gap: spacing.md,
   } as ViewStyle,
   header: {
-    padding: 16,
+    padding: spacing.md,
     paddingBottom: 0,
-    gap: 14,
+    gap: spacing.md,
   } as ViewStyle,
   listContent: {
-    paddingBottom: 28,
-    gap: 12,
+    paddingBottom: 110,
+    gap: spacing.md,
   } as ViewStyle,
-  sectionWrap: { marginTop: 6 } as ViewStyle,
+  sectionWrap: { marginTop: spacing.xs } as ViewStyle,
   pageTitle: {
-    color: "#D4AF37",
-    fontSize: 24,
-    fontWeight: "800",
-    marginTop: 10,
+    color: designColors.accent.gold,
+    fontSize: typography.h1.fontSize,
+    fontWeight: typography.h1.fontWeight,
+    marginTop: spacing.sm,
   } as TextStyle,
   pageSubtitle: {
-    color: "#999",
-    fontSize: 13,
-    marginTop: 6,
-    lineHeight: 18,
+    color: designColors.text.muted,
+    fontSize: typography.caption.fontSize,
+    marginTop: spacing.xs,
+    lineHeight: typography.caption.lineHeight,
   } as TextStyle,
   center: {
-    marginTop: 30,
+    marginTop: spacing.xl,
     alignItems: "center",
-    gap: 10,
+    gap: spacing.md,
   } as ViewStyle,
-  loadingText: { color: "#999", fontSize: 13, marginTop: 6 } as TextStyle,
+  loadingText: { color: designColors.text.muted, fontSize: typography.caption.fontSize, marginTop: spacing.xs } as TextStyle,
   note: {
-    marginTop: 10,
-    marginHorizontal: 16,
-    backgroundColor: "#D4AF37",
-    borderRadius: 12,
-    padding: 12,
+    marginTop: spacing.sm,
+    marginHorizontal: spacing.md,
+    backgroundColor: designColors.accent.goldSubtle,
+    borderRadius: radii.md,
+    padding: spacing.md,
     borderWidth: 1,
-    borderColor: "#2E3135",
-    gap: 10,
+    borderColor: designColors.border.gold,
+    gap: spacing.md,
     alignItems: "center",
   } as ViewStyle,
-  noteText: { color: "#C9C9C9", fontSize: 13, lineHeight: 18, textAlign: "center" } as TextStyle,
-  list: { gap: 12, marginTop: 6 } as ViewStyle,
+  noteText: { color: designColors.text.secondary, fontSize: typography.caption.fontSize, lineHeight: 18, textAlign: "center" } as TextStyle,
+  list: { gap: spacing.md, marginTop: spacing.xs } as ViewStyle,
   card: {
-    marginHorizontal: 16,
-    backgroundColor: "#ffffff",
-    borderRadius: 16,
-    padding: 14,
+    marginHorizontal: spacing.md,
+    backgroundColor: designColors.bg.surface,
+    borderRadius: radii.xl,
+    padding: spacing.md,
     borderWidth: 1,
-    borderColor: "#D4AF37",
-    gap: 6,
+    borderColor: designColors.border.gold,
+    gap: spacing.xs,
+    ...shadows.level1,
   } as ViewStyle,
   cardTitle: {
-    color: "#D4AF37",
-    fontSize: 14,
-    fontWeight: "800",
+    color: designColors.accent.gold,
+    fontSize: typography.body.fontSize,
+    fontWeight: typography.bodySemibold.fontWeight,
   } as TextStyle,
   cardLink: {
-    color: "#6991e9",
-    fontSize: 12,
-    fontWeight: "700",
+    color: designColors.semantic.info,
+    fontSize: typography.caption.fontSize,
+    fontWeight: typography.caption.fontWeight,
   } as TextStyle,
 
-  headerRow: { flexDirection: "row", alignItems: "center", gap: 12 } as ViewStyle,
+  headerRow: { flexDirection: "row", alignItems: "center", gap: spacing.md } as ViewStyle,
 
   filtersRow: {
-    gap: 10,
-    marginTop: 6,
+    gap: spacing.md,
+    marginTop: spacing.xs,
   } as ViewStyle,
   searchWrap: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    backgroundColor: "#ffffff",
+    gap: spacing.md,
+    backgroundColor: designColors.bg.surface,
     borderWidth: 1,
-    borderColor: "rgba(212,175,55,0.35)",
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderColor: designColors.border.gold,
+    borderRadius: radii.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   } as ViewStyle,
   categoryWrap: {
-    backgroundColor: "#ffffff",
+    backgroundColor: designColors.bg.surface,
     borderWidth: 1,
-    borderColor: "rgba(212,175,55,0.25)",
-    borderRadius: 14,
-    padding: 10,
+    borderColor: designColors.border.goldLight,
+    borderRadius: radii.md,
+    padding: spacing.sm,
   } as ViewStyle,
   categoryPills: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
-    marginTop: 8,
+    gap: spacing.sm,
+    marginTop: spacing.sm,
   } as ViewStyle,
   pill: {
-    paddingHorizontal: 10,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 7,
-    borderRadius: 999,
+    borderRadius: radii.full,
     borderWidth: 1,
-    borderColor: "rgba(105,145,233,0.25)",
-    backgroundColor: "rgba(225, 227, 193, 0.06)",
+    borderColor: designColors.border.default,
+    backgroundColor: designColors.bg.elevated,
   } as ViewStyle,
   pillActive: {
-    borderColor: "#D4AF37",
-    backgroundColor: "rgba(212,175,55,0.18)",
+    borderColor: designColors.accent.gold,
+    backgroundColor: designColors.accent.goldSubtle,
   } as ViewStyle,
-  pillText: { color: "#6991e9", fontWeight: "800", fontSize: 11, maxWidth: 120 } as TextStyle,
-  pillTextActive: { color: "#D4AF37" } as TextStyle,
-  searchLabel: { color: "#999", fontWeight: "800", fontSize: 12 } as TextStyle,
+  pillText: { color: designColors.text.secondary, fontWeight: "800", fontSize: 12, maxWidth: 120 } as TextStyle,
+  pillTextActive: { color: designColors.accent.gold } as TextStyle,
+  searchLabel: { color: designColors.text.muted, fontWeight: "800", fontSize: 12 } as TextStyle,
 
   retryBtn: {
-    marginTop: 6,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: "rgba(255,255,255,0.45)",
+    marginTop: spacing.xs,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.md,
+    backgroundColor: designColors.accent.goldSubtle,
     borderWidth: 1,
-    borderColor: "rgba(46,49,53,0.35)",
+    borderColor: designColors.border.gold,
   } as ViewStyle,
-  retryText: { color: "#ffe0e0", fontWeight: "900", fontSize: 13 } as TextStyle,
+  retryText: { color: designColors.accent.gold, fontWeight: "800", fontSize: 13 } as TextStyle,
 
   footerLoader: {
     paddingVertical: 14,
